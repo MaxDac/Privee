@@ -1,5 +1,7 @@
 {
     "dockerComposeFile": "docker-compose.yml",
+    "service": "privee",
+    "workspaceFolder": "/workspaces/Privee",
     "shutdownAction": "stopCompose",
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
