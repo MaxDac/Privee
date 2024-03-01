@@ -46,6 +46,8 @@
                 "ms-azuretools.vscode-docker",
                 "ms-vscode.azurecli",
                 "eamodio.gitlens",
+                "pantajoe.vscode-elixir-credo",
+                "ziglang.vscode-zig",
                 "vscodevim.vim"
             ]
         }
