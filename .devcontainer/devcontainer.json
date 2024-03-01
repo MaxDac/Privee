@@ -36,7 +36,10 @@
                 "editor.fontSize": 12,
                 "editor.fontFamily": "'FiraCode Nerd Font Mono', 'Courier New', monospace",
                 "editor.lineNumbers": "relative",
-                "terminal.integrated.fontSize": 12
+                "terminal.integrated.fontSize": 12,
+                "remote.extensionKind": {
+                    "vscodevim.vim": ["ui"]
+                }
             },
             "extensions": [
                 "jakebecker.elixir-ls",
