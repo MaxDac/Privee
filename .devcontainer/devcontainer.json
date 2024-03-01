@@ -47,8 +47,7 @@
                 "ms-vscode.azurecli",
                 "eamodio.gitlens",
                 "pantajoe.vscode-elixir-credo",
-                "ziglang.vscode-zig",
-                "vscodevim.vim"
+                "ziglang.vscode-zig"
             ]
         }
     },
