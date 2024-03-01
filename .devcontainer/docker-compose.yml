@@ -1,8 +1,7 @@
 version: '3'
 services:
-  plfantasy:
+  privee:
     build:
-      context: ..
       dockerfile: .devcontainer/Dockerfile
 
     volumes:
