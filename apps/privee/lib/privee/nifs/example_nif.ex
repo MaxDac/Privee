@@ -1,4 +1,4 @@
-defmodule Privee.Nifs.ExampleNifs do
+defmodule Privee.Nifs.ExampleNif do
   @moduledoc """
   Documentation for `ExampleNif`.
   """
@@ -10,7 +10,7 @@ defmodule Privee.Nifs.ExampleNifs do
   It has been previously called during module load.
   """
   def load_nif do
-    :erlang.load_nif("./nifs/zig-out/lib/libexample_nif", 0)
+    :erlang.load_nif("../../nifs/zig-out/lib/libexample_nif", 0)
   end
 
   @doc """

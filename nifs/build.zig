@@ -1,8 +1,17 @@
 const std = @import("std");
 
+const default_erlang_home: []const u8 = "/usr/local/lib/erlang/erts-14.2.2/include";
+
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
+
+/// Defines build params
+/// 
+/// - `b`: the build params. The only custom build params that has to be passed after `--` is
+/// the Erlang home.
+/// Please refer to [this](https://stackoverflow.com/questions/72558202/can-i-pass-commandline-arguments-when-invoking-zig-build-run)
+/// article for more information about passing build parameters.
 pub fn build(b: *std.Build) void {
     // Standard target options allows the person running `zig build` to choose
     // what target to build for. Here we do not override the defaults, which
@@ -25,8 +34,9 @@ pub fn build(b: *std.Build) void {
     });
 
     // Including Erlang path for compilation.
-    // TODO - This should be configured from the command.
-    lib.addIncludePath(.{ .path = "/home/mdacunzo/.asdf/installs/erlang/26.2.2/erts-14.2.2/include" });
+    const erlang_home = getErlangHomeFromArguments(b.args);
+    std.debug.print("Erlang home: '{s}'\n", .{erlang_home});
+    lib.addIncludePath(.{ .path = erlang_home });
 
     // Linking LibC for Erlang NIFs.
     lib.linkLibC();
@@ -51,4 +61,12 @@ pub fn build(b: *std.Build) void {
     // This will evaluate the `test` step rather than the default, which is "install".
     const test_step = b.step("test", "Run library tests");
     test_step.dependOn(&run_main_tests.step);
+}
+
+fn getErlangHomeFromArguments(args: ?[][]const u8) []const u8 {
+    if (args) |as| {
+        return as[0];
+    }
+
+    return default_erlang_home;
 }

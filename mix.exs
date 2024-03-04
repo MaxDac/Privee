@@ -7,7 +7,15 @@ defmodule Privee.Umbrella.MixProject do
       version: "0.1.0",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: [
+        privee_umbrella: [
+          applications: [
+            privee: :permanent,
+            privee_web: :permanent
+          ]
+        ]
+      ]
     ]
   end
 
@@ -26,7 +34,9 @@ defmodule Privee.Umbrella.MixProject do
   defp deps do
     [
       # Required to run "mix format" on ~H/.heex files from the umbrella root
-      {:phoenix_live_view, ">= 0.0.0"}
+      {:phoenix_live_view, ">= 0.0.0"},
+      {:credo, "~> 1.7"},
+      {:dialyxir, "~> 1.4"}
     ]
   end
 

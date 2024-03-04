@@ -26,7 +26,7 @@ erl_crash.dump
 /.elixir_ls/
 
 # Zig output folders
-/zig-out/
+/nifs/zig-out/
 
 # Zig cache
-/zig-cache/
+/nifs/zig-cache/
