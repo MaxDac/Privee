@@ -1,5 +1,7 @@
 FROM hexpm/elixir:1.16.1-erlang-26.2.2-debian-bookworm-20240130-slim AS elixir-build
 
+ENV ERL_HOME="/usr/local/lib/erlang/erts-14.2.2"
+
 RUN apt-get update && \
   apt-get install -y git && \
   apt-get install -y postgresql-client && \
