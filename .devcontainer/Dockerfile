@@ -22,5 +22,6 @@ RUN wget https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz && \
   mkdir zls && \
   tar -xzf zls-x86_64-linux.tar.gz -C ./zls && \
   mv zls /usr/local/lib/ && \
+  chmod +x /usr/local/lib/zls/bin/zls && \
   ln -s /usr/local/lib/zls/bin/zls /usr/local/bin/zls && \
   rm -rf zig-linux-x86_64-0.11.0.tar.xz zls-x86_64-linux.tar.gz
