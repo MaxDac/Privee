@@ -39,6 +39,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step: Build Zig NIFs
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
+
       # Step: Build PR
       - name: Build PR
         uses: ./.github/actions/compile-pr
@@ -78,6 +82,10 @@ jobs:
       # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
       - name: Checkout code
         uses: actions/checkout@v3
+
+      # Step: Build Zig NIFs
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
 
       # Step: Test PR
       - name: Test PR
