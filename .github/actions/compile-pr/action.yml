@@ -30,9 +30,6 @@ runs:
     # Step: Setup project and install/cache dependencies.
     - name: Install dependencies
       uses: ./.github/actions/install-dependencies
-      with:
-        otp: ${{ inputs.otp }}
-        elixir: ${{ inputs.elixir }}
 
     # Step: Compile the project treating any warnings as errors.
     # Customize this step if a different behavior is desired.
