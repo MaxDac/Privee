@@ -1,6 +1,23 @@
 name: build-nifs
 description: 'Build Zig NIFs in the project'
 
+inputs:
+  zig:
+    type: string
+    description: 'Zig compiler version'
+    required: true
+    default: '0.11.0'
+  otp:
+    type: string
+    description: 'OTP version'
+    required: true
+    default: '26.2.2'
+  elixir:
+    type: string
+    description: 'Elixir version'
+    required: true
+    default: '1.16.1'
+
 permissions:
   contents: read
 
@@ -11,6 +28,11 @@ runs:
     - uses: goto-bus-stop/setup-zig@v2
       with:
         version: 0.11.0
+
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ inputs.otp }}
+        elixir-version: ${{ inputs.elixir }}
 
     - name: Building NIFs
       shell: bash

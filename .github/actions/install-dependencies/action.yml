@@ -1,17 +1,7 @@
 name: dependencies
 description: 'Install required dependencies and compiles them'
 
-inputs:
-  otp:
-    type: string
-    description: 'OTP version'
-    required: true
-    default: '26.2.2'
-  elixir:
-    type: string
-    description: 'Elixir version'
-    required: true
-    default: '1.16.1'
+ default: '1.16.1'
 
 permissions:
   contents: read

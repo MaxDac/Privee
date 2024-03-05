@@ -33,6 +33,7 @@ jobs:
       matrix:
         otp: ['26.2.2']
         elixir: ['1.16.1']
+        zig: ['0.11.0']
 
     steps:
       # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
@@ -42,6 +43,10 @@ jobs:
       # Step: Build Zig NIFs
       - name: Build NIfs
         uses: ./.github/actions/build-nifs
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+          zig: ${{ matrix.zig }}
 
       # Step: Build PR
       - name: Build PR

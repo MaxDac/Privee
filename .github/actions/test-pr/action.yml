@@ -34,9 +34,6 @@ runs:
     # Step: Setup project and install/cache dependencies.
     - name: Install dependencies
       uses: ./.github/actions/install-dependencies
-      with:
-        otp: ${{ matrix.otp }}
-        elixir: ${{ matrix.elixir }}
     
     # Step: installing inotify-tools to enable LiveView reloading to perform the tests.
     - name: Install OS dependencies
