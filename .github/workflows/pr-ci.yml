@@ -1,0 +1,87 @@
+name: Elixir CI - Compilation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+    branches: 
+      - main
+  
+  push:
+    branches: main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # The `runs-on` configuration must be set only at the top level workflow execution.
+    runs-on: ubuntu-latest
+
+    name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+
+    env:
+      MIX_ENV: dev
+
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        otp: ['26.2.2']
+        elixir: ['1.16.1']
+
+    steps:
+      # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step: Build PR
+      - name: Build PR
+        uses: ./.github/actions/compile-pr
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: test
+
+    services:
+      db:
+        image: 'postgres:11'
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: 'mysecretpassword'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        otp: ['26.2.2']
+        elixir: ['1.16.1']
+
+    steps:
+      # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step: Test PR
+      - name: Test PR
+        uses: ./.github/actions/test-pr
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
