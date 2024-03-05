@@ -9,6 +9,6 @@ runs:
 
   steps:
     - uses: goto-bus-stop/setup-zig@v1.0.0
-        with:
-          version: 0.11.0
+      with:
+        version: 0.11.0
     - run: cd nifs && zig build test && zig fmt --check .
