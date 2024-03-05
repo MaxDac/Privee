@@ -5,6 +5,9 @@ defmodule Privee.Nifs.ExampleNif do
 
   @on_load :load_nif
 
+  @dialyzer {:nowarn_function, load_nif: 0}
+  @dialyzer {:nowarn_function, nif_add: 2}
+
   @doc """
   This function loads the NIF.
   It has been previously called during module load.
