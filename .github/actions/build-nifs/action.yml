@@ -8,8 +8,7 @@ runs:
   using: "composite"
 
   steps:
-    # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
-    # Cache key based on Elixir & Erlang version (also useful when running in matrix)
-    - name: 
-      uses: goto-bus-stop/setup-zig@v2
-      run: cd nifs && zig build test && zig fmt --check .
+    - uses: goto-bus-stop/setup-zig@v1.0.0
+        with:
+          version: 0.11.0
+    - run: cd nifs && zig build test && zig fmt --check .
