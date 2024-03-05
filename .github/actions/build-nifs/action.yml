@@ -8,8 +8,9 @@ runs:
   using: "composite"
 
   steps:
+    - name: Building NIFs
+      shell: bash
     - uses: goto-bus-stop/setup-zig@v1.0.0
       with:
         version: 0.11.0
-        shell: bash
     - run: zig build --build-file nifs/build.zig && zig fmt --check ./nifs
