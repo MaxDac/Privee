@@ -7,16 +7,6 @@ inputs:
     description: 'Zig compiler version'
     required: true
     default: '0.11.0'
-  otp:
-    type: string
-    description: 'OTP version'
-    required: true
-    default: '26.2.2'
-  elixir:
-    type: string
-    description: 'Elixir version'
-    required: true
-    default: '1.16.1'
 
 permissions:
   contents: read
@@ -25,17 +15,6 @@ runs:
   using: "composite"
 
   steps:
-    - name: Loading Erlang
-      uses: erlef/setup-beam@v1
-      with:
-        otp-version: ${{ inputs.otp }}
-        elixir-version: ${{ inputs.elixir }}
-
-    - name: Loading Zig compiler
-      uses: goto-bus-stop/setup-zig@v2
-      with:
-        version: ${{ inputs.zig }}
-
     - name: Building NIFs
       shell: bash
       run: zig build --build-file nifs/build.zig -- /opt/hostedtoolcache/otp/ubuntu-22.04/OTP-26.2.2/x64/erts-14.2.2/include

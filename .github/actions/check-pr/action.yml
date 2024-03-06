@@ -56,4 +56,21 @@ runs:
       with:
         otp: ${{ inputs.otp }}
         elixir: ${{ inputs.elixir }}
+
+    # Step: Check that the checked in code has already been formatted.
+    # This step fails if something was found unformatted.
+    # Customize this step as desired.
+    - name: Check Formatting
+      shell: bash
+      run: mix format --check-formatted
+
+    # Step: Checks Credo rules.
+    - name: Check Credo
+      shell: bash
+      run: mix credo --strict
+
+    # Step: Run Dialyzer
+    - name: Run dialyzer
+      shell: bash
+      run: mix dialyzer --format github
     

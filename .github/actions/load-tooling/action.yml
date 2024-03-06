@@ -1,0 +1,42 @@
+name: load-tooling
+description: 'Loads the Elixir, Erlang and Zig tooling'
+
+inputs:
+  zig:
+    type: string
+    description: 'Zig compiler version'
+    required: true
+    default: '0.11.0'
+  otp:
+    type: string
+    description: 'OTP version'
+    required: true
+    default: '26.2.2'
+  elixir:
+    type: string
+    description: 'Elixir version'
+    required: true
+    default: '1.16.1'
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Loading Erlang
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ inputs.otp }}
+        elixir-version: ${{ inputs.elixir }}
+
+    - name: Loading Zig compiler
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: ${{ inputs.zig }}
+    
+    # Step: installing inotify-tools to enable LiveView reloading to perform the tests.
+    - name: Install OS dependencies
+      shell: bash
+      run: sudo apt install inotify-tools

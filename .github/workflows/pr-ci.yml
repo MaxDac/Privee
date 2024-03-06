@@ -36,21 +36,27 @@ jobs:
         zig: ['0.11.0']
 
     steps:
-      # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step: Build Zig NIFs
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
+      - name: Loading tooling
+        uses: ./.github/actions/load-tooling
         with: 
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
 
-      # Step: Build PR
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
+
       - name: Build PR
         uses: ./.github/actions/compile-pr
+
+      - name: Check PR
+        uses: ./.github/actions/check-pr
         with: 
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
@@ -84,17 +90,24 @@ jobs:
         elixir: ['1.16.1']
 
     steps:
-      # Step: Check out the code. This step must be run first because the composable actions are contained in the repo.
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step: Build Zig NIFs
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
-
-      # Step: Test PR
-      - name: Test PR
-        uses: ./.github/actions/test-pr
+      - name: Loading tooling
+        uses: ./.github/actions/load-tooling
         with: 
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
+          zig: ${{ matrix.zig }}
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
+
+      - name: Build PR
+        uses: ./.github/actions/compile-pr
+
+      - name: Test PR
+        uses: ./.github/actions/test-pr
