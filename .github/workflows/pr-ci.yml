@@ -34,6 +34,7 @@ jobs:
         otp: ['26.2.2']
         elixir: ['1.16.1']
         zig: ['0.11.0']
+        nod: {'18'}
 
     steps:
       - name: Checkout code
@@ -45,6 +46,7 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
+          node: ${{ matrix.node }}
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
@@ -99,6 +101,7 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
+          node: ${{ matrix.node }}
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
