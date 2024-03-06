@@ -23,7 +23,7 @@ runs:
     # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
     # Cache key based on Elixir & Erlang version (also useful when running in matrix)
     - name: Restore PLT cache
-      uses: actions/cache/restore@v3
+      uses: actions/cache/restore@v4
       id: plt_cache
       with:
         key: |
@@ -41,7 +41,7 @@ runs:
     
     # Step: Save PLT cache if it was updated
     - name: Save PLT cache
-      uses: actions/cache/save@v3
+      uses: actions/cache/save@v4
       if: steps.plt_cache.outputs.cache-hit != 'true'
       id: plt_cache_save
       with:
