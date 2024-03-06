@@ -36,10 +36,6 @@ runs:
       with:
         version: ${{ inputs.zig }}
 
-    - name: Finding Erlang NIFs
-      shell: bash
-      run: find / -name "erl_nif.h"
-
     - name: Building NIFs
       shell: bash
-      run: zig build --build-file nifs/build.zig && zig fmt --check ./nifs
+      run: zig build --build-file nifs/build.zig -- /opt/hostedtoolcache/otp/ubuntu-22.04/OTP-26.2.2/x64/erts-14.2.2/include && zig fmt --check ./nifs
