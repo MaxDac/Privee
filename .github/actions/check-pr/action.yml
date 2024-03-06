@@ -49,13 +49,6 @@ runs:
           ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         path: |
           priv/plts
-    
-    # Step: Retrieving from cache or building and caching the PLTs for dialyzer
-    - name: Caching PLTs
-      uses: ./.github/actions/cache-plts
-      with:
-        otp: ${{ inputs.otp }}
-        elixir: ${{ inputs.elixir }}
 
     # Step: Check that the checked in code has already been formatted.
     # This step fails if something was found unformatted.
