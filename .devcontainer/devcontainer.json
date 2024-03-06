@@ -39,15 +39,24 @@
                 "terminal.integrated.fontSize": 12
             },
             "extensions": [
+                // Elixir
                 "jakebecker.elixir-ls",
-                "phoenixframework.phoenix",
                 "samuel-pordeus.elixir-test",
-                "bradlc.vscode-tailwindcss",
-                "ms-azuretools.vscode-docker",
-                "ms-vscode.azurecli",
-                "eamodio.gitlens",
                 "pantajoe.vscode-elixir-credo",
-                "ziglang.vscode-zig"
+                "phoenixframework.phoenix",
+                "bradlc.vscode-tailwindcss",
+                "eamodio.gitlens",
+
+                // Zig
+                "ziglang.vscode-zig",
+                "vadimcn.vscode-lldb",
+
+                // Tooling 
+                "github.vscode-github-actions",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "ms-azuretools.vscode-docker",
+                "GitHub.vscode-pull-request-github"
             ]
         }
     },

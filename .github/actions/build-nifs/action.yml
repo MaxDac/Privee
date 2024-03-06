@@ -1,0 +1,20 @@
+name: build-nifs
+description: 'Build Zig NIFs in the project'
+
+inputs:
+  zig:
+    type: string
+    description: 'Zig compiler version'
+    required: true
+    default: '0.11.0'
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Building NIFs
+      shell: bash
+      run: zig build --build-file nifs/build.zig -- /opt/hostedtoolcache/otp/ubuntu-22.04/OTP-26.2.2/x64/erts-14.2.2/include

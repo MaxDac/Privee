@@ -1,0 +1,14 @@
+name: Elixir CI - Tests
+description: "Runs tests on the codebase."
+
+permissions:
+  contents: read
+
+runs:
+  using: "composite"
+
+  steps:
+    # Step: Execute the tests.
+    - name: Run tests
+      shell: bash
+      run: mix test

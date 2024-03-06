@@ -1,0 +1,116 @@
+name: Elixir CI - Compilation
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+    branches: 
+      - main
+  
+  push:
+    branches: main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # The `runs-on` configuration must be set only at the top level workflow execution.
+    runs-on: ubuntu-latest
+
+    name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+
+    env:
+      MIX_ENV: dev
+
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        otp: ['26.2.2']
+        elixir: ['1.16.1']
+        zig: ['0.11.0']
+        node: ['18']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Loading tooling
+        uses: ./.github/actions/load-tooling
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+          zig: ${{ matrix.zig }}
+          node: ${{ matrix.node }}
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
+
+      - name: Build PR
+        uses: ./.github/actions/compile-pr
+
+      - name: Check PR
+        uses: ./.github/actions/check-pr
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: test
+
+    services:
+      db:
+        image: 'postgres:11'
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: 'postgres'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        otp: ['26.2.2']
+        elixir: ['1.16.1']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Loading tooling
+        uses: ./.github/actions/load-tooling
+        with: 
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+          zig: ${{ matrix.zig }}
+          node: ${{ matrix.node }}
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Build NIfs
+        uses: ./.github/actions/build-nifs
+
+      - name: Build PR
+        uses: ./.github/actions/compile-pr
+
+      - name: Test PR
+        uses: ./.github/actions/test-pr
