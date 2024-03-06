@@ -36,6 +36,10 @@ runs:
       with:
         version: ${{ inputs.zig }}
 
+    - name: Finding Erlang NIFs
+      shell: bash
+      run: find / -name "erl_nif.h"
+
     - name: Building NIFs
       shell: bash
       run: zig build --build-file nifs/build.zig && zig fmt --check ./nifs
