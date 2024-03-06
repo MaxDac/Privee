@@ -31,13 +31,17 @@ runs:
         restore-keys: |
                       ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         path: |
-                      priv/plts
+                      ~/priv/plts
 
     # Create PLTs if no cache was found
     - name: Create PLTs
       if: steps.plt_cache.outputs.cache-hit != 'true'
       shell: bash
       run: mix dialyzer --plt
+
+    - name: Debugging directories
+      shell: bash
+      run: ls -al
     
     # Step: Save PLT cache if it was updated
     - name: Save PLT cache
@@ -48,7 +52,7 @@ runs:
         key: |
           ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         path: |
-          priv/plts
+          ~/priv/plts
 
     # Step: Check that the checked in code has already been formatted.
     # This step fails if something was found unformatted.
