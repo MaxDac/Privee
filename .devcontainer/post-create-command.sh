@@ -1,8 +1,6 @@
 #!/bin/sh
 
 git clone https://codeberg.org/MaxDac/dotfiles.git ~/.dotfiles && \
-sh ~/.dotfiles/setup-environment.sh && \
-sh ~/.dotfiles/install-neovim-tooling.sh && \
 mix local.hex --force && \
 mix local.rebar --force && \
 mix archive.install --force hex phx_new && \
