@@ -57,7 +57,8 @@ defmodule PriveeWeb.MixProject do
       {:gettext, "~> 0.20"},
       {:privee, in_umbrella: true},
       {:jason, "~> 1.2"},
-      {:bandit, "~> 1.2"}
+      {:bandit, "~> 1.2"},
+      {:libcluster, "~> 3.3"}
     ]
   end
 
