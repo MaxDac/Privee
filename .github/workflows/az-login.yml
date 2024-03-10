@@ -1,9 +1,13 @@
 name: Run Azure Login with OIDC
-on: [push]
+on:
+  push: 
+    branches:
+      - "maxdac/6-add-kubernetes-erlang-node-compatibility"
 
 permissions:
-      id-token: write
-      contents: read
+  id-token: write
+  contents: read
+
 jobs: 
   build-and-deploy:
     runs-on: ubuntu-latest
