@@ -1,5 +1,6 @@
 #!/bin/sh
 
+git clone https://codeberg.org/MaxDac/dotfiles.git ~/.dotfiles && \
 sh ~/.dotfiles/setup-environment.sh && \
 sh ~/.dotfiles/install-neovim-tooling.sh && \
 zsh && \
