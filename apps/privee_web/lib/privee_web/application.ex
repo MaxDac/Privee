@@ -12,8 +12,8 @@ defmodule PriveeWeb.Application do
       # Start a worker by calling: PriveeWeb.Worker.start_link(arg)
       # {PriveeWeb.Worker, arg},
       # Start to serve requests, typically the last entry
-      PriveeWeb.Endpoint,
-      {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]}
+      PriveeWeb.Endpoint # ,
+      # {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
