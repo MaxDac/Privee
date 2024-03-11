@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for privee-web on 2024-03-10T21:52:54Z
+# fly.toml app configuration file generated for privee on 2024-03-10T21:52:54Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'privee-web'
+app = 'privee'
 primary_region = 'ams'
 kill_signal = 'SIGTERM'
 
@@ -13,7 +13,7 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'privee-web.fly.dev'
+  PHX_HOST = 'privee.fly.dev'
   PORT = '8080'
 
 [http_service]

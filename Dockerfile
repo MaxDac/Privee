@@ -37,7 +37,7 @@ RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERS
 WORKDIR /app
 
 # Copying NIFs files over
-COPY nifs nifs
+COPY nifs ./nifs
 
 # Building Zig dependencies
 RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-14.2.2/include
