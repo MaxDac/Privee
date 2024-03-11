@@ -31,13 +31,14 @@ WORKDIR /tmp
 RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
   tar -xf zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
   mv zig-linux-x86_64-${ZIG_VERSION} /usr/local/lib/ && \
-  ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig 
+  ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig && \
+  rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
 
 # prepare build dir
 WORKDIR /app
 
 # Copying NIFs files over
-COPY nifs ./nifs
+COPY nifs nifs
 
 # Building Zig dependencies
 RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-14.2.2/include
@@ -83,9 +84,6 @@ COPY config/runtime.exs config/
 COPY rel rel
 RUN mix release
 
-# Copy the NIFs files over
-COPY nifs /app/_build/${mix_env}/rel/privee_umbrella/nifs
-
 # start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
@@ -108,7 +106,9 @@ RUN chown nobody /app
 ENV MIX_ENV="prod"
 
 # Only copy the final release from the build stage
-COPY --from=builder --chown=nobody:root /app/_build/${mix_env}/rel/privee_umbrella ./
+COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./
+
+COPY --from=builder --chown=nobody:root /app/nifs/zig-out/lib ./nifs
 
 USER nobody
 
