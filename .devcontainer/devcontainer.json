@@ -56,7 +56,10 @@
                 "GitHub.copilot",
                 "GitHub.copilot-chat",
                 "ms-azuretools.vscode-docker",
-                "GitHub.vscode-pull-request-github"
+                "GitHub.vscode-pull-request-github",
+
+                // Postgres
+                "ms-ossdata.vscode-postgresql"
             ]
         }
     },
