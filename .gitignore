@@ -25,6 +25,9 @@ erl_crash.dump
 # Elixir LS
 /.elixir_ls/
 
+# Elixir Tools
+/.elixir-tools/
+
 # Zig output folders
 /nifs/zig-out/
 
