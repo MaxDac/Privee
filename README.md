@@ -1,3 +1,5 @@
+[![Elixir CI - Compilation](https://github.com/MaxDac/Privee/actions/workflows/pr-ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/pr-ci.yml) [![Fly Deploy](https://github.com/MaxDac/Privee/actions/workflows/fly.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/fly.yml)
+
 # Privee
 Privee FHL project for Microsoft.
 
