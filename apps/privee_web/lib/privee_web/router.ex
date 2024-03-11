@@ -1,6 +1,8 @@
 defmodule PriveeWeb.Router do
   use PriveeWeb, :router
 
+  import PriveeWeb.SessionAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule PriveeWeb.Router do
     plug :put_root_layout, html: {PriveeWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_session
   end
 
   pipeline :api do
@@ -39,6 +42,44 @@ defmodule PriveeWeb.Router do
 
       live_dashboard "/dashboard", metrics: PriveeWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser, :redirect_if_session_is_authenticated]
+
+    live_session :redirect_if_session_is_authenticated,
+      on_mount: [{PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated}] do
+      live "/sessions/register", SessionRegistrationLive, :new
+      live "/sessions/log_in", SessionLoginLive, :new
+      live "/sessions/reset_password", SessionForgotPasswordLive, :new
+      live "/sessions/reset_password/:token", SessionResetPasswordLive, :edit
+    end
+
+    post "/sessions/log_in", SessionSessionController, :create
+  end
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser, :require_authenticated_session]
+
+    live_session :require_authenticated_session,
+      on_mount: [{PriveeWeb.SessionAuth, :ensure_authenticated}] do
+      live "/sessions/settings", SessionSettingsLive, :edit
+      live "/sessions/settings/confirm_email/:token", SessionSettingsLive, :confirm_email
+    end
+  end
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser]
+
+    delete "/sessions/log_out", SessionSessionController, :delete
+
+    live_session :current_session,
+      on_mount: [{PriveeWeb.SessionAuth, :mount_current_session}] do
+      live "/sessions/confirm/:token", SessionConfirmationLive, :edit
+      live "/sessions/confirm", SessionConfirmationInstructionsLive, :new
     end
   end
 end
