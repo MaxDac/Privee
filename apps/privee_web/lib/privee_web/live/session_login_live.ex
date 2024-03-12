@@ -3,7 +3,7 @@ defmodule PriveeWeb.SessionLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto sm:max-w-sm md:max-w-md">
       <.header class="text-center">
         Sign in to account
         <:subtitle>
@@ -15,9 +15,26 @@ defmodule PriveeWeb.SessionLoginLive do
         </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="login_form" action={~p"/sessions/log_in"} phx-update="ignore">
-        <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
+      <.simple_form 
+        for={@form} 
+        id="login_form" 
+        action={~p"/sessions/log_in"} 
+        phx-update="ignore">
+
+        <.input 
+          field={@form[:session_name]} 
+          type="text" 
+          label="Session Name" 
+          placeholder="Write your session name."
+          required />
+
+        <.input 
+          field={@form[:recovery_phrase]} 
+          type="textarea" 
+          label="Recovery phrase" 
+          placeholder="Your citation."
+          rows="5" 
+          required />
 
         <:actions>
           <.button phx-disable-with="Signing in..." class="w-full">

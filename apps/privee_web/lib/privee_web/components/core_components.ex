@@ -204,7 +204,7 @@ defmodule PriveeWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-white">
+      <div class="mt-10 space-y-8">
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -233,8 +233,11 @@ defmodule PriveeWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:bg-zinc-700 py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "phx-submit-loading:opacity-75 py-2 px-3",
+        "text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br",
+        "focus:ring-4 focus:outline-none focus:ring-green-300",
+        "dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80",
+        "font-medium rounded-lg text-sm text-center me-2 mb-2",
         @class
       ]}
       {@rest}
@@ -356,10 +359,11 @@ defmodule PriveeWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "min-h-[6rem] phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
+          @errors == [] && "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
+          @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
+          @errors != [] && "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
+          @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
@@ -372,17 +376,18 @@ defmodule PriveeWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id} errors={@errors}><%= @label %></.label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
-          "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
+          @errors == [] && "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
+          @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
+          @errors != [] && "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
+          @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
       />
@@ -395,11 +400,16 @@ defmodule PriveeWeb.CoreComponents do
   Renders a label.
   """
   attr :for, :string, default: nil
+  attr :errors, :list, default: []
   slot :inner_block, required: true
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class={[
+      "block text-sm mb-2 font-semibold leading-6",
+      @errors == [] && "text-zinc-800 dark:text-white",
+      @errors != [] && "text-red-700 dark:text-red-500",
+    ]}>
       <%= render_slot(@inner_block) %>
     </label>
     """
@@ -412,7 +422,7 @@ defmodule PriveeWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
+    <p class="mt-3 flex gap-3 text-sm leading-6 text-red-600 dark:text-red-500 phx-no-feedback:hidden">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       <%= render_slot(@inner_block) %>
     </p>
@@ -426,17 +436,21 @@ defmodule PriveeWeb.CoreComponents do
 
   slot :inner_block, required: true
   slot :subtitle
+  slot :description
   slot :actions
 
   def header(assigns) do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+        <h1 class="text-lg font-semibold leading-8 text-zinc-800 dark:text-zinc-50">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           <%= render_slot(@subtitle) %>
+        </p>
+        <p :if={@description != []} class="text-left mt-2 text-xs leading-6 text-zinc-600 dark:text-zinc-400">
+          <%= render_slot(@description) %>
         </p>
       </div>
       <div class="flex-none"><%= render_slot(@actions) %></div>

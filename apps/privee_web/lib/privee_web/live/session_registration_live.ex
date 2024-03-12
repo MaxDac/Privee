@@ -6,7 +6,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto sm:max-w-sm md:max-w-md">
       <.header class="text-center">
         Register for an account
         <:subtitle>
@@ -16,6 +16,12 @@ defmodule PriveeWeb.SessionRegistrationLive do
           </.link>
           to your account now.
         </:subtitle>
+
+        <:description>
+          To register a session, you have to define a <strong>Session Name</strong>, a series of alphanumeric characters
+          divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only 
+          alphabetic character, spaces and punctuation.
+        </:description>
       </.header>
 
       <.simple_form
@@ -31,8 +37,20 @@ defmodule PriveeWeb.SessionRegistrationLive do
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input field={@form[:email]} type="email" label="Email" required />
-        <.input field={@form[:password]} type="password" label="Password" required />
+        <.input 
+          field={@form[:session_name]} 
+          type="text" 
+          label="Session Name" 
+          placeholder="Write your session name."
+          required />
+
+        <.input 
+          field={@form[:recovery_phrase]} 
+          type="textarea" 
+          label="Recovery phrase" 
+          placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
+          rows="5" 
+          required />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
@@ -56,17 +74,17 @@ defmodule PriveeWeb.SessionRegistrationLive do
   def handle_event("save", %{"session" => session_params}, socket) do
     case Sessions.register_session(session_params) do
       {:ok, session} ->
-        {:ok, _} =
-          Sessions.deliver_session_confirmation_instructions(
-            session,
-            &url(~p"/sessions/confirm/#{&1}")
-          )
-
         changeset = Sessions.change_session_registration(session)
-        {:noreply, socket |> assign(trigger_submit: true) |> assign_form(changeset)}
+        {:noreply, 
+         socket 
+         |> assign(trigger_submit: true) 
+         |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, socket |> assign(check_errors: true) |> assign_form(changeset)}
+        {:noreply, 
+         socket 
+         |> assign(check_errors: true) 
+         |> assign_form(changeset)}
     end
   end
 

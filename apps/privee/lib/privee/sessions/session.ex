@@ -56,7 +56,7 @@ defmodule Privee.Sessions.Session do
   defp validate_session_name(changeset, opts) do
     changeset
     |> validate_required([:session_name])
-    |> validate_length(:session_name, min: 12, max: 72)
+    |> validate_length(:session_name, min: 24, max: 72)
     |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/, message: "must contain only alphanumeric characters and hyphens")
     |> maybe_hash_session_name(opts)
     |> validate_unique_session_name(opts)

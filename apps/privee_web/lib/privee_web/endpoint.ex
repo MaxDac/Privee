@@ -22,7 +22,7 @@ defmodule PriveeWeb.Endpoint do
   plug Plug.Static,
     at: "/",
     from: :privee_web,
-    gzip: false,
+    gzip: true,
     only: PriveeWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
