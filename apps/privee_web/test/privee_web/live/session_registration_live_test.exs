@@ -28,10 +28,12 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       result =
         lv
         |> element("#registration_form")
-        |> render_change(session: %{
-          "recovery_phrase" => "with !@# special characters but long enough",
-          "session_name" => "too_short"
-        })
+        |> render_change(
+          session: %{
+            "recovery_phrase" => "with !@# special characters but long enough",
+            "session_name" => "too_short"
+          }
+        )
 
       assert result =~ "Register"
       assert result =~ "must contain only alphabetic characters and punctuation"
@@ -44,7 +46,12 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
 
       session_name = unique_session_name()
-      form = form(lv, "#registration_form", session: valid_session_attributes(session_name: session_name))
+
+      form =
+        form(lv, "#registration_form",
+          session: valid_session_attributes(session_name: session_name)
+        )
+
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 

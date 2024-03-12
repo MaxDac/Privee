@@ -11,7 +11,10 @@ defmodule PriveeWeb.SessionControllerTest do
     test "logs the session in", %{conn: conn, session: session} do
       conn =
         post(conn, ~p"/sessions/log_in", %{
-          "session" => %{"recovery_phrase" => session.recovery_phrase, "session_name" => unique_session_name()}
+          "session" => %{
+            "recovery_phrase" => session.recovery_phrase,
+            "session_name" => unique_session_name()
+          }
         })
 
       assert get_session(conn, :session_token)
@@ -68,7 +71,7 @@ defmodule PriveeWeb.SessionControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
 
-    # TODO - Use this test when the username will be available.
+    # #19 - Use this test when the username will be available.
     # test "login following session_name update", %{conn: conn, session: session} do
     #   conn =
     #     conn
@@ -87,10 +90,15 @@ defmodule PriveeWeb.SessionControllerTest do
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
         post(conn, ~p"/sessions/log_in", %{
-          "session" => %{"recovery_phrase" => "invalid@recovery_phrase.com", "session_name" => "invalid_session_name"}
+          "session" => %{
+            "recovery_phrase" => "invalid@recovery_phrase.com",
+            "session_name" => "invalid_session_name"
+          }
         })
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid recovery_phrase or session_name"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invalid recovery_phrase or session_name"
+
       assert redirected_to(conn) == ~p"/"
     end
   end

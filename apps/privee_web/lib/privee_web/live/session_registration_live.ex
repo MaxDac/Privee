@@ -19,7 +19,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
         <:description>
           To register a session, you have to define a <strong>Session Name</strong>, a series of alphanumeric characters
-          divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only 
+          divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only
           alphabetic character, spaces and punctuation.
         </:description>
       </.header>
@@ -37,20 +37,22 @@ defmodule PriveeWeb.SessionRegistrationLive do
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input 
-          field={@form[:session_name]} 
-          type="text" 
-          label="Session Name" 
+        <.input
+          field={@form[:session_name]}
+          type="text"
+          label="Session Name"
           placeholder="Write your session name."
-          required />
+          required
+        />
 
-        <.input 
-          field={@form[:recovery_phrase]} 
-          type="textarea" 
-          label="Recovery phrase" 
+        <.input
+          field={@form[:recovery_phrase]}
+          type="textarea"
+          label="Recovery phrase"
           placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
-          rows="5" 
-          required />
+          rows="5"
+          required
+        />
 
         <:actions>
           <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
@@ -75,15 +77,16 @@ defmodule PriveeWeb.SessionRegistrationLive do
     case Sessions.register_session(session_params) do
       {:ok, session} ->
         changeset = Sessions.change_session_registration(session)
-        {:noreply, 
-         socket 
-         |> assign(trigger_submit: true) 
+
+        {:noreply,
+         socket
+         |> assign(trigger_submit: true)
          |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, 
-         socket 
-         |> assign(check_errors: true) 
+        {:noreply,
+         socket
+         |> assign(check_errors: true)
          |> assign_form(changeset)}
     end
   end

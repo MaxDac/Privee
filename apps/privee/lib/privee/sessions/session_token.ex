@@ -1,4 +1,8 @@
 defmodule Privee.Sessions.SessionToken do
+  @moduledoc """
+  This module provides functions to manage session tokens.
+  """
+
   use Ecto.Schema
   import Ecto.Query
   alias Privee.Sessions.SessionToken

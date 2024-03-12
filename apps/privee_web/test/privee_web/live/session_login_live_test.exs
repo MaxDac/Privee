@@ -31,11 +31,13 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/")
 
       form =
-        form(lv, "#login_form", session: %{
-          recovery_phrase: session.recovery_phrase,
-          session_name: session_name,
-          remember_me: true
-        })
+        form(lv, "#login_form",
+          session: %{
+            recovery_phrase: session.recovery_phrase,
+            session_name: session_name,
+            remember_me: true
+          }
+        )
 
       conn = submit_form(form, conn)
 
@@ -49,12 +51,17 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
       form =
         form(lv, "#login_form",
-          session: %{recovery_phrase: session_recovery_phrase(), session_name: "123456", remember_me: true}
+          session: %{
+            recovery_phrase: session_recovery_phrase(),
+            session_name: "123456",
+            remember_me: true
+          }
         )
 
       conn = submit_form(form, conn)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid recovery_phrase or session_name"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invalid recovery_phrase or session_name"
 
       assert redirected_to(conn) == "/"
     end

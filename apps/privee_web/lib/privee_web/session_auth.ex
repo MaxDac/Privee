@@ -1,4 +1,8 @@
 defmodule PriveeWeb.SessionAuth do
+  @moduledoc """
+  This module provides functions that manage the session,
+  """
+
   use PriveeWeb, :verified_routes
 
   import Plug.Conn
@@ -185,7 +189,8 @@ defmodule PriveeWeb.SessionAuth do
   defp mount_current_session(socket, session) do
     Phoenix.Component.assign_new(socket, :current_session, fn ->
       case {session["session_token"], session["session_name"]} do
-        {session_token, session_name} when not is_nil(session_token) and not is_nil(session_name) ->
+        {session_token, session_name}
+        when not is_nil(session_token) and not is_nil(session_name) ->
           session_token
           |> Sessions.get_session_by_session_token()
           |> Map.put(:session_name, session_name)

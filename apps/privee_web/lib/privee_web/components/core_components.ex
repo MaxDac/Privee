@@ -360,9 +360,11 @@ defmodule PriveeWeb.CoreComponents do
         name={@name}
         class={[
           "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
-          @errors == [] && "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
+          @errors == [] &&
+            "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
           @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
-          @errors != [] && "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
+          @errors != [] &&
+            "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
           @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
@@ -384,9 +386,11 @@ defmodule PriveeWeb.CoreComponents do
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
           "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
-          @errors == [] && "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
+          @errors == [] &&
+            "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
           @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
-          @errors != [] && "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
+          @errors != [] &&
+            "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
           @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
         ]}
         {@rest}
@@ -405,11 +409,14 @@ defmodule PriveeWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class={[
-      "block text-sm mb-2 font-semibold leading-6",
-      @errors == [] && "text-zinc-800 dark:text-white",
-      @errors != [] && "text-red-700 dark:text-red-500",
-    ]}>
+    <label
+      for={@for}
+      class={[
+        "block text-sm mb-2 font-semibold leading-6",
+        @errors == [] && "text-zinc-800 dark:text-white",
+        @errors != [] && "text-red-700 dark:text-red-500"
+      ]}
+    >
       <%= render_slot(@inner_block) %>
     </label>
     """
@@ -449,7 +456,10 @@ defmodule PriveeWeb.CoreComponents do
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           <%= render_slot(@subtitle) %>
         </p>
-        <p :if={@description != []} class="text-left mt-2 text-xs leading-6 text-zinc-600 dark:text-zinc-400">
+        <p
+          :if={@description != []}
+          class="text-left mt-2 text-xs leading-6 text-zinc-600 dark:text-zinc-400"
+        >
           <%= render_slot(@description) %>
         </p>
       </div>

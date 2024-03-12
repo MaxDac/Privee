@@ -1,15 +1,17 @@
 defmodule Privee.Sessions.Session do
+  @moduledoc """
+  The session schema.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
   @type t :: %__MODULE__{
           id: non_neg_integer(),
-
           session_name: String.t(),
           hashed_session_name: String.t(),
           recovery_phrase: String.t(),
           confirmed_at: NaiveDateTime.t(),
-
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
@@ -57,8 +59,11 @@ defmodule Privee.Sessions.Session do
     changeset
     |> validate_required([:session_name])
     |> validate_length(:session_name, min: 24, max: 72)
-    |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/, message: "must contain only alphanumeric characters and hyphens")
+    |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/,
+      message: "must contain only alphanumeric characters and hyphens"
+    )
     |> maybe_hash_session_name(opts)
+
     # #18
     # |> validate_unique_session_name(opts)
   end
@@ -67,7 +72,9 @@ defmodule Privee.Sessions.Session do
     changeset
     |> validate_required([:recovery_phrase])
     |> validate_length(:recovery_phrase, min: 24, max: 160)
-    |> validate_format(:recovery_phrase, ~r/^[a-zA-Z\s\.\,\;\:\!\?]+$/, message: "must contain only alphabetic characters and punctuation")
+    |> validate_format(:recovery_phrase, ~r/^[a-zA-Z\s\.\,\;\:\!\?]+$/,
+      message: "must contain only alphabetic characters and punctuation"
+    )
   end
 
   defp maybe_hash_session_name(changeset, opts) do
@@ -148,7 +155,10 @@ defmodule Privee.Sessions.Session do
   If there is no session name or the session doesn't have a session name, we call
   `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_session_name?(%Privee.Sessions.Session{hashed_session_name: hashed_session_name}, session_name)
+  def valid_session_name?(
+        %Privee.Sessions.Session{hashed_session_name: hashed_session_name},
+        session_name
+      )
       when is_binary(hashed_session_name) and byte_size(session_name) > 0 do
     Bcrypt.verify_pass(session_name, hashed_session_name)
   end

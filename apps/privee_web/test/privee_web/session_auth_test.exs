@@ -32,12 +32,16 @@ defmodule PriveeWeb.SessionAuthTest do
     end
 
     test "redirects to the configured path", %{conn: conn, session: session} do
-      conn = conn |> put_session(:session_return_to, "/hello") |> SessionAuth.log_in_session(session)
+      conn =
+        conn |> put_session(:session_return_to, "/hello") |> SessionAuth.log_in_session(session)
+
       assert redirected_to(conn) == "/hello"
     end
 
     test "writes a cookie if remember_me is configured", %{conn: conn, session: session} do
-      conn = conn |> fetch_cookies() |> SessionAuth.log_in_session(session, %{"remember_me" => "true"})
+      conn =
+        conn |> fetch_cookies() |> SessionAuth.log_in_session(session, %{"remember_me" => "true"})
+
       assert get_session(conn, :session_token) == conn.cookies[@remember_me_cookie]
 
       assert %{value: signed_token, max_age: max_age} = conn.resp_cookies[@remember_me_cookie]
@@ -86,7 +90,12 @@ defmodule PriveeWeb.SessionAuthTest do
   describe "fetch_current_session/2" do
     test "authenticates session from session", %{conn: conn, session: session} do
       session_token = Sessions.generate_session_token(session)
-      conn = conn |> put_session(:session_token, session_token) |> SessionAuth.fetch_current_session([])
+
+      conn =
+        conn
+        |> put_session(:session_token, session_token)
+        |> SessionAuth.fetch_current_session([])
+
       assert conn.assigns.current_session.id == session.id
     end
 
@@ -120,6 +129,7 @@ defmodule PriveeWeb.SessionAuthTest do
   describe "on_mount :mount_current_session" do
     test "assigns current_session based on a valid session_token", %{conn: conn, session: session} do
       session_token = Sessions.generate_session_token(session)
+
       socket_session =
         conn
         |> put_session(:session_token, session_token)
@@ -132,7 +142,9 @@ defmodule PriveeWeb.SessionAuthTest do
       assert updated_socket.assigns.current_session.id == session.id
     end
 
-    test "assigns nil to current_session assign if there isn't a valid session_token", %{conn: conn} do
+    test "assigns nil to current_session assign if there isn't a valid session_token", %{
+      conn: conn
+    } do
       session_token = "invalid_token"
       session = conn |> put_session(:session_token, session_token) |> get_session()
 
@@ -153,8 +165,12 @@ defmodule PriveeWeb.SessionAuthTest do
   end
 
   describe "on_mount :ensure_authenticated" do
-    test "authenticates current_session based on a valid session_token", %{conn: conn, session: session} do
+    test "authenticates current_session based on a valid session_token", %{
+      conn: conn,
+      session: session
+    } do
       session_token = Sessions.generate_session_token(session)
+
       socket_session =
         conn
         |> put_session(:session_token, session_token)
@@ -196,6 +212,7 @@ defmodule PriveeWeb.SessionAuthTest do
   describe "on_mount :redirect_if_session_is_authenticated" do
     test "redirects if there is an authenticated  session ", %{conn: conn, session: session} do
       session_token = Sessions.generate_session_token(session)
+
       session =
         conn
         |> put_session(:session_token, session_token)
@@ -226,7 +243,11 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "redirect_if_session_is_authenticated/2" do
     test "redirects if session is authenticated", %{conn: conn, session: session} do
-      conn = conn |> assign(:current_session, session) |> SessionAuth.redirect_if_session_is_authenticated([])
+      conn =
+        conn
+        |> assign(:current_session, session)
+        |> SessionAuth.redirect_if_session_is_authenticated([])
+
       assert conn.halted
       assert redirected_to(conn) == ~p"/chat"
     end
@@ -276,7 +297,9 @@ defmodule PriveeWeb.SessionAuthTest do
     end
 
     test "does not redirect if session is authenticated", %{conn: conn, session: session} do
-      conn = conn |> assign(:current_session, session) |> SessionAuth.require_authenticated_session([])
+      conn =
+        conn |> assign(:current_session, session) |> SessionAuth.require_authenticated_session([])
+
       refute conn.halted
       refute conn.status
     end
