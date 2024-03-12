@@ -35,4 +35,30 @@ defmodule PriveeWeb.ConnCase do
     Privee.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Setup helper that registers and logs in sessions.
+
+      setup :register_and_log_in_session
+
+  It stores an updated connection and a registered session in the
+  test context.
+  """
+  def register_and_log_in_session(%{conn: conn}) do
+    session = Privee.SessionsFixtures.session_fixture()
+    %{conn: log_in_session(conn, session), session: session}
+  end
+
+  @doc """
+  Logs the given `session` into the `conn`.
+
+  It returns an updated `conn`.
+  """
+  def log_in_session(conn, session) do
+    token = Privee.Sessions.generate_session_token(session)
+
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{})
+    |> Plug.Conn.put_session(:session_token, token)
+  end
 end

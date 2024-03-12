@@ -1,6 +1,8 @@
 defmodule PriveeWeb.Router do
   use PriveeWeb, :router
 
+  import PriveeWeb.SessionAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,16 +10,11 @@ defmodule PriveeWeb.Router do
     plug :put_root_layout, html: {PriveeWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-  end
-
-  scope "/", PriveeWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -40,5 +37,34 @@ defmodule PriveeWeb.Router do
       live_dashboard "/dashboard", metrics: PriveeWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
+  end
+
+  ## Authentication routes
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser, :redirect_if_session_is_authenticated]
+
+    live_session :redirect_if_session_is_authenticated,
+      on_mount: [{PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated}] do
+      live "/sessions/register", SessionRegistrationLive, :new
+      live "/", SessionLoginLive, :new
+    end
+
+    post "/sessions/log_in", SessionController, :create
+  end
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser, :require_authenticated_session]
+
+    live_session :require_authenticated_session,
+      on_mount: [{PriveeWeb.SessionAuth, :ensure_authenticated}] do
+      live "/chat", Chat.ChatLive
+    end
+  end
+
+  scope "/", PriveeWeb do
+    pipe_through [:browser]
+
+    delete "/sessions/log_out", SessionController, :delete
   end
 end

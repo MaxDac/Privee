@@ -35,8 +35,8 @@ defmodule Privee.Umbrella.MixProject do
     [
       # Required to run "mix format" on ~H/.heex files from the umbrella root
       {:phoenix_live_view, ">= 0.0.0"},
-      {:credo, "~> 1.7"},
-      {:dialyxir, "~> 1.4"}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.3", only: [:dev], runtime: false}
     ]
   end
 

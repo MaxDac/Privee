@@ -9,15 +9,17 @@ module.exports = {
   content: [
     "./js/**/*.js",
     "../lib/privee_web.ex",
-    "../lib/privee_web/**/*.*ex"
+    "../lib/privee_web/**/*.*ex",
+    "./node_modules/flowbite/**/*.js"
   ],
   theme: {
     extend: {
       colors: {
-        brand: "#FD4F00",
+        brand: "#08875d"
       }
     },
   },
+  darkMode: 'class',
   plugins: [
     require("@tailwindcss/forms"),
     // Allows prefixing tailwind classes with LiveView classes to add rules
@@ -25,6 +27,8 @@ module.exports = {
     //
     //     <div class="phx-click-loading:animate-ping">
     //
+    require("flowbite/plugin"),
+    require('flowbite-typography'),
     plugin(({addVariant}) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
     plugin(({addVariant}) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
     plugin(({addVariant}) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),

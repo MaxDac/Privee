@@ -29,6 +29,10 @@
                     "elixir": "html",
                     "phoenix-heex": "html"
                 },
+                "vscode-elixir-test": {
+                    "mixEnv": "test",
+                    "beforeTest": "clear",
+                },
                 "zig.initialSetupDone": true,
                 "zig.path": "",
                 "zig.zls.path": "",
@@ -56,7 +60,10 @@
                 "GitHub.copilot",
                 "GitHub.copilot-chat",
                 "ms-azuretools.vscode-docker",
-                "GitHub.vscode-pull-request-github"
+                "GitHub.vscode-pull-request-github",
+
+                // Postgres
+                "ms-ossdata.vscode-postgresql"
             ]
         }
     },
@@ -64,7 +71,8 @@
     "forwardPorts": [
         4000,
         4001,
-        5432
+        5432,
+        5050
     ],
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "sh .devcontainer/post-create-command.sh",
