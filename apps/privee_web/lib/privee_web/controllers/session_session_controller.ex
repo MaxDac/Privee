@@ -8,12 +8,6 @@ defmodule PriveeWeb.SessionSessionController do
     create(conn, params, "Account created successfully!")
   end
 
-  def create(conn, %{"_action" => "password_updated"} = params) do
-    conn
-    |> put_session(:session_return_to, ~p"/sessions/settings")
-    |> create(params, "Password updated successfully!")
-  end
-
   def create(conn, params) do
     create(conn, params, "Welcome back!")
   end

@@ -55,7 +55,7 @@ defmodule PriveeWeb.ConnCase do
   It returns an updated `conn`.
   """
   def log_in_session(conn, session) do
-    token = Privee.Sessions.generate_session_session_token(session)
+    token = Privee.Sessions.generate_session_token(session)
 
     conn
     |> Phoenix.ConnTest.init_test_session(%{})

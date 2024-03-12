@@ -26,7 +26,7 @@ defmodule PriveeWeb.SessionAuth do
   if you are not using LiveView.
   """
   def log_in_session(conn, session, params \\ %{}) do
-    token = Sessions.generate_session_session_token(session)
+    token = Sessions.generate_session_token(session)
     session_return_to = get_session(conn, :session_return_to)
 
     conn
@@ -72,7 +72,7 @@ defmodule PriveeWeb.SessionAuth do
   """
   def log_out_session(conn) do
     session_token = get_session(conn, :session_token)
-    session_token && Sessions.delete_session_session_token(session_token)
+    session_token && Sessions.delete_session_token(session_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       PriveeWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})

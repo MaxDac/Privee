@@ -48,7 +48,7 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "logout_session/1" do
     test "erases session and cookies", %{conn: conn, session: session} do
-      session_token = Sessions.generate_session_session_token(session)
+      session_token = Sessions.generate_session_token(session)
 
       conn =
         conn
@@ -85,7 +85,7 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "fetch_current_session/2" do
     test "authenticates session from session", %{conn: conn, session: session} do
-      session_token = Sessions.generate_session_session_token(session)
+      session_token = Sessions.generate_session_token(session)
       conn = conn |> put_session(:session_token, session_token) |> SessionAuth.fetch_current_session([])
       assert conn.assigns.current_session.id == session.id
     end
@@ -110,7 +110,7 @@ defmodule PriveeWeb.SessionAuthTest do
     end
 
     test "does not authenticate if data is missing", %{conn: conn, session: session} do
-      _ = Sessions.generate_session_session_token(session)
+      _ = Sessions.generate_session_token(session)
       conn = SessionAuth.fetch_current_session(conn, [])
       refute get_session(conn, :session_token)
       refute conn.assigns.current_session
@@ -119,7 +119,7 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "on_mount :mount_current_session" do
     test "assigns current_session based on a valid session_token", %{conn: conn, session: session} do
-      session_token = Sessions.generate_session_session_token(session)
+      session_token = Sessions.generate_session_token(session)
       session = conn |> put_session(:session_token, session_token) |> get_session()
 
       {:cont, updated_socket} =
@@ -150,7 +150,7 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "on_mount :ensure_authenticated" do
     test "authenticates current_session based on a valid session_token", %{conn: conn, session: session} do
-      session_token = Sessions.generate_session_session_token(session)
+      session_token = Sessions.generate_session_token(session)
       session = conn |> put_session(:session_token, session_token) |> get_session()
 
       {:cont, updated_socket} =
@@ -187,7 +187,7 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "on_mount :redirect_if_session_is_authenticated" do
     test "redirects if there is an authenticated  session ", %{conn: conn, session: session} do
-      session_token = Sessions.generate_session_session_token(session)
+      session_token = Sessions.generate_session_token(session)
       session = conn |> put_session(:session_token, session_token) |> get_session()
 
       assert {:halt, _updated_socket} =
