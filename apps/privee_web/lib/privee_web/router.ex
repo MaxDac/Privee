@@ -50,7 +50,7 @@ defmodule PriveeWeb.Router do
       live "/", SessionLoginLive, :new
     end
 
-    post "/sessions/log_in", SessionSessionController, :create
+    post "/sessions/log_in", SessionController, :create
   end
 
   scope "/", PriveeWeb do
@@ -58,20 +58,13 @@ defmodule PriveeWeb.Router do
 
     live_session :require_authenticated_session,
       on_mount: [{PriveeWeb.SessionAuth, :ensure_authenticated}] do
-      live "/sessions/settings", SessionSettingsLive, :edit
-      live "/sessions/settings/confirm_email/:token", SessionSettingsLive, :confirm_email
+      live "/chat", Chat.ChatLive
     end
   end
 
   scope "/", PriveeWeb do
     pipe_through [:browser]
 
-    delete "/sessions/log_out", SessionSessionController, :delete
-
-    live_session :current_session,
-      on_mount: [{PriveeWeb.SessionAuth, :mount_current_session}] do
-      live "/sessions/confirm/:token", SessionConfirmationLive, :edit
-      live "/sessions/confirm", SessionConfirmationInstructionsLive, :new
-    end
+    delete "/sessions/log_out", SessionController, :delete
   end
 end

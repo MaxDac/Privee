@@ -10,7 +10,6 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
       assert html =~ "Log in"
       assert html =~ "Register"
-      assert html =~ "Forgot your password?"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -18,7 +17,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
         conn
         |> log_in_session(session_fixture())
         |> live(~p"/")
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, "/chat")
 
       assert {:ok, _conn} = result
     end
@@ -26,13 +25,13 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
   describe "session login" do
     test "redirects if session login with valid credentials", %{conn: conn} do
-      password = "123456789abcd"
-      session = session_fixture(%{password: password})
+      session_name = "123456789abcd"
+      session = session_fixture(%{session_name: session_name})
 
       {:ok, lv, _html} = live(conn, ~p"/")
 
       form =
-        form(lv, "#login_form", session: %{email: session.email, password: password, remember_me: true})
+        form(lv, "#login_form", session: %{recovery_phrase: session.email, session_name: session_name, remember_me: true})
 
       conn = submit_form(form, conn)
 
@@ -46,12 +45,12 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
       form =
         form(lv, "#login_form",
-          session: %{email: "test@email.com", password: "123456", remember_me: true}
+          session: %{recovery_phrase: session_recovery_phrase(), session_name: "123456", remember_me: true}
         )
 
       conn = submit_form(form, conn)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid recovery_phrase or session_name"
 
       assert redirected_to(conn) == "/"
     end
@@ -70,18 +69,18 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       assert login_html =~ "Register"
     end
 
-    test "redirects to forgot password page when the Forgot Password button is clicked", %{
+    test "redirects to forgot session_name page when the Forgot session_name button is clicked", %{
       conn: conn
     } do
       {:ok, lv, _html} = live(conn, ~p"/")
 
       {:ok, conn} =
         lv
-        |> element(~s|main a:fl-contains("Forgot your password?")|)
+        |> element(~s|main a:fl-contains("Forgot your session_name?")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"/sessions/reset_password")
+        |> follow_redirect(conn, ~p"/sessions/reset_session_name")
 
-      assert conn.resp_body =~ "Forgot your password?"
+      assert conn.resp_body =~ "Forgot your session_name?"
     end
   end
 end

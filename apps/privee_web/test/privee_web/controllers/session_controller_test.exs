@@ -1,4 +1,4 @@
-defmodule PriveeWeb.SessionSessionControllerTest do
+defmodule PriveeWeb.SessionControllerTest do
   use PriveeWeb.ConnCase, async: true
 
   import Privee.SessionsFixtures
@@ -11,17 +11,16 @@ defmodule PriveeWeb.SessionSessionControllerTest do
     test "logs the session in", %{conn: conn, session: session} do
       conn =
         post(conn, ~p"/sessions/log_in", %{
-          "session" => %{"email" => session.email, "password" => valid_session_password()}
+          "session" => %{"recovery_phrase" => session.recovery_phrase, "session_name" => unique_session_name()}
         })
 
       assert get_session(conn, :session_token)
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      conn = get(conn, ~p"/chat")
       response = html_response(conn, 200)
-      assert response =~ session.email
-      assert response =~ ~p"/sessions/settings"
+      assert response =~ unique_session_name()
       assert response =~ ~p"/sessions/log_out"
     end
 
@@ -29,14 +28,14 @@ defmodule PriveeWeb.SessionSessionControllerTest do
       conn =
         post(conn, ~p"/sessions/log_in", %{
           "session" => %{
-            "email" => session.email,
-            "password" => valid_session_password(),
+            "recovery_phrase" => session.recovery_phrase,
+            "session_name" => unique_session_name(),
             "remember_me" => "true"
           }
         })
 
       assert conn.resp_cookies["_privee_web_session_remember_me"]
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
     end
 
     test "logs the session in with return to", %{conn: conn, session: session} do
@@ -45,8 +44,8 @@ defmodule PriveeWeb.SessionSessionControllerTest do
         |> init_test_session(session_return_to: "/foo/bar")
         |> post(~p"/sessions/log_in", %{
           "session" => %{
-            "email" => session.email,
-            "password" => valid_session_password()
+            "recovery_phrase" => session.recovery_phrase,
+            "session_name" => unique_session_name()
           }
         })
 
@@ -60,37 +59,38 @@ defmodule PriveeWeb.SessionSessionControllerTest do
         |> post(~p"/sessions/log_in", %{
           "_action" => "registered",
           "session" => %{
-            "email" => session.email,
-            "password" => valid_session_password()
+            "recovery_phrase" => session.recovery_phrase,
+            "session_name" => unique_session_name()
           }
         })
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
 
-    test "login following password update", %{conn: conn, session: session} do
-      conn =
-        conn
-        |> post(~p"/sessions/log_in", %{
-          "_action" => "password_updated",
-          "session" => %{
-            "email" => session.email,
-            "password" => valid_session_password()
-          }
-        })
+    # TODO - Use this test when the username will be available.
+    # test "login following session_name update", %{conn: conn, session: session} do
+    #   conn =
+    #     conn
+    #     |> post(~p"/sessions/log_in", %{
+    #       "_action" => "session_name_updated",
+    #       "session" => %{
+    #         "recovery_phrase" => session.recovery_phrase,
+    #         "session_name" => unique_session_name()
+    #       }
+    #     })
 
-      assert redirected_to(conn) == ~p"/sessions/settings"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Password updated successfully"
-    end
+    #   assert redirected_to(conn) == ~p"/sessions/settings"
+    #   assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "session_name updated successfully"
+    # end
 
     test "redirects to login page with invalid credentials", %{conn: conn} do
       conn =
         post(conn, ~p"/sessions/log_in", %{
-          "session" => %{"email" => "invalid@email.com", "password" => "invalid_password"}
+          "session" => %{"recovery_phrase" => "invalid@recovery_phrase.com", "session_name" => "invalid_session_name"}
         })
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid recovery_phrase or session_name"
       assert redirected_to(conn) == ~p"/"
     end
   end

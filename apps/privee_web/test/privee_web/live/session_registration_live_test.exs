@@ -17,7 +17,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
         conn
         |> log_in_session(session_fixture())
         |> live(~p"/sessions/register")
-        |> follow_redirect(conn, "/")
+        |> follow_redirect(conn, "/chat")
 
       assert {:ok, _conn} = result
     end
@@ -28,11 +28,14 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       result =
         lv
         |> element("#registration_form")
-        |> render_change(session: %{"email" => "with spaces", "password" => "too short"})
+        |> render_change(session: %{
+          "recovery_phrase" => "with !@# special characters but long enough",
+          "session_name" => "too_short"
+        })
 
       assert result =~ "Register"
-      assert result =~ "must have the @ sign and no spaces"
-      assert result =~ "should be at least 12 character"
+      assert result =~ "must contain only alphabetic characters and punctuation"
+      assert result =~ "should be at least 24 character"
     end
   end
 
@@ -40,30 +43,29 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
     test "creates account and logs the session in", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
 
-      email = unique_session_email()
-      form = form(lv, "#registration_form", session: valid_session_attributes(email: email))
+      session_name = unique_session_name()
+      form = form(lv, "#registration_form", session: valid_session_attributes(session_name: session_name))
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/")
+      conn = get(conn, "/chat")
       response = html_response(conn, 200)
-      assert response =~ email
-      assert response =~ "Settings"
+      assert response =~ session_name
       assert response =~ "Log out"
     end
 
-    test "renders errors for duplicated email", %{conn: conn} do
+    test "renders errors for duplicated session name", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
 
-      session = session_fixture(%{email: "test@email.com"})
+      _session = session_fixture(%{session_name: unique_session_name()})
 
       result =
         lv
         |> form("#registration_form",
-          session: %{"email" => session.email, "password" => "valid_password"}
+          session: %{"recovery_phrase" => session_recovery_phrase(), "session_name" => unique_session_name()}
         )
         |> render_submit()
 

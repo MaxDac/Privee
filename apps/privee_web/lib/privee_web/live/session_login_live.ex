@@ -15,26 +15,30 @@ defmodule PriveeWeb.SessionLoginLive do
         </:subtitle>
       </.header>
 
-      <.simple_form 
-        for={@form} 
-        id="login_form" 
-        action={~p"/sessions/log_in"} 
+      <.simple_form
+        for={@form}
+        id="login_form"
+        action={~p"/sessions/log_in"}
         phx-update="ignore">
 
-        <.input 
-          field={@form[:session_name]} 
-          type="text" 
-          label="Session Name" 
+        <.input
+          field={@form[:session_name]}
+          type="text"
+          label="Session Name"
           placeholder="Write your session name."
           required />
 
-        <.input 
-          field={@form[:recovery_phrase]} 
-          type="textarea" 
-          label="Recovery phrase" 
+        <.input
+          field={@form[:recovery_phrase]}
+          type="textarea"
+          label="Recovery phrase"
           placeholder="Your citation."
-          rows="5" 
+          rows="5"
           required />
+
+        <:actions>
+          <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
+        </:actions>
 
         <:actions>
           <.button phx-disable-with="Signing in..." class="w-full">

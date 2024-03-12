@@ -22,7 +22,7 @@ defmodule PriveeWeb.SessionAuthTest do
       conn = SessionAuth.log_in_session(conn, session)
       assert token = get_session(conn, :session_token)
       assert get_session(conn, :live_socket_id) == "sessions_sessions:#{Base.url_encode64(token)}"
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
       assert Sessions.get_session_by_session_token(token)
     end
 
@@ -119,11 +119,16 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "on_mount :mount_current_session" do
     test "assigns current_session based on a valid session_token", %{conn: conn, session: session} do
+      IO.inspect(session.session_name, label: "session name")
       session_token = Sessions.generate_session_token(session)
-      session = conn |> put_session(:session_token, session_token) |> get_session()
+      socket_session =
+        conn
+        |> put_session(:session_token, session_token)
+        |> put_session(:session_name, unique_session_name())
+        |> get_session()
 
       {:cont, updated_socket} =
-        SessionAuth.on_mount(:mount_current_session, %{}, session, %LiveView.Socket{})
+        SessionAuth.on_mount(:mount_current_session, %{}, socket_session, %LiveView.Socket{})
 
       assert updated_socket.assigns.current_session.id == session.id
     end
@@ -188,7 +193,11 @@ defmodule PriveeWeb.SessionAuthTest do
   describe "on_mount :redirect_if_session_is_authenticated" do
     test "redirects if there is an authenticated  session ", %{conn: conn, session: session} do
       session_token = Sessions.generate_session_token(session)
-      session = conn |> put_session(:session_token, session_token) |> get_session()
+      session =
+        conn
+        |> put_session(:session_token, session_token)
+        |> put_session(:session_name, unique_session_name())
+        |> get_session()
 
       assert {:halt, _updated_socket} =
                SessionAuth.on_mount(
@@ -216,7 +225,7 @@ defmodule PriveeWeb.SessionAuthTest do
     test "redirects if session is authenticated", %{conn: conn, session: session} do
       conn = conn |> assign(:current_session, session) |> SessionAuth.redirect_if_session_is_authenticated([])
       assert conn.halted
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
     end
 
     test "does not redirect if session is not authenticated", %{conn: conn} do

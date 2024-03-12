@@ -1,4 +1,4 @@
-defmodule PriveeWeb.SessionSessionController do
+defmodule PriveeWeb.SessionController do
   use PriveeWeb, :controller
 
   alias Privee.Sessions
@@ -13,17 +13,17 @@ defmodule PriveeWeb.SessionSessionController do
   end
 
   defp create(conn, %{"session" => session_params}, info) do
-    %{"email" => email, "password" => password} = session_params
+    %{"session_name" => session_name, "recovery_phrase" => recovery_phrase} = session_params
 
-    if session = Sessions.get_session_by_email_and_password(email, password) do
+    if session = Sessions.get_session_by_session_name_and_phrase(session_name, recovery_phrase) do
       conn
       |> put_flash(:info, info)
       |> SessionAuth.log_in_session(session, session_params)
     else
-      # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
+      # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
       conn
-      |> put_flash(:error, "Invalid email or password")
-      |> put_flash(:email, String.slice(email, 0, 160))
+      |> put_flash(:error, "Invalid recovery_phrase or session_name")
+      |> put_flash(:recovery_phrase, String.slice(recovery_phrase, 0, 160))
       |> redirect(to: ~p"/")
     end
   end

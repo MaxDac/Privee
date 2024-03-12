@@ -4,8 +4,8 @@ defmodule Privee.Sessions do
   """
 
   import Ecto.Query, warn: false
-  alias Privee.Repo
 
+  alias Privee.Repo
   alias Privee.Sessions.{Session, SessionToken}
 
   @doc """
@@ -23,7 +23,11 @@ defmodule Privee.Sessions do
   def get_session_by_session_name_and_phrase(session_name, recovery_phrase)
       when is_binary(session_name) and is_binary(recovery_phrase) do
     session = Repo.get_by(Session, recovery_phrase: String.trim(recovery_phrase))
-    if Session.valid_session_name?(session, session_name), do: session
+    if Session.valid_session_name?(session, session_name), do:
+      session
+      # Manually putting the session name, as it is hashed in the database and
+      # it's not possible to retrieve it otherwise.
+      |> Map.put(:session_name, session_name)
   end
 
   @doc """

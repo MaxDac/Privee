@@ -22,7 +22,7 @@ defmodule Privee.SessionsTest do
         session_name: session_name
       })
 
-      assert %Session{id: ^id} =
+      assert %Session{id: ^id, session_name: ^session_name} =
                Sessions.get_session_by_session_name_and_phrase(session_name, session.recovery_phrase)
     end
   end
@@ -55,7 +55,7 @@ defmodule Privee.SessionsTest do
 
       assert %{
                recovery_phrase: ["must contain only alphabetic characters and punctuation", "should be at least 24 character(s)"],
-               session_name: ["must contain only alphanumeric characters and hyphens", "should be at least 12 character(s)"]
+               session_name: ["must contain only alphanumeric characters and hyphens", "should be at least 24 character(s)"]
              } = errors_on(changeset)
     end
 
