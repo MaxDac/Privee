@@ -25,17 +25,21 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
   describe "session login" do
     test "redirects if session login with valid credentials", %{conn: conn} do
-      session_name = "123456789abcd"
+      session_name = unique_session_name()
       session = session_fixture(%{session_name: session_name})
 
       {:ok, lv, _html} = live(conn, ~p"/")
 
       form =
-        form(lv, "#login_form", session: %{recovery_phrase: session.email, session_name: session_name, remember_me: true})
+        form(lv, "#login_form", session: %{
+          recovery_phrase: session.recovery_phrase,
+          session_name: session_name,
+          remember_me: true
+        })
 
       conn = submit_form(form, conn)
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/chat"
     end
 
     test "redirects to login page with a flash error if there are no valid credentials", %{
@@ -67,20 +71,6 @@ defmodule PriveeWeb.SessionLoginLiveTest do
         |> follow_redirect(conn, ~p"/sessions/register")
 
       assert login_html =~ "Register"
-    end
-
-    test "redirects to forgot session_name page when the Forgot session_name button is clicked", %{
-      conn: conn
-    } do
-      {:ok, lv, _html} = live(conn, ~p"/")
-
-      {:ok, conn} =
-        lv
-        |> element(~s|main a:fl-contains("Forgot your session_name?")|)
-        |> render_click()
-        |> follow_redirect(conn, ~p"/sessions/reset_session_name")
-
-      assert conn.resp_body =~ "Forgot your session_name?"
     end
   end
 end

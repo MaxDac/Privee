@@ -119,7 +119,6 @@ defmodule PriveeWeb.SessionAuthTest do
 
   describe "on_mount :mount_current_session" do
     test "assigns current_session based on a valid session_token", %{conn: conn, session: session} do
-      IO.inspect(session.session_name, label: "session name")
       session_token = Sessions.generate_session_token(session)
       socket_session =
         conn
@@ -156,10 +155,14 @@ defmodule PriveeWeb.SessionAuthTest do
   describe "on_mount :ensure_authenticated" do
     test "authenticates current_session based on a valid session_token", %{conn: conn, session: session} do
       session_token = Sessions.generate_session_token(session)
-      session = conn |> put_session(:session_token, session_token) |> get_session()
+      socket_session =
+        conn
+        |> put_session(:session_token, session_token)
+        |> put_session(:session_name, unique_session_name())
+        |> get_session()
 
       {:cont, updated_socket} =
-        SessionAuth.on_mount(:ensure_authenticated, %{}, session, %LiveView.Socket{})
+        SessionAuth.on_mount(:ensure_authenticated, %{}, socket_session, %LiveView.Socket{})
 
       assert updated_socket.assigns.current_session.id == session.id
     end
