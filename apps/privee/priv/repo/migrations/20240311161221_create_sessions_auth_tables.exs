@@ -5,13 +5,13 @@ defmodule Privee.Repo.Migrations.CreateSessionsAuthTables do
     execute "CREATE EXTENSION IF NOT EXISTS citext", ""
 
     create table(:sessions) do
-      add :email, :citext, null: false
-      add :hashed_password, :string, null: false
+      add :recovery_phrase, :citext, null: false
+      add :hashed_session_name, :string, null: false
       add :confirmed_at, :naive_datetime
       timestamps()
     end
 
-    create unique_index(:sessions, [:email])
+    create unique_index(:sessions, [:hashed_session_name])
 
     create table(:sessions_tokens) do
       add :session_id, references(:sessions, on_delete: :delete_all), null: false

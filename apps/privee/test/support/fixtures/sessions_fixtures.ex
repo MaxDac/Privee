@@ -4,13 +4,13 @@ defmodule Privee.SessionsFixtures do
   entities via the `Privee.Sessions` context.
   """
 
-  def unique_session_email, do: "session#{System.unique_integer()}@example.com"
-  def valid_session_password, do: "hello world!"
+  def unique_session_name, do: Ecto.UUID.generate()
+  def session_recovery_phrase, do: "The quick brown fox jumps over the lazy dog"
 
   def valid_session_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
-      email: unique_session_email(),
-      password: valid_session_password()
+      session_name: unique_session_name(),
+      recovery_phrase: session_recovery_phrase()
     })
   end
 
