@@ -59,7 +59,8 @@ defmodule Privee.Sessions.Session do
     |> validate_length(:session_name, min: 24, max: 72)
     |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/, message: "must contain only alphanumeric characters and hyphens")
     |> maybe_hash_session_name(opts)
-    |> validate_unique_session_name(opts)
+    # #18
+    # |> validate_unique_session_name(opts)
   end
 
   defp validate_recovery_phrase(changeset) do
@@ -86,16 +87,18 @@ defmodule Privee.Sessions.Session do
     end
   end
 
-  defp validate_unique_session_name(changeset, opts) do
-    hash_session_name? = Keyword.get(opts, :hash_session_name, true)
-    if hash_session_name? do
-      changeset
-      |> unsafe_validate_unique(:hashed_session_name, Privee.Repo)
-      |> unique_constraint(:hashed_session_name)
-    else
-      changeset
-    end
-  end
+  # #18 Evaluate the introduction of another field for uniqueness.
+  # defp validate_unique_session_name(changeset, opts) do
+  #   hash_session_name? = Keyword.get(opts, :hash_session_name, true)
+  #   if hash_session_name? do
+  #     changeset
+  #     |> maybe_hash_session_name([hash_session_name: true])
+  #     |> unsafe_validate_unique(:hashed_session_name, Privee.Repo)
+  #     |> unique_constraint(:hashed_session_name)
+  #   else
+  #     changeset
+  #   end
+  # end
 
   @doc """
   A session changeset for changing the recovery_phrase.
