@@ -231,7 +231,7 @@ defmodule PriveeWeb.SessionAuthTest do
       conn = conn |> fetch_flash() |> SessionAuth.require_authenticated_session([])
       assert conn.halted
 
-      assert redirected_to(conn) == ~p"/sessions/log_in"
+      assert redirected_to(conn) == ~p"/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You must log in to access this page."

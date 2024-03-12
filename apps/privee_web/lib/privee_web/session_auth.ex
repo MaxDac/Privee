@@ -156,7 +156,7 @@ defmodule PriveeWeb.SessionAuth do
       socket =
         socket
         |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
-        |> Phoenix.LiveView.redirect(to: ~p"/sessions/log_in")
+        |> Phoenix.LiveView.redirect(to: ~p"/")
 
       {:halt, socket}
     end
@@ -206,7 +206,7 @@ defmodule PriveeWeb.SessionAuth do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: ~p"/sessions/log_in")
+      |> redirect(to: ~p"/")
       |> halt()
     end
   end

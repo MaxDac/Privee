@@ -79,7 +79,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
         lv
         |> element(~s|main a:fl-contains("Sign in")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"/sessions/log_in")
+        |> follow_redirect(conn, ~p"/")
 
       assert login_html =~ "Log in"
     end

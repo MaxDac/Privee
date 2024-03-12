@@ -17,12 +17,6 @@ defmodule PriveeWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", PriveeWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   # Other scopes may use custom stacks.
   # scope "/api", PriveeWeb do
   #   pipe_through :api
@@ -53,9 +47,7 @@ defmodule PriveeWeb.Router do
     live_session :redirect_if_session_is_authenticated,
       on_mount: [{PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated}] do
       live "/sessions/register", SessionRegistrationLive, :new
-      live "/sessions/log_in", SessionLoginLive, :new
-      live "/sessions/reset_password", SessionForgotPasswordLive, :new
-      live "/sessions/reset_password/:token", SessionResetPasswordLive, :edit
+      live "/", SessionLoginLive, :new
     end
 
     post "/sessions/log_in", SessionSessionController, :create

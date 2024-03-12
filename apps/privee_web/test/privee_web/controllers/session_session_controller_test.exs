@@ -91,7 +91,7 @@ defmodule PriveeWeb.SessionSessionControllerTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
-      assert redirected_to(conn) == ~p"/sessions/log_in"
+      assert redirected_to(conn) == ~p"/"
     end
   end
 

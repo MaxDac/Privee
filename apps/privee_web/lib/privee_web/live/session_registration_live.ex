@@ -11,7 +11,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
         Register for an account
         <:subtitle>
           Already registered?
-          <.link navigate={~p"/sessions/log_in"} class="font-semibold text-brand hover:underline">
+          <.link navigate={~p"/"} class="font-semibold text-brand hover:underline">
             Sign in
           </.link>
           to your account now.

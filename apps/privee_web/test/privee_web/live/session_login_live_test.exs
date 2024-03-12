@@ -6,7 +6,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
   describe "Log in page" do
     test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/sessions/log_in")
+      {:ok, _lv, html} = live(conn, ~p"/")
 
       assert html =~ "Log in"
       assert html =~ "Register"
@@ -17,7 +17,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       result =
         conn
         |> log_in_session(session_fixture())
-        |> live(~p"/sessions/log_in")
+        |> live(~p"/")
         |> follow_redirect(conn, "/")
 
       assert {:ok, _conn} = result
@@ -29,7 +29,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       password = "123456789abcd"
       session = session_fixture(%{password: password})
 
-      {:ok, lv, _html} = live(conn, ~p"/sessions/log_in")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       form =
         form(lv, "#login_form", session: %{email: session.email, password: password, remember_me: true})
@@ -42,7 +42,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
     test "redirects to login page with a flash error if there are no valid credentials", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/log_in")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       form =
         form(lv, "#login_form",
@@ -53,13 +53,13 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
 
-      assert redirected_to(conn) == "/sessions/log_in"
+      assert redirected_to(conn) == "/"
     end
   end
 
   describe "login navigation" do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/log_in")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       {:ok, _login_live, login_html} =
         lv
@@ -73,7 +73,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
     test "redirects to forgot password page when the Forgot Password button is clicked", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/log_in")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       {:ok, conn} =
         lv
