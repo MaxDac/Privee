@@ -63,9 +63,11 @@ defmodule PriveeWeb.PriveeSelectorLive do
     changeset = get_privee_form_changeset(params, socket)
 
     if changeset.valid? do
+      selected_session = Ecto.Changeset.get_field(changeset, :session_name)
+
       {:noreply,
        socket
-       |> assign_form(params)}
+       |> push_navigate(to: ~p"/chat/#{selected_session}")}
     else
       {:noreply,
        socket

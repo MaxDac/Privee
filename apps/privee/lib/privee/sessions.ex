@@ -8,7 +8,7 @@ defmodule Privee.Sessions do
   alias Plug.Session
   alias Privee.Sessions.PriveeForm
   alias Privee.Repo
-  alias Privee.Sessions.{Session, SessionToken, PriveeForm, Message}
+  alias Privee.Sessions.{Session, SessionToken, PriveeForm}
 
   @doc """
   Gets a session by the recovery phrase and the password.
