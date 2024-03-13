@@ -6,7 +6,8 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :privee_web, PriveeWeb.Endpoint,
-  url: [host: "example.com", port: 80],
+  # #8 Review the host when installing on Azure
+  url: [host: "privee.fly.dev", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Configures Swoosh API Client
