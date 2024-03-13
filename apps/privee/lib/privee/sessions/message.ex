@@ -11,6 +11,12 @@ defmodule Privee.Sessions.Message do
   alias Privee.Sessions.Message
   alias Privee.Sessions.Session
 
+  @type t :: %__MODULE__{
+    text: String.t(),
+    from: String.t(),
+    to: String.t()
+  }
+
   embedded_schema do
     field :text, :string
 
@@ -23,7 +29,7 @@ defmodule Privee.Sessions.Message do
     message
     |> cast(attrs, [:text, :from, :to])
     |> validate_required([:text, :from, :to])
-    |> foreign_key_constraint(:from, name: :fk_message_from)
-    |> foreign_key_constraint(:to, name: :fk_message_to)
+    |> foreign_key_constraint(:from)
+    |> foreign_key_constraint(:to)
   end
 end

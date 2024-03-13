@@ -4,7 +4,7 @@ defmodule Privee.SessionsTest do
   alias Privee.Sessions
 
   import Privee.SessionsFixtures
-  alias Privee.Sessions.{Session, SessionToken}
+  alias Privee.Sessions.{Session, SessionToken, PriveeForm}
 
   describe "get_session_by_session_name_and_phrase/2" do
     test "does not return the session if the recovery phrase does not exist" do
@@ -123,8 +123,6 @@ defmodule Privee.SessionsTest do
       assert session_token = Repo.get_by(SessionToken, token: token)
       assert session_token.context == "session"
 
-      IO.puts("Passing")
-
       # Creating the same token for another session should fail
       assert_raise Ecto.ConstraintError, fn ->
         Repo.insert!(%SessionToken{
@@ -173,6 +171,36 @@ defmodule Privee.SessionsTest do
 
       refute inspect(%Session{recovery_phrase: recovery_phrase}) =~
                "session_name: \"#{recovery_phrase}\""
+    end
+  end
+
+  describe "change_privee_form/2" do
+    setup do
+      session = session_fixture()
+      %{session: session}
+    end
+
+    test " identifies an invalid session name" do
+      invalid_session_name = "some invalid session name"
+      changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
+
+      refute changeset.valid?
+      assert Enum.any?(errors_on(changeset).session_name, & &1 == "must contain only alphanumeric characters and hyphens")
+    end
+
+    test " identifies an non existent session name" do
+      invalid_session_name = "non-existent-session-name"
+      changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
+
+      refute changeset.valid?
+      assert Enum.any?(errors_on(changeset).session_name, & &1 == "The session name does not exist")
+    end
+
+    test " identifies an existent session name", %{session: %{session_name: session_name}} do
+      invalid_session_name = "non-existent-session-name"
+      changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => session_name})
+
+      assert changeset.valid?
     end
   end
 end
