@@ -178,8 +178,8 @@ defmodule PriveeWeb.SessionAuth do
 
   defp mount_current_session(socket, session) do
     Phoenix.Component.assign_new(socket, :current_session, fn ->
-      if session_token = session["session_token"], do:
-        Sessions.get_session_by_session_token(session_token)
+      if session_token = session["session_token"],
+        do: Sessions.get_session_by_session_token(session_token)
     end)
   end
 

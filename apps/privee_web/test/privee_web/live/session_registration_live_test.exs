@@ -72,7 +72,10 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       result =
         lv
         |> form("#registration_form",
-          session: %{"recovery_phrase" => session_recovery_phrase(), "session_name" => unique_session_name()}
+          session: %{
+            "recovery_phrase" => session_recovery_phrase(),
+            "session_name" => unique_session_name()
+          }
         )
         |> render_submit()
 

@@ -129,7 +129,7 @@ defmodule Privee.SessionsTest do
       assert_raise Ecto.ConstraintError, fn ->
         Repo.insert!(%SessionToken{
           token: session_token.token,
-          session_id: session_fixture(%{session_name: Ecto.UUID.generate}).id,
+          session_id: session_fixture(%{session_name: Ecto.UUID.generate()}).id,
           context: "session"
         })
       end
@@ -170,7 +170,9 @@ defmodule Privee.SessionsTest do
   describe "inspect/2 for the Session module" do
     test "does not include recovery_phrase" do
       recovery_phrase = "Some recovery phrase longer than twentyfour characters"
-      refute inspect(%Session{recovery_phrase: recovery_phrase}) =~ "session_name: \"#{recovery_phrase}\""
+
+      refute inspect(%Session{recovery_phrase: recovery_phrase}) =~
+               "session_name: \"#{recovery_phrase}\""
     end
   end
 end
