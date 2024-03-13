@@ -12,8 +12,8 @@ defmodule PriveeWeb.SessionControllerTest do
       conn =
         post(conn, ~p"/sessions/log_in", %{
           "session" => %{
-            "recovery_phrase" => session.recovery_phrase,
-            "session_name" => unique_session_name()
+            "recovery_phrase" => session_recovery_phrase(),
+            "session_name" => session.session_name
           }
         })
 
@@ -31,8 +31,8 @@ defmodule PriveeWeb.SessionControllerTest do
       conn =
         post(conn, ~p"/sessions/log_in", %{
           "session" => %{
-            "recovery_phrase" => session.recovery_phrase,
-            "session_name" => unique_session_name(),
+            "recovery_phrase" => session_recovery_phrase(),
+            "session_name" => session.session_name,
             "remember_me" => "true"
           }
         })
@@ -47,8 +47,8 @@ defmodule PriveeWeb.SessionControllerTest do
         |> init_test_session(session_return_to: "/foo/bar")
         |> post(~p"/sessions/log_in", %{
           "session" => %{
-            "recovery_phrase" => session.recovery_phrase,
-            "session_name" => unique_session_name()
+            "recovery_phrase" => session_recovery_phrase(),
+            "session_name" => session.session_name
           }
         })
 
@@ -62,8 +62,8 @@ defmodule PriveeWeb.SessionControllerTest do
         |> post(~p"/sessions/log_in", %{
           "_action" => "registered",
           "session" => %{
-            "recovery_phrase" => session.recovery_phrase,
-            "session_name" => unique_session_name()
+            "recovery_phrase" => session_recovery_phrase(),
+            "session_name" => session.session_name
           }
         })
 
