@@ -27,7 +27,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
     test "redirects if session login with valid credentials", %{conn: conn} do
       recovery_phrase = session_recovery_phrase()
       session_name = unique_session_name()
-      session = session_fixture(%{session_name: session_name, recovery_phrase: recovery_phrase})
+      _session = session_fixture(%{session_name: session_name, recovery_phrase: recovery_phrase})
 
       {:ok, lv, _html} = live(conn, ~p"/")
 

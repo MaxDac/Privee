@@ -36,7 +36,6 @@ defmodule PriveeWeb.SessionAuth do
     conn
     |> renew_session()
     |> put_token_in_session(token)
-    |> put_session_name_in_session(session.session_name)
     |> maybe_write_remember_me_cookie(token, params)
     |> redirect(to: session_return_to || signed_in_path(conn))
   end
@@ -96,7 +95,7 @@ defmodule PriveeWeb.SessionAuth do
   def fetch_current_session(conn, _opts) do
     {session_token, conn} = ensure_session_token(conn)
     session = session_token && Sessions.get_session_by_session_token(session_token)
-    assign(conn, :current_session, rebuild_session(conn, session))
+    assign(conn, :current_session, session)
   end
 
   defp ensure_session_token(conn) do
@@ -110,15 +109,6 @@ defmodule PriveeWeb.SessionAuth do
       else
         {nil, conn}
       end
-    end
-  end
-
-  defp rebuild_session(conn, session) do
-    if session_name = get_session(conn, :session_name) do
-      session
-      |> Map.put(:session_name, session_name)
-    else
-      session
     end
   end
 
@@ -188,16 +178,8 @@ defmodule PriveeWeb.SessionAuth do
 
   defp mount_current_session(socket, session) do
     Phoenix.Component.assign_new(socket, :current_session, fn ->
-      case {session["session_token"], session["session_name"]} do
-        {session_token, session_name}
-        when not is_nil(session_token) and not is_nil(session_name) ->
-          session_token
-          |> Sessions.get_session_by_session_token()
-          |> Map.put(:session_name, session_name)
-
-        _ ->
-          nil
-      end
+      if session_token = session["session_token"], do:
+        Sessions.get_session_by_session_token(session_token)
     end)
   end
 
@@ -236,13 +218,6 @@ defmodule PriveeWeb.SessionAuth do
     conn
     |> put_session(:session_token, token)
     |> put_session(:live_socket_id, "sessions_sessions:#{Base.url_encode64(token)}")
-  end
-
-  # Putting the session name in the session is required as it will be hashed on the database, and it won't be
-  # possiblle to fetch it back again.
-  defp put_session_name_in_session(conn, session_name) do
-    conn
-    |> put_session(:session_name, session_name)
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do
