@@ -7,4 +7,5 @@ mix deps.get && \
 mix deps.compile && \
 zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-14.2.2/include && \
 mix ecto.create && \
-mix ecto.migrate
+mix ecto.migrate && \
+npm i --prefix apps/privee_web/assets
