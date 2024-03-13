@@ -22,14 +22,9 @@ defmodule Privee.Sessions do
   """
   def get_session_by_session_name_and_phrase(session_name, recovery_phrase)
       when is_binary(session_name) and is_binary(recovery_phrase) do
-    session = Repo.get_by(Session, recovery_phrase: String.trim(recovery_phrase))
+    session = Repo.get_by(Session, session_name: session_name)
 
-    if Session.valid_session_name?(session, session_name),
-      do:
-        session
-        # Manually putting the session name, as it is hashed in the database and
-        # it's not possible to retrieve it otherwise.
-        |> Map.put(:session_name, session_name)
+    if Session.valid_recovery_phrase?(session, recovery_phrase), do: session
   end
 
   @doc """
@@ -79,41 +74,6 @@ defmodule Privee.Sessions do
   """
   def change_session_registration(%Session{} = session, attrs \\ %{}) do
     Session.registration_changeset(session, attrs, hash_session_name: false)
-  end
-
-  ## Settings
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for changing the session recovery phrase.
-
-  ## Examples
-
-      iex> change_session_recovery-phrase(session)
-      %Ecto.Changeset{data: %Session{}}
-
-  """
-  def change_session_recovery_phrase(session, attrs \\ %{}) do
-    Session.recovery_phrase_changeset(session, attrs)
-  end
-
-  @doc """
-  Emulates that the recovery phrase will change without actually changing
-  it in the database.
-
-  ## Examples
-
-      iex> apply_session_recover_phrase(session, "valid session_name", %{recovery_phrase: ...})
-      {:ok, %Session{}}
-
-      iex> apply_session_email(session, "invalid session_name", %{email: ...})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def apply_session_recovery_phrase(session, session_name, attrs) do
-    session
-    |> Session.recovery_phrase_changeset(attrs)
-    |> Session.validate_current_session_name(session_name)
-    |> Ecto.Changeset.apply_action(:update)
   end
 
   ## Session

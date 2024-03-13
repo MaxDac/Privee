@@ -16,22 +16,16 @@ defmodule Privee.SessionsTest do
 
     test "does not return the session if the session_name is not valid" do
       session = session_fixture()
-      refute Sessions.get_session_by_session_name_and_phrase(session.recovery_phrase, "invalid")
+      refute Sessions.get_session_by_session_name_and_phrase(session.session_name, "invalid")
     end
 
     test "returns the session if the recovery phrase and session_name are valid" do
-      session_name = Ecto.UUID.generate()
+      %{id: id} = session = session_fixture()
 
-      %{id: id} =
-        session =
-        session_fixture(%{
-          session_name: session_name
-        })
-
-      assert %Session{id: ^id, session_name: ^session_name} =
+      assert %Session{id: ^id} =
                Sessions.get_session_by_session_name_and_phrase(
-                 session_name,
-                 session.recovery_phrase
+                 session.session_name,
+                 session_recovery_phrase()
                )
     end
   end
@@ -86,15 +80,14 @@ defmodule Privee.SessionsTest do
     end
 
     test "registers sessions with a hashed session_name" do
-      recovery_phrase = session_recovery_phrase()
+      session_name = unique_session_name()
 
       {:ok, session} =
-        Sessions.register_session(valid_session_attributes(recovery_phrase: recovery_phrase))
+        Sessions.register_session(valid_session_attributes(session_name: session_name))
 
-      assert session.recovery_phrase == recovery_phrase
-      assert is_binary(session.hashed_session_name)
-      assert is_nil(session.confirmed_at)
-      assert is_nil(session.session_name)
+      assert session.session_name == session_name
+      assert is_binary(session.session_name)
+      assert is_nil(session.recovery_phrase)
     end
   end
 
@@ -115,74 +108,8 @@ defmodule Privee.SessionsTest do
         )
 
       assert changeset.valid?
-      assert get_change(changeset, :recovery_phrase) == recovery_phrase
       assert get_change(changeset, :session_name) == session_name
-      assert is_nil(get_change(changeset, :hashed_session_name))
-    end
-  end
-
-  describe "change_session_recovery_phrase/2" do
-    test "returns a session changeset" do
-      assert %Ecto.Changeset{} = changeset = Sessions.change_session_recovery_phrase(%Session{})
-      assert changeset.required == [:recovery_phrase]
-    end
-  end
-
-  describe "apply_session_recovery_phrase/3" do
-    setup do
-      %{session: session_fixture()}
-    end
-
-    test "requires recovery_phrase to change", %{session: session} do
-      {:error, changeset} =
-        Sessions.apply_session_recovery_phrase(session, unique_session_name(), %{})
-
-      assert %{recovery_phrase: ["did not change"]} = errors_on(changeset)
-    end
-
-    test "validates recovery_phrase", %{session: session} do
-      {:error, changeset} =
-        Sessions.apply_session_recovery_phrase(session, unique_session_name(), %{
-          recovery_phrase: "not valid"
-        })
-
-      assert %{recovery_phrase: ["should be at least 24 character(s)"]} = errors_on(changeset)
-    end
-
-    test "validates maximum value for recovery_phrase for security", %{session: session} do
-      too_long = String.duplicate("db", 100)
-
-      {:error, changeset} =
-        Sessions.apply_session_recovery_phrase(session, unique_session_name(), %{
-          recovery_phrase: too_long
-        })
-
-      assert "should be at most 160 character(s)" in errors_on(changeset).recovery_phrase
-    end
-
-    test "validates current session_name", %{session: session} do
-      {:error, changeset} =
-        Sessions.apply_session_recovery_phrase(session, "!invalid", %{
-          recovery_phrase: session_recovery_phrase()
-        })
-
-      assert %{current_session_name: ["is not valid"]} = errors_on(changeset)
-    end
-
-    test "applies the recovery_phrase without persisting it" do
-      recovery_phrase = "The lazy dog jumps over the quick brown fox"
-      session_name = unique_session_name()
-
-      session =
-        session_fixture(%{recovery_phrase: session_recovery_phrase(), session_name: session_name})
-
-      {:ok, session} =
-        Sessions.apply_session_recovery_phrase(session, session_name, %{
-          recovery_phrase: recovery_phrase
-        })
-
-      assert session.recovery_phrase == recovery_phrase
-      assert Sessions.get_session!(session.id).recovery_phrase != recovery_phrase
+      assert get_change(changeset, :hashed_recovery_phrase)
     end
   end
 
@@ -196,11 +123,13 @@ defmodule Privee.SessionsTest do
       assert session_token = Repo.get_by(SessionToken, token: token)
       assert session_token.context == "session"
 
+      IO.puts("Passing")
+
       # Creating the same token for another session should fail
       assert_raise Ecto.ConstraintError, fn ->
         Repo.insert!(%SessionToken{
           token: session_token.token,
-          session_id: session_fixture().id,
+          session_id: session_fixture(%{session_name: Ecto.UUID.generate}).id,
           context: "session"
         })
       end
@@ -239,8 +168,9 @@ defmodule Privee.SessionsTest do
   end
 
   describe "inspect/2 for the Session module" do
-    test "does not include session_name" do
-      refute inspect(%Session{session_name: "123456"}) =~ "session_name: \"123456\""
+    test "does not include recovery_phrase" do
+      recovery_phrase = "Some recovery phrase longer than twentyfour characters"
+      refute inspect(%Session{recovery_phrase: recovery_phrase}) =~ "session_name: \"#{recovery_phrase}\""
     end
   end
 end

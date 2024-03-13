@@ -9,24 +9,22 @@ defmodule Privee.Sessions.Session do
   @type t :: %__MODULE__{
           id: non_neg_integer(),
           session_name: String.t(),
-          hashed_session_name: String.t(),
           recovery_phrase: String.t(),
-          confirmed_at: NaiveDateTime.t(),
+          hashed_recovery_phrase: String.t(),
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
 
   schema "sessions" do
-    field :session_name, :string, virtual: true, redact: true
-    field :hashed_session_name, :string, redact: true
-    field :recovery_phrase, :string
-    field :confirmed_at, :naive_datetime
+    field :session_name, :string
+    field :recovery_phrase, :string, virtual: true, redact: true
+    field :hashed_recovery_phrase, :string, redact: true
 
     timestamps()
   end
 
   @doc """
-  A session_name changeset for registration.
+  A changeset for registration.
 
   It is important to validate the length of the session name.
   Otherwise databases may truncate the session name without warnings, which
@@ -35,16 +33,16 @@ defmodule Privee.Sessions.Session do
 
   ## Options
 
-    * `:hash_session_name` - Hashes the session name so it can be stored securely
-      in the database and ensures the session name field is cleared to prevent
-      leaks in the logs. If session name hashing is not needed and clearing the
-      session name field is not desired (like when using this changeset for
+    * `:hash_recovery_phrase` - Hashes the recovery phrase so it can be stored securely
+      in the database and ensures the recovery_phrase field is cleared to prevent
+      leaks in the logs. If recovery phrase hashing is not needed and clearing the
+      recovery phrase field is not desired (like when using this changeset for
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
 
-    * `:validate_session_name` - Validates the uniqueness of the session name, in case
-      you don't want to validate the uniqueness of the session name (like when
-      using this changeset for validations on a LiveView form before
+    * `:validate_recovery_phrase` - Validates the uniqueness of the recovery phrase,
+      in case you don't want to validate the uniqueness of the recovery phrase (like
+      when using this changeset for validations on a LiveView form before
       submitting the form), this option can be set to `false`.
       Defaults to `true`.
   """
@@ -52,7 +50,7 @@ defmodule Privee.Sessions.Session do
     session
     |> cast(attrs, [:session_name, :recovery_phrase])
     |> validate_session_name(opts)
-    |> validate_recovery_phrase()
+    |> validate_recovery_phrase(opts)
   end
 
   defp validate_session_name(changeset, opts) do
@@ -62,108 +60,57 @@ defmodule Privee.Sessions.Session do
     |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/,
       message: "must contain only alphanumeric characters and hyphens"
     )
-    |> maybe_hash_session_name(opts)
-
-    # #18
-    # |> validate_unique_session_name(opts)
+    |> validate_unique_session_name(opts)
   end
 
-  defp validate_recovery_phrase(changeset) do
+  defp validate_recovery_phrase(changeset, opts) do
     changeset
     |> validate_required([:recovery_phrase])
     |> validate_length(:recovery_phrase, min: 24, max: 160)
     |> validate_format(:recovery_phrase, ~r/^[a-zA-Z\s\.\,\;\:\!\?]+$/,
       message: "must contain only alphabetic characters and punctuation"
     )
+    |> maybe_hash_recovery_phrase(opts)
   end
 
-  defp maybe_hash_session_name(changeset, opts) do
-    hash_session_name? = Keyword.get(opts, :hash_session_name, true)
-    session_name = get_change(changeset, :session_name)
+  defp maybe_hash_recovery_phrase(changeset, opts) do
+    hash_recovery_phrase? = Keyword.get(opts, :hash_recovery_phrase, true)
+    recovery_phrase = get_change(changeset, :recovery_phrase)
 
-    if hash_session_name? && session_name && changeset.valid? do
+    if hash_recovery_phrase? && recovery_phrase && changeset.valid? do
       changeset
       # If using Bcrypt, then further validate it is at most 72 bytes long
-      |> validate_length(:session_name, max: 72, count: :bytes)
+      |> validate_length(:recovery_phrase, max: 72, count: :bytes)
       # Hashing could be done with `Ecto.Changeset.prepare_changes/2`, but that
       # would keep the database transaction open longer and hurt performance.
-      |> put_change(:hashed_session_name, Bcrypt.hash_pwd_salt(session_name))
-      |> delete_change(:session_name)
+      |> put_change(:hashed_recovery_phrase, Bcrypt.hash_pwd_salt(recovery_phrase))
+      |> delete_change(:recovery_phrase)
     else
       changeset
     end
   end
 
-  # #18 Evaluate the introduction of another field for uniqueness.
-  # defp validate_unique_session_name(changeset, opts) do
-  #   hash_session_name? = Keyword.get(opts, :hash_session_name, true)
-  #   if hash_session_name? do
-  #     changeset
-  #     |> maybe_hash_session_name([hash_session_name: true])
-  #     |> unsafe_validate_unique(:hashed_session_name, Privee.Repo)
-  #     |> unique_constraint(:hashed_session_name)
-  #   else
-  #     changeset
-  #   end
-  # end
-
-  @doc """
-  A session changeset for changing the recovery_phrase.
-
-  It requires the recovery_phrase to change otherwise an error is added.
-  """
-  def recovery_phrase_changeset(session, attrs) do
-    session
-    |> cast(attrs, [:recovery_phrase])
-    |> validate_recovery_phrase()
-    |> case do
-      %{changes: %{recovery_phrase: _}} = changeset -> changeset
-      %{} = changeset -> add_error(changeset, :recovery_phrase, "did not change")
-    end
+  defp validate_unique_session_name(changeset, _opts) do
+    changeset
+    |> unsafe_validate_unique(:session_name, Privee.Repo)
+    |> unique_constraint(:session_name)
   end
 
   @doc """
-  A session changeset for changing the session name.
+  Verifies the recovery phrase.
 
-  ## Options
-
-    * `:hash_session name` - Hashes the session name so it can be stored securely
-      in the database and ensures the session name field is cleared to prevent
-      leaks in the logs. If session name hashing is not needed and clearing the
-      session name field is not desired (like when using this changeset for
-      validations on a LiveView form), this option can be set to `false`.
-      Defaults to `true`.
-  """
-  def session_name_changeset(session, attrs, opts \\ []) do
-    session
-    |> cast(attrs, [:session_name])
-    |> validate_confirmation(:session_name, message: "does not match session name")
-    |> validate_session_name(opts)
-  end
-
-  @doc """
-  Confirms the account by setting `confirmed_at`.
-  """
-  def confirm_changeset(session) do
-    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    change(session, confirmed_at: now)
-  end
-
-  @doc """
-  Verifies the session name.
-
-  If there is no session name or the session doesn't have a session name, we call
+  If there is no recovery phrase or the session doesn't have a recovery phrase, we call
   `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_session_name?(
-        %Privee.Sessions.Session{hashed_session_name: hashed_session_name},
-        session_name
+  def valid_recovery_phrase?(
+        %Privee.Sessions.Session{hashed_recovery_phrase: hashed_recovery_phrase},
+        recovery_phrase
       )
-      when is_binary(hashed_session_name) and byte_size(session_name) > 0 do
-    Bcrypt.verify_pass(session_name, hashed_session_name)
+      when is_binary(hashed_recovery_phrase) and byte_size(recovery_phrase) > 0 do
+    Bcrypt.verify_pass(recovery_phrase, hashed_recovery_phrase)
   end
 
-  def valid_session_name?(_, _) do
+  def valid_recovery_phrase?(_, _) do
     Bcrypt.no_user_verify()
     false
   end
@@ -171,11 +118,11 @@ defmodule Privee.Sessions.Session do
   @doc """
   Validates the current session otherwise adds an error to the changeset.
   """
-  def validate_current_session_name(changeset, session_name) do
-    if valid_session_name?(changeset.data, session_name) do
+  def validate_current_recovery_phrase(changeset, recovery_phrase) do
+    if valid_recovery_phrase?(changeset.data, recovery_phrase) do
       changeset
     else
-      add_error(changeset, :current_session_name, "is not valid")
+      add_error(changeset, :current_recovery_phrase, "is not valid")
     end
   end
 end
