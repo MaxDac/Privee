@@ -23,16 +23,21 @@ FROM ${BUILDER_IMAGE} as builder
 ARG ZIG_VERSION="0.11.0"
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget \
+RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 WORKDIR /tmp
 
+# Installing Zig to compile NIFs 
 RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
   tar -xf zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
   mv zig-linux-x86_64-${ZIG_VERSION} /usr/local/lib/ && \
   ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig && \
   rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
+
+# Installing Node 
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+  apt-get install -y nodejs
 
 # prepare build dir
 WORKDIR /app
@@ -73,7 +78,7 @@ COPY apps/privee_web/lib apps/privee_web/lib
 COPY apps/privee_web/assets apps/privee_web/assets
 
 # compile assets
-RUN cd apps/privee_web && mix assets.deploy
+RUN npm i --prefix apps/privee_web/assets && cd apps/privee_web && mix assets.deploy
 
 # Compile the release
 RUN mix compile
