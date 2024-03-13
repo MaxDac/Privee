@@ -1,4 +1,4 @@
-defmodule PriveeWeb.ChatLive do
+defmodule PriveeWeb.PriveeSelectorLive do
   @moduledoc """
   The chat screen. This is the only screen that the user will be able to see.
   """
@@ -19,9 +19,9 @@ defmodule PriveeWeb.ChatLive do
         </:subtitle>
       </.header>
 
-      <.simple_form 
-        for={@form} 
-        id="privee_form" 
+      <.simple_form
+        for={@form}
+        id="privee_form"
         phx-change="validate"
         phx-submit="create"
       >
@@ -46,14 +46,14 @@ defmodule PriveeWeb.ChatLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, 
+    {:ok,
      socket
      |> assign_form()}
   end
 
   @impl true
   def handle_event("validate", %{"privee_form" => params}, socket) do
-    {:noreply, 
+    {:noreply,
      socket
      |> assign_form(params)}
   end
@@ -63,11 +63,11 @@ defmodule PriveeWeb.ChatLive do
     changeset = get_privee_form_changeset(params, socket)
 
     if changeset.valid? do
-      {:noreply, 
+      {:noreply,
        socket
        |> assign_form(params)}
     else
-      {:noreply, 
+      {:noreply,
        socket
        |> assign_form(params)}
     end
@@ -76,7 +76,7 @@ defmodule PriveeWeb.ChatLive do
   defp assign_form(socket, params \\ %{}) do
     changeset = get_privee_form_changeset(params, socket)
 
-    # Not showing the error when first accessing the page 
+    # Not showing the error when first accessing the page
     changeset = if params == %{}, do: changeset, else: assign_changeset_action(changeset)
 
     assign(socket, :form, to_form(changeset))
@@ -91,7 +91,7 @@ defmodule PriveeWeb.ChatLive do
   defp validate_session_name_not_same_as_session(changeset, %{assigns: %{current_session: current_session}} = _socket) do
     current_session_name = current_session.session_name
 
-    Ecto.Changeset.validate_change(changeset, :session_name, fn 
+    Ecto.Changeset.validate_change(changeset, :session_name, fn
       field, ^current_session_name ->
         [{field, "You selected your session name"}]
       _, _ ->

@@ -197,7 +197,6 @@ defmodule Privee.SessionsTest do
     end
 
     test " identifies an existent session name", %{session: %{session_name: session_name}} do
-      invalid_session_name = "non-existent-session-name"
       changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => session_name})
 
       assert changeset.valid?

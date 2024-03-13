@@ -18,10 +18,10 @@ defmodule PriveeWeb.SessionControllerTest do
         })
 
       assert get_session(conn, :session_token)
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/chat")
+      conn = get(conn, ~p"/privee")
       response = html_response(conn, 200)
       assert response =~ unique_session_name()
       assert response =~ ~p"/sessions/log_out"
@@ -38,7 +38,7 @@ defmodule PriveeWeb.SessionControllerTest do
         })
 
       assert conn.resp_cookies["_privee_web_session_remember_me"]
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
     end
 
     test "logs the session in with return to", %{conn: conn, session: session} do
@@ -67,7 +67,7 @@ defmodule PriveeWeb.SessionControllerTest do
           }
         })
 
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
 

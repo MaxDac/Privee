@@ -1,27 +1,27 @@
-defmodule PriveeWeb.ChatLiveTest do
+defmodule PriveeWeb.PriveeSelectorLiveTest do
   @moduledoc """
   Tests for the chat live.
   """
 
   use PriveeWeb.ConnCase, async: true
-  
+
   import Phoenix.LiveViewTest
   import Privee.SessionsFixtures
 
   describe "chat_live" do
     test " renders the chat view when the user is logged in", %{conn: conn} do
-      {:ok, _lv, html} = 
+      {:ok, _lv, html} =
         conn
         |> log_in_session(session_fixture())
-        |> live(~p"/chat")
+        |> live(~p"/privee")
 
       assert html =~ "Create a new Privée"
     end
 
     test " redirects to the login when the user is not logged in", %{conn: conn} do
-      result = 
+      result =
         conn
-        |> live(~p"/chat")
+        |> live(~p"/privee")
         |> follow_redirect(conn, "/")
 
       assert {:ok, _conn} = result
@@ -29,10 +29,10 @@ defmodule PriveeWeb.ChatLiveTest do
 
     test " shows an error when selecting an invalid session name", %{conn: conn} do
       %{session_name: session_name} = session = session_fixture()
-      {:ok, chat_live, _html} = 
+      {:ok, chat_live, _html} =
         conn
         |> log_in_session(session)
-        |> live(~p"/chat")
+        |> live(~p"/privee")
 
       result =
         chat_live
@@ -58,10 +58,10 @@ defmodule PriveeWeb.ChatLiveTest do
 
     test " shows an error when submitting an invalid session name", %{conn: conn} do
       %{session_name: session_name} = session = session_fixture()
-      {:ok, chat_live, _html} = 
+      {:ok, chat_live, _html} =
         conn
         |> log_in_session(session)
-        |> live(~p"/chat")
+        |> live(~p"/privee")
 
       result =
         chat_live
