@@ -11,11 +11,7 @@ defmodule PriveeWeb.ChatComponents do
   def chat_input(assigns) do
     ~H"""
     <div>
-      <.input
-        field={@form[:text]}
-        placeholder="Write your message here"
-        required
-      />
+      <.input field={@form[:text]} placeholder="Write your message here" required />
     </div>
     """
   end
@@ -27,11 +23,19 @@ defmodule PriveeWeb.ChatComponents do
     ~H"""
     <div class={[
       "p-2",
-      if rem(@i, 2) == 0 do "flex justify-end" else nil end
+      if rem(@i, 2) == 0 do
+        "flex justify-end"
+      else
+        nil
+      end
     ]}>
       <div class={[
         "flex flex-col w-full max-w-[500px] leading-1.5 p-4 border-gray-200 rounded-e-xl rounded-es-xl",
-        if rem(@i, 2) == 0 do "bg-green-100 dark:bg-green-800" else "bg-gray-100 dark:bg-gray-700" end
+        if rem(@i, 2) == 0 do
+          "bg-green-100 dark:bg-green-800"
+        else
+          "bg-gray-100 dark:bg-gray-700"
+        end
       ]}>
         <p class="text-sm font-normal py-2.5 text-gray-900 dark:text-white">
           That's awesome. I think our users will really appreciate the improvements.

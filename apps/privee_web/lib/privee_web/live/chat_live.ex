@@ -26,8 +26,7 @@ defmodule PriveeWeb.ChatLive do
   end
 
   @impl true
-  def handle_event("validate", %{"message" => params}, socket) do
-    IO.inspect(params, label: "validate params")
+  def handle_event("validate", %{"message" => _params}, socket) do
     {:noreply,
      socket
      |> assign_form()}
@@ -35,7 +34,6 @@ defmodule PriveeWeb.ChatLive do
 
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
-    IO.inspect(params, label: "create params")
     {:noreply,
      socket
      |> assign_form(params)}
