@@ -9,19 +9,17 @@ defmodule Privee.Sessions.Message do
   import Ecto.Changeset
 
   alias Privee.Sessions.Message
-  alias Privee.Sessions.Session
 
   @type t :: %__MODULE__{
-    text: String.t(),
-    from: String.t(),
-    to: String.t()
-  }
+          text: String.t(),
+          from: String.t(),
+          to: String.t()
+        }
 
   embedded_schema do
     field :text, :string
-
-    belongs_to :from, Session
-    belongs_to :to, Session
+    field :from, :string
+    field :to, :string
   end
 
   @doc false
@@ -29,7 +27,5 @@ defmodule Privee.Sessions.Message do
     message
     |> cast(attrs, [:text, :from, :to])
     |> validate_required([:text, :from, :to])
-    |> foreign_key_constraint(:from)
-    |> foreign_key_constraint(:to)
   end
 end

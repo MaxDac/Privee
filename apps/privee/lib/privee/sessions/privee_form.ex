@@ -11,10 +11,10 @@ defmodule Privee.Sessions.PriveeForm do
   alias Privee.Sessions.Session
 
   @type t :: %__MODULE__{
-    session_name: String.t()
-  }
+          session_name: String.t()
+        }
 
-  embedded_schema do 
+  embedded_schema do
     field :session_name, :string
   end
 

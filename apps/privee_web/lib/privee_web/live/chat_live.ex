@@ -2,29 +2,50 @@ defmodule PriveeWeb.ChatLive do
   @moduledoc """
   This component represents a privee, or a chat where two sessions can actually talk.
   """
-  
-  use PriveeWeb, :live_view
 
-  @impl true
-  def render(assigns) do
-    ~H"""
-    <.header>
-      <%= @selected_session %>
-    </.header>
-    """
-  end
+  use PriveeWeb, :chat_live_view
+
+  import PriveeWeb.ChatComponents
+
+  alias Privee.Sessions
+  alias Privee.Sessions.Message
 
   @impl true
   def mount(%{"session" => selected_session}, _session, socket) do
-    {:ok, 
+    {:ok,
      socket
-     |> assign(:selected_session, selected_session)}
+     |> assign(:selected_session, selected_session)
+     |> assign_form()}
   end
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, 
+    {:ok,
      socket
      |> push_navigate(to: ~p"/privee")}
+  end
+
+  @impl true
+  def handle_event("validate", %{"message" => params}, socket) do
+    IO.inspect(params, label: "validate params")
+    {:noreply,
+     socket
+     |> assign_form()}
+  end
+
+  @impl true
+  def handle_event("create", %{"message" => params}, socket) do
+    IO.inspect(params, label: "create params")
+    {:noreply,
+     socket
+     |> assign_form(params)}
+  end
+
+  defp assign_form(socket, attrs \\ %{}) do
+    form =
+      Sessions.change_message(%Message{}, attrs)
+      |> to_form()
+
+    assign(socket, :form, form)
   end
 end

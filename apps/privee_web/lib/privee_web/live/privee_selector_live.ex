@@ -19,13 +19,7 @@ defmodule PriveeWeb.PriveeSelectorLive do
         </:subtitle>
       </.header>
 
-      <.simple_form
-        for={@form}
-        id="privee_form"
-        phx-change="validate"
-        phx-submit="create"
-      >
-
+      <.simple_form for={@form} id="privee_form" phx-change="validate" phx-submit="create">
         <.input
           field={@form[:session_name]}
           type="text"
@@ -90,12 +84,16 @@ defmodule PriveeWeb.PriveeSelectorLive do
     |> validate_session_name_not_same_as_session(socket)
   end
 
-  defp validate_session_name_not_same_as_session(changeset, %{assigns: %{current_session: current_session}} = _socket) do
+  defp validate_session_name_not_same_as_session(
+         changeset,
+         %{assigns: %{current_session: current_session}} = _socket
+       ) do
     current_session_name = current_session.session_name
 
     Ecto.Changeset.validate_change(changeset, :session_name, fn
       field, ^current_session_name ->
         [{field, "You selected your session name"}]
+
       _, _ ->
         []
     end)

@@ -4,7 +4,7 @@ defmodule Privee.SessionsTest do
   alias Privee.Sessions
 
   import Privee.SessionsFixtures
-  alias Privee.Sessions.{Session, SessionToken, PriveeForm}
+  alias Privee.Sessions.{PriveeForm, Session, SessionToken}
 
   describe "get_session_by_session_name_and_phrase/2" do
     test "does not return the session if the recovery phrase does not exist" do
@@ -182,18 +182,30 @@ defmodule Privee.SessionsTest do
 
     test " identifies an invalid session name" do
       invalid_session_name = "some invalid session name"
-      changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
+
+      changeset =
+        Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
 
       refute changeset.valid?
-      assert Enum.any?(errors_on(changeset).session_name, & &1 == "must contain only alphanumeric characters and hyphens")
+
+      assert Enum.any?(
+               errors_on(changeset).session_name,
+               &(&1 == "must contain only alphanumeric characters and hyphens")
+             )
     end
 
     test " identifies an non existent session name" do
       invalid_session_name = "non-existent-session-name"
-      changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
+
+      changeset =
+        Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => invalid_session_name})
 
       refute changeset.valid?
-      assert Enum.any?(errors_on(changeset).session_name, & &1 == "The session name does not exist")
+
+      assert Enum.any?(
+               errors_on(changeset).session_name,
+               &(&1 == "The session name does not exist")
+             )
     end
 
     test " identifies an existent session name", %{session: %{session_name: session_name}} do

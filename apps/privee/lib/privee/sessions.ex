@@ -8,7 +8,7 @@ defmodule Privee.Sessions do
   alias Plug.Session
   alias Privee.Sessions.PriveeForm
   alias Privee.Repo
-  alias Privee.Sessions.{Session, SessionToken, PriveeForm}
+  alias Privee.Sessions.{Session, SessionToken, PriveeForm, Message}
 
   @doc """
   Gets a session by the recovery phrase and the password.
@@ -126,7 +126,7 @@ defmodule Privee.Sessions do
 
   defp validate_session_name_exists(changeset) do
     Ecto.Changeset.validate_change(changeset, :session_name, fn field, value ->
-      if session_name_exists?(value), 
+      if session_name_exists?(value),
         do: [],
         else: [{field, "The session name does not exist"}]
     end)
@@ -137,5 +137,13 @@ defmodule Privee.Sessions do
     |> from()
     |> where([s], s.session_name == ^session_name)
     |> Repo.exists?()
+  end
+
+  @doc """
+  Provides the changeset for the message.
+  """
+  def change_message(%Message{} = message, attrs \\ %{}) do
+    message
+    |> Message.changeset(attrs)
   end
 end

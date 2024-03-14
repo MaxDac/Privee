@@ -58,6 +58,15 @@ defmodule PriveeWeb do
     end
   end
 
+  def chat_live_view do
+    quote do
+      use Phoenix.LiveView,
+        layout: {PriveeWeb.Layouts, :chat_layout}
+
+      unquote(html_helpers())
+    end
+  end
+
   def live_component do
     quote do
       use Phoenix.LiveComponent
@@ -93,7 +102,6 @@ defmodule PriveeWeb do
       # Routes generation with the ~p sigil
       unquote(verified_routes())
 
-
       @doc """
       Assign a default action to the changeset. This function is useful when the form
       that uses the changeset does not have an action, so from the documentation it does not
@@ -102,7 +110,7 @@ defmodule PriveeWeb do
       Please check [here](https://stackoverflow.com/a/43453618/8620481) for more information.
       """
       @spec assign_changeset_action(changeset :: Ecto.Changeset.t(), action :: atom()) ::
-        Ecto.Changeset.t()
+              Ecto.Changeset.t()
       def assign_changeset_action(changeset, action \\ :insert)
       def assign_changeset_action(%{valid?: true} = changeset, _), do: changeset
       def assign_changeset_action(changeset, action), do: %{changeset | action: action}

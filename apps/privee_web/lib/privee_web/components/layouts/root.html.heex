@@ -12,39 +12,6 @@
     </script>
   </head>
   <body class="antialiased">
-    <ul class="relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_session do %>
-        <li class="text-[0.8125rem] leading-6 text-zinc-900">
-          <%= @current_session.session_name %>
-        </li>
-        <li>
-          <.link
-            href={~p"/sessions/log_out"}
-            method="delete"
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zing-300"
-          >
-            Log out
-          </.link>
-        </li>
-      <% else %>
-        <li>
-          <.link
-            href={~p"/sessions/register"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zing-300"
-          >
-            Register
-          </.link>
-        </li>
-        <li>
-          <.link
-            href={~p"/"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zing-300"
-          >
-            Log in
-          </.link>
-        </li>
-      <% end %>
-    </ul>
     <%= @inner_content %>
   </body>
 </html>

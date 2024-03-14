@@ -29,6 +29,7 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
 
     test " shows an error when selecting an invalid session name", %{conn: conn} do
       %{session_name: session_name} = session = session_fixture()
+
       {:ok, privee_selector_live, _html} =
         conn
         |> log_in_session(session)
@@ -50,7 +51,9 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
 
       result =
         privee_selector_live
-        |> form("#privee_form", %{privee_form: %{session_name: "non-existent-but-valid-session-name"}})
+        |> form("#privee_form", %{
+          privee_form: %{session_name: "non-existent-but-valid-session-name"}
+        })
         |> render_change()
 
       assert result =~ "The session name does not exist"
@@ -58,6 +61,7 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
 
     test " shows an error when submitting an invalid session name", %{conn: conn} do
       %{session_name: session_name} = session = session_fixture()
+
       {:ok, privee_selector_live, _html} =
         conn
         |> log_in_session(session)
@@ -79,7 +83,9 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
 
       result =
         privee_selector_live
-        |> form("#privee_form", %{privee_form: %{session_name: "non-existent-but-valid-session-name"}})
+        |> form("#privee_form", %{
+          privee_form: %{session_name: "non-existent-but-valid-session-name"}
+        })
         |> render_submit()
 
       assert result =~ "The session name does not exist"
@@ -87,10 +93,12 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
 
     test " redirect to the chat when the right session name has been selected", %{conn: conn} do
       session = session_fixture()
-      %{session_name: session_name} = session_fixture(%{
-        session_name: "another-twenty-four-session-name",
-        recovery_phrase: "Yet another recovery phrase of more than twenty four characters"
-      })
+
+      %{session_name: session_name} =
+        session_fixture(%{
+          session_name: "another-twenty-four-session-name",
+          recovery_phrase: "Yet another recovery phrase of more than twenty four characters"
+        })
 
       conn = log_in_session(conn, session)
 
