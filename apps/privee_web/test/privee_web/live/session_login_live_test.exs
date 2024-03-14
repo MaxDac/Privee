@@ -17,7 +17,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
         conn
         |> log_in_session(session_fixture())
         |> live(~p"/")
-        |> follow_redirect(conn, "/chat")
+        |> follow_redirect(conn, "/privee")
 
       assert {:ok, _conn} = result
     end
@@ -42,7 +42,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
       conn = submit_form(form, conn)
 
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
     end
 
     test "redirects to login page with a flash error if there are no valid credentials", %{

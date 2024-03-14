@@ -22,7 +22,7 @@ defmodule PriveeWeb.SessionAuthTest do
       conn = SessionAuth.log_in_session(conn, session)
       assert token = get_session(conn, :session_token)
       assert get_session(conn, :live_socket_id) == "sessions_sessions:#{Base.url_encode64(token)}"
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
       assert Sessions.get_session_by_session_token(token)
     end
 
@@ -249,7 +249,7 @@ defmodule PriveeWeb.SessionAuthTest do
         |> SessionAuth.redirect_if_session_is_authenticated([])
 
       assert conn.halted
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
     end
 
     test "does not redirect if session is not authenticated", %{conn: conn} do

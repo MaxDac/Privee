@@ -194,6 +194,8 @@ defmodule PriveeWeb.CoreComponents do
   attr :for, :any, required: true, doc: "the datastructure for the form"
   attr :as, :any, default: nil, doc: "the server side parameter to collect all input under"
 
+  attr :class, :string, default: nil, doc: "a custom class for the inner component"
+
   attr :rest, :global,
     include: ~w(autocomplete name rel action enctype method novalidate target multipart),
     doc: "the arbitrary HTML attributes to apply to the form tag"
@@ -204,7 +206,7 @@ defmodule PriveeWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8">
+      <div class={@class || "mt-10 space-y-8"}>
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -244,6 +246,42 @@ defmodule PriveeWeb.CoreComponents do
     >
       <%= render_slot(@inner_block) %>
     </button>
+    """
+  end
+
+  @doc """
+  Renders a link with simplified options compared to the Phoenix LiveView default link,
+  in the form of a button.
+
+  Internally, it uses the Phoenix LiveView default link.
+
+  ## Examples
+
+      <.button_link hreh="to">Send!</.button>
+  """
+  attr :class, :string, default: nil
+
+  attr :rest, :global,
+    include:
+      ~w(navigate patch href replace method crsf_token download hreflang referrerpolicy rel target type)
+
+  slot :inner_block, required: true
+
+  def button_link(assigns) do
+    ~H"""
+    <.link
+      class={[
+        "phx-submit-loading:opacity-75 py-2 px-3",
+        "text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br",
+        "focus:ring-4 focus:outline-none focus:ring-green-300",
+        "dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80",
+        "font-medium rounded-lg text-sm text-center me-2 mb-2",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </.link>
     """
   end
 

@@ -53,13 +53,21 @@ defmodule Privee.Sessions.Session do
     |> validate_recovery_phrase(opts)
   end
 
-  defp validate_session_name(changeset, opts) do
+  @doc """
+  Validates the session name format.
+  """
+  def validate_session_name_format(changeset) do
     changeset
     |> validate_required([:session_name])
     |> validate_length(:session_name, min: 24, max: 72)
     |> validate_format(:session_name, ~r/^[a-zA-Z0-9-]+$/,
       message: "must contain only alphanumeric characters and hyphens"
     )
+  end
+
+  defp validate_session_name(changeset, opts) do
+    changeset
+    |> validate_session_name_format()
     |> validate_unique_session_name(opts)
   end
 

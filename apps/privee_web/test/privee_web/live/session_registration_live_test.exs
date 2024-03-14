@@ -17,7 +17,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
         conn
         |> log_in_session(session_fixture())
         |> live(~p"/sessions/register")
-        |> follow_redirect(conn, "/chat")
+        |> follow_redirect(conn, "/privee")
 
       assert {:ok, _conn} = result
     end
@@ -55,10 +55,10 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 
-      assert redirected_to(conn) == ~p"/chat"
+      assert redirected_to(conn) == ~p"/privee"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/chat")
+      conn = get(conn, "/privee")
       response = html_response(conn, 200)
       assert response =~ session_name
       assert response =~ "Log out"

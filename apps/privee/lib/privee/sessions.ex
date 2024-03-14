@@ -5,8 +5,11 @@ defmodule Privee.Sessions do
 
   import Ecto.Query, warn: false
 
+  alias Plug.Session
+
   alias Privee.Repo
-  alias Privee.Sessions.{Session, SessionToken}
+  alias Privee.Sessions.PriveeForm
+  alias Privee.Sessions.{Message, PriveeForm, Session, SessionToken}
 
   @doc """
   Gets a session by the recovery phrase and the password.
@@ -101,5 +104,47 @@ defmodule Privee.Sessions do
   def delete_session_token(token) do
     Repo.delete_all(SessionToken.by_token_and_context_query(token, "session"))
     :ok
+  end
+
+  #
+  # Privee form
+  #
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking session changes.
+
+  ## Examples
+
+      iex> change_privee_form(privee_form)
+      %Ecto.Changeset{data: %Session{}}
+
+  """
+  def change_privee_form(%PriveeForm{} = privee_form, attrs \\ %{}) do
+    privee_form
+    |> PriveeForm.changeset(attrs)
+    |> validate_session_name_exists()
+  end
+
+  defp validate_session_name_exists(changeset) do
+    Ecto.Changeset.validate_change(changeset, :session_name, fn field, value ->
+      if session_name_exists?(value),
+        do: [],
+        else: [{field, "The session name does not exist"}]
+    end)
+  end
+
+  defp session_name_exists?(session_name) do
+    Session
+    |> from()
+    |> where([s], s.session_name == ^session_name)
+    |> Repo.exists?()
+  end
+
+  @doc """
+  Provides the changeset for the message.
+  """
+  def change_message(%Message{} = message, attrs \\ %{}) do
+    message
+    |> Message.changeset(attrs)
   end
 end
