@@ -12,6 +12,8 @@ defmodule PriveeWeb.PriveeSelectorLive do
 
   require Logger
 
+  @message_received_event "message_received"
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -46,6 +48,7 @@ defmodule PriveeWeb.PriveeSelectorLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
+     |> subscribe_to_events()
      |> assign_form()}
   end
 
@@ -53,7 +56,6 @@ defmodule PriveeWeb.PriveeSelectorLive do
   def handle_event("validate", %{"privee_form" => params}, socket) do
     {:noreply,
      socket
-     |> subscribe_to_events()
      |> assign_form(params)}
   end
 
@@ -72,6 +74,11 @@ defmodule PriveeWeb.PriveeSelectorLive do
        socket
        |> assign_form(params)}
     end
+  end
+
+  @impl true
+  def handle_info(%{event: @message_received_event, payload: payload}, socket) do
+    {:noreply, Events.send_notification_event_to_client(socket, payload)}
   end
 
   defp assign_form(socket, params \\ %{}) do
