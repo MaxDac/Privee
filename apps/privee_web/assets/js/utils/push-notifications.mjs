@@ -23,24 +23,33 @@ export const askNotificationPermission = () => {
     * @returns {Promise<?Notification>} - The notification.
     */
 export const pushNotification = (body, title) => {
-  if (document.hidden) {
-    const imageUrl = "/favicon.ico"
-    const notificationTitle = title || "Stygian - Nuova notifica"
-  
-    const notification = new Notification(notificationTitle, {
-      body: body,
-      icon: imageUrl
+  const imageUrl = "/favicon.ico"
+  const notificationTitle = title || " - Privee new notification"
+
+  const notification = new Notification(notificationTitle, {
+    body: body,
+    icon: imageUrl
+  })
+    
+  return new Promise((resolve, _reject) => {
+    document.addEventListener("visibilitychange", (_) => {
+      if (document.visibilityState === "visible") {
+        resolve(notification)
+      }
     })
-      
-    return new Promise((resolve, _reject) => {
-      document.addEventListener("visibilitychange", (_) => {
-        if (document.visibilityState === "visible") {
-          resolve(notification)
-        }
-      })
-    })
-  }
-  else {
-    return Promise.resolve(null)
-  }
+  })
+}
+
+/**
+  * @typedef {Object & Event} PhoenixEvent This type represents a custom Phoenix event.
+  * @property {any} detail The event details
+  */
+
+/**
+ * Handles the Phoenix back end event that requires triggering a notification.
+ * @param {PhoenixEvent} event The event triggered from the back-end.
+ */
+export const phoenixPushEventHandler = (event) => {
+  pushNotification(event.detail.text, "Privee - Text received")
+    .catch(e => console.error("Error showing notification: ", e))
 }

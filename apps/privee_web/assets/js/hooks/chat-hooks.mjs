@@ -1,5 +1,3 @@
-import { pushNotification } from "../utils/push-notifications.mjs"
-
 /**
  * Adds hooks to the chat screen to automatically scroll to the bottom of the chat.
  * @param {any} Hooks LiveView Hooks 
@@ -11,7 +9,6 @@ export function addChatHooks(Hooks) {
     },
     updated() {
       scrollElementToEnd(this.el)
-      pushNotification("You received a new message")
     },
   }
 

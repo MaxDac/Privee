@@ -29,7 +29,7 @@ import "flowbite/dist/flowbite.phoenix.js"
 
 // Importing utility functions
 import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
-import { askNotificationPermission } from "./utils/push-notifications.mjs"
+import { askNotificationPermission, phoenixPushEventHandler } from "./utils/push-notifications.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 
 // Setting up LiveView hooks
@@ -57,6 +57,9 @@ document.addEventListener("DOMContentLoaded", addToggleDarkModeHandling)
 
 // Asking for notification permission to the browser
 askNotificationPermission()
+
+// Setting the LiveView events
+window.addEventListener("phx:trigger_notification", phoenixPushEventHandler)
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

@@ -12,6 +12,8 @@ defmodule PriveeWeb.Events do
   import Phoenix.LiveView
 
   @chat_created_event "chat_created"
+  @message_received_event "message_received"
+  @js_event "trigger_notification"
 
   @doc """
   Creates a subscription for the current LiveView socket to receive broadcasted
@@ -56,12 +58,12 @@ defmodule PriveeWeb.Events do
   Broadcasts the insertion of a new message both to the current chat topic, and to the
   user currently in the chat.
   """
-  def broadcast_new_message(%Message{to: to, from: from} = message) do
-    chat_topic = get_chat_subscription_topic(to, from)
+  def broadcast_new_message(%Message{from: from, to: to} = message) do
+    chat_topic = get_chat_subscription_topic(from, to)
     receiver_topic = get_receiver_subscription_topic(to)
 
     Endpoint.broadcast(chat_topic, @chat_created_event, message)
-    Endpoint.broadcast(receiver_topic, @chat_created_event, message)
+    Endpoint.broadcast(receiver_topic, @message_received_event, message)
   end
 
   defp get_chat_subscription_topic(session_id_1, session_id_2) do
@@ -74,5 +76,21 @@ defmodule PriveeWeb.Events do
 
   defp get_receiver_subscription_topic(session_id) do
     "receiver:#{session_id}"
+  end
+
+  @doc """
+  Sends a notification event to the client, to trigger in turn a notification. 
+  """
+  def send_notification_event_to_client(socket, payload)
+
+  # If the sender is the same session the current session is talking to, don't send the notification.
+  def send_notification_event_to_client(%{assigns: %{selected_session: %{id: from}}} = socket, %{
+        from: from
+      }) do
+    socket
+  end
+
+  def send_notification_event_to_client(socket, %{text: text}) do
+    push_event(socket, @js_event, %{text: text})
   end
 end

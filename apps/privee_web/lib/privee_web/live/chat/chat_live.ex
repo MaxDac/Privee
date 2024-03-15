@@ -16,6 +16,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   embed_templates "components/*"
 
   @chat_created_event "chat_created"
+  @message_received_event "message_received"
 
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
@@ -56,6 +57,11 @@ defmodule PriveeWeb.Chat.ChatLive do
     {:noreply, assign_message(socket, message)}
   end
 
+  @impl true
+  def handle_info(%{event: @message_received_event, payload: payload}, socket) do
+    {:noreply, Events.send_notification_event_to_client(socket, payload)}
+  end
+
   defp assign_selected_session(
          %{assigns: %{selected_session_name: selected_session_name}} = socket
        ) do
@@ -94,10 +100,10 @@ defmodule PriveeWeb.Chat.ChatLive do
          %{assigns: %{current_session: current_session, selected_session: selected_session}} =
            socket
        ) do
-    case Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id) do
-      :ok ->
-        socket
-
+    with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
+         :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
+      socket
+    else
       error ->
         Logger.warning("Failed to subscribe to chat events: '#{inspect(error)}'.")
         socket
