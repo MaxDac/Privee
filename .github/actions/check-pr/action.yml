@@ -1,17 +1,17 @@
 name: cache-plts
-description: 'Cache PLTs for Dialyzer'
+description: "Cache PLTs for Dialyzer"
 
 inputs:
   otp:
     type: string
-    description: 'OTP version'
+    description: "OTP version"
     required: true
-    default: '26.2.2'
+    default: "26.2.2"
   elixir:
     type: string
-    description: 'Elixir version'
+    description: "Elixir version"
     required: true
-    default: '1.16.1'
+    default: "1.16.1"
 
 permissions:
   contents: read
@@ -27,18 +27,18 @@ runs:
       id: plt_cache
       with:
         key: |
-                      ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
+          ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         restore-keys: |
-                      ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
+          ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         path: |
-                      priv/plts
+          priv/plts
 
     # Create PLTs if no cache was found
     - name: Create PLTs
       if: steps.plt_cache.outputs.cache-hit != 'true'
       shell: bash
       run: mix dialyzer --plt
-    
+
     # Step: Save PLT cache if it was updated
     - name: Save PLT cache
       uses: actions/cache/save@v4
@@ -66,4 +66,3 @@ runs:
     - name: Run dialyzer
       shell: bash
       run: mix dialyzer --format github
-    

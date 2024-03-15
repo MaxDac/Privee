@@ -7,9 +7,9 @@ on:
       - synchronize
       - reopened
 
-    branches: 
+    branches:
       - main
-  
+
   push:
     branches: main
 
@@ -30,10 +30,10 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ['26.2.2']
-        elixir: ['1.16.1']
-        zig: ['0.11.0']
-        node: ['20']
+        otp: ["26.2.2"]
+        elixir: ["1.16.1"]
+        zig: ["0.11.0"]
+        node: ["20"]
 
     steps:
       - name: Checkout code
@@ -41,7 +41,7 @@ jobs:
 
       - name: Loading tooling
         uses: ./.github/actions/load-tooling
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
@@ -58,7 +58,7 @@ jobs:
 
       - name: Check PR
         uses: ./.github/actions/check-pr
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
@@ -70,10 +70,10 @@ jobs:
 
     services:
       db:
-        image: 'postgres:11'
-        ports: ['5432:5432']
+        image: "postgres:11"
+        ports: ["5432:5432"]
         env:
-          POSTGRES_PASSWORD: 'postgres'
+          POSTGRES_PASSWORD: "postgres"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -86,9 +86,9 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ['26.2.2']
-        elixir: ['1.16.1']
-        zig: ['0.11.0']
+        otp: ["26.2.2"]
+        elixir: ["1.16.1"]
+        zig: ["0.11.0"]
 
     steps:
       - name: Checkout code
@@ -96,7 +96,7 @@ jobs:
 
       - name: Loading tooling
         uses: ./.github/actions/load-tooling
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
@@ -114,7 +114,7 @@ jobs:
       - name: Test PR
         uses: ./.github/actions/test-pr
 
-  client: 
+  client:
     runs-on: ubuntu-latest
 
     name: Pull Request CI check and test Node ${{ matrix.node }}
@@ -123,7 +123,7 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        node: ['20']
+        node: ["20"]
 
     steps:
       - name: Checkout code
@@ -132,10 +132,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '${{ matrix.node }}'
-  
+          node-version: "${{ matrix.node }}"
+
       - name: Install dependencies
         run: npm install
-  
+
       - name: Run npm command
         run: npm run check

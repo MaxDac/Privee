@@ -1,27 +1,27 @@
 name: load-tooling
-description: 'Loads the Elixir, Erlang and Zig tooling'
+description: "Loads the Elixir, Erlang and Zig tooling"
 
 inputs:
   otp:
     type: string
-    description: 'OTP version'
+    description: "OTP version"
     required: true
-    default: '26.2.2'
+    default: "26.2.2"
   elixir:
     type: string
-    description: 'Elixir version'
+    description: "Elixir version"
     required: true
-    default: '1.16.1'
+    default: "1.16.1"
   zig:
     type: string
-    description: 'Zig compiler version'
+    description: "Zig compiler version"
     required: true
-    default: '0.11.0'
+    default: "0.11.0"
   node:
     type: string
-    description: 'Node version'
+    description: "Node version"
     required: true
-    default: '18'
+    default: "18"
 
 permissions:
   contents: read
@@ -40,11 +40,11 @@ runs:
       uses: goto-bus-stop/setup-zig@v2
       with:
         version: ${{ inputs.zig }}
-    
+
     - uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node }}
-    
+
     # Step: installing inotify-tools to enable LiveView reloading to perform the tests.
     - name: Install OS dependencies
       shell: bash
