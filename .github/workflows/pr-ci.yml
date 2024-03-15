@@ -135,7 +135,7 @@ jobs:
           node-version: "${{ matrix.node }}"
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --prefix apps/privee_web/assets
 
       - name: Run npm command
-        run: npm run check
+        run: npm run check --prefix apps/privee_web/assets
