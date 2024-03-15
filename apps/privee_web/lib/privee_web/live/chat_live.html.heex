@@ -1,9 +1,13 @@
 <section class="flex flex-col h-[calc(100vh-80px)] justify-between">
   <.header class="h-10 pt-5 pb-10 text-center">
-    <%= @selected_session %>
+    <%= @selected_session_name %>
   </.header>
   <main class="flex-grow overflow-auto">
-    <.chat_screen />
+    <.chat_screen 
+      current_session={@current_session}
+      selected_session={@selected_session}
+      messages={@messages} 
+    />
   </main>
   <footer class="px-5 py-5">
     <.simple_form
@@ -13,6 +17,18 @@
       phx-submit="create"
       class="space-y-4"
     >
+      <.input 
+        type="hidden" 
+        field={@form[:from]} 
+        value={@current_session.id}
+      />
+
+      <.input 
+        type="hidden" 
+        field={@form[:to]} 
+        value={@selected_session.id}
+      />
+
       <.chat_input form={@form} />
     </.simple_form>
   </footer>

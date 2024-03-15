@@ -46,6 +46,38 @@ defmodule Privee.Sessions do
   """
   def get_session!(id), do: Repo.get!(Session, id)
 
+  @doc """
+  Gets a single session.
+
+  Returns nil if the session does not exist.
+
+  ## Examples
+
+      iex> get_session(123)
+      %Session{}
+
+      iex> get_session(456)
+      nil
+
+  """
+  def get_session(id), do: Repo.get(Session, id)
+
+  @doc """
+  Gets a single session using its session name.
+
+  Returns nil if the session does not exist.
+
+  ## Examples
+
+      iex> get_session_by_session_name("some-existent-session-name")
+      %Session{}
+
+      iex> get_session_by_session_name("some-non-existent-session-name")
+      nil
+
+  """
+  def get_session_by_session_name(session_name), do: Repo.get_by(Session, session_name: session_name)
+
   ## Session registration
 
   @doc """

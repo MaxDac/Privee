@@ -43,6 +43,28 @@ defmodule Privee.SessionsTest do
     end
   end
 
+  describe "get_session/1" do
+    test "returns nil if id is invalid" do
+      assert is_nil Sessions.get_session(-1)
+    end
+
+    test "returns the session with the given id" do
+      %{id: id} = session = session_fixture()
+      assert %Session{id: ^id} = Sessions.get_session(session.id)
+    end
+  end
+
+  describe "get_session_by_session_name/1" do
+    test "returns nil if id is invalid" do
+      assert is_nil Sessions.get_session_by_session_name("non-existent-session-name")
+    end
+
+    test "returns the session with the given id" do
+      %{session_name: session_name} = session_fixture()
+      assert %Session{session_name: ^session_name} = Sessions.get_session_by_session_name(session_name)
+    end
+  end
+
   describe "register_session/1" do
     test "requires recovery_phrase and session_name to be set" do
       {:error, changeset} = Sessions.register_session(%{})
