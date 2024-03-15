@@ -10,6 +10,8 @@ defmodule PriveeWeb.PriveeSelectorLive do
   alias Privee.Sessions
   alias Privee.Sessions.PriveeForm
 
+  require Logger
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -103,10 +105,12 @@ defmodule PriveeWeb.PriveeSelectorLive do
   end
 
   defp subscribe_to_events(%{assigns: %{current_session: current_session}} = socket) do
-    with :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
-      socket
-    else
-      _ -> 
+    case Events.subscribe_to_receiving_events(socket, current_session.id) do
+      :ok ->
+        socket
+
+      error ->
+        Logger.warning("Could not subscribe to receiving events '#{inspect(error)}'.")
         socket
     end
   end

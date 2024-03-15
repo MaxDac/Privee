@@ -3,7 +3,7 @@ defmodule PriveeWeb.Events do
   Exposes the functions needed to configure and use the Phoenix `PubSub` server
   in the context of the chatting notifications.
   """
-  
+
   alias Phoenix.LiveView.Socket
 
   alias Privee.Sessions.Message
@@ -14,20 +14,19 @@ defmodule PriveeWeb.Events do
   @chat_created_event "chat_created"
 
   @doc """
-  Creates a subscription for the current LiveView socket to receive broadcasted 
+  Creates a subscription for the current LiveView socket to receive broadcasted
   new messages in the chat the session is currently following.
 
   It returns {:ok, %Socket{}} if the subscription succeeded, {:error, %Socket{}}
   otherwise.
   """
   def subscribe_to_chat_events(
-    %Socket{} = socket, 
-    current_session_id,
-    chatting_to_id
-  ) do
+        %Socket{} = socket,
+        current_session_id,
+        chatting_to_id
+      ) do
     if connected?(socket) do
       topic = get_chat_subscription_topic(current_session_id, chatting_to_id)
-      IO.inspect(topic, label: "chat subscribing")
       Endpoint.subscribe(topic)
     else
       {:error, :socket_not_connected}
@@ -35,19 +34,18 @@ defmodule PriveeWeb.Events do
   end
 
   @doc """
-  Creates a subscription for the current LiveView socket to receive broadcasted 
+  Creates a subscription for the current LiveView socket to receive broadcasted
   new messages to the current session_id.
 
   It returns {:ok, %Socket{}} if the subscription succeeded, {:error, %Socket{}}
   otherwise.
   """
   def subscribe_to_receiving_events(
-    %Socket{} = socket, 
-    current_session_id
-  ) do
+        %Socket{} = socket,
+        current_session_id
+      ) do
     if connected?(socket) do
       topic = get_receiver_subscription_topic(current_session_id)
-      IO.inspect(topic, label: "receiving subscribing")
       Endpoint.subscribe(topic)
     else
       {:error, :socket_not_connected}
@@ -61,8 +59,6 @@ defmodule PriveeWeb.Events do
   def broadcast_new_message(%Message{to: to, from: from} = message) do
     chat_topic = get_chat_subscription_topic(to, from)
     receiver_topic = get_receiver_subscription_topic(to)
-    
-    IO.inspect({chat_topic, receiver_topic}, label: "broadcasting")
 
     Endpoint.broadcast(chat_topic, @chat_created_event, message)
     Endpoint.broadcast(receiver_topic, @chat_created_event, message)

@@ -74,8 +74,11 @@ defmodule Privee.Chats do
   Gets the message between the receiver and the sender by matching the message keys
   and the secondary key specified at the moment of storing the message in ETS.
   """
-  @spec get_messages(current_session_id :: non_neg_integer(), chat_session_id :: non_neg_integer()) ::
-    list(Message.t())
+  @spec get_messages(
+          current_session_id :: non_neg_integer(),
+          chat_session_id :: non_neg_integer()
+        ) ::
+          list(Message.t())
   def get_messages(current_session_id, chat_session_id) do
     GenServer.call(__MODULE__, {:get_messages, current_session_id, chat_session_id})
   end

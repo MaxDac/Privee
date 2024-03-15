@@ -45,7 +45,7 @@ defmodule Privee.SessionsTest do
 
   describe "get_session/1" do
     test "returns nil if id is invalid" do
-      assert is_nil Sessions.get_session(-1)
+      assert is_nil(Sessions.get_session(-1))
     end
 
     test "returns the session with the given id" do
@@ -56,12 +56,14 @@ defmodule Privee.SessionsTest do
 
   describe "get_session_by_session_name/1" do
     test "returns nil if id is invalid" do
-      assert is_nil Sessions.get_session_by_session_name("non-existent-session-name")
+      assert is_nil(Sessions.get_session_by_session_name("non-existent-session-name"))
     end
 
     test "returns the session with the given id" do
       %{session_name: session_name} = session_fixture()
-      assert %Session{session_name: ^session_name} = Sessions.get_session_by_session_name(session_name)
+
+      assert %Session{session_name: ^session_name} =
+               Sessions.get_session_by_session_name(session_name)
     end
   end
 

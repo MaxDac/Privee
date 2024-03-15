@@ -76,7 +76,8 @@ defmodule Privee.Sessions do
       nil
 
   """
-  def get_session_by_session_name(session_name), do: Repo.get_by(Session, session_name: session_name)
+  def get_session_by_session_name(session_name),
+    do: Repo.get_by(Session, session_name: session_name)
 
   ## Session registration
 

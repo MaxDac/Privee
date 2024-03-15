@@ -11,6 +11,8 @@ defmodule PriveeWeb.Chat.ChatLive do
   alias Privee.Sessions
   alias Privee.Sessions.Message
 
+  require Logger
+
   embed_templates "components/*"
 
   @chat_created_event "chat_created"
@@ -51,11 +53,12 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def handle_info(%{event: @chat_created_event, payload: message}, socket) do
-    IO.inspect(message, label: "Received message")
     {:noreply, assign_message(socket, message)}
   end
 
-  defp assign_selected_session(%{assigns: %{selected_session_name: selected_session_name}} = socket) do
+  defp assign_selected_session(
+         %{assigns: %{selected_session_name: selected_session_name}} = socket
+       ) do
     if selected_session = Sessions.get_session_by_session_name(selected_session_name) do
       assign(socket, :selected_session, selected_session)
     else
@@ -65,16 +68,19 @@ defmodule PriveeWeb.Chat.ChatLive do
     end
   end
 
-  defp assign_existing_messages(%{assigns: %{
-    current_session: current_session,
-    selected_session: selected_session,
-  }} = socket) do
+  defp assign_existing_messages(
+         %{
+           assigns: %{
+             current_session: current_session,
+             selected_session: selected_session
+           }
+         } = socket
+       ) do
     messages = Chats.get_messages(current_session.id, selected_session.id)
     assign(socket, :messages, messages)
   end
 
-  defp assign_existing_messages(socket), do:
-    assign(socket, :messages, [])
+  defp assign_existing_messages(socket), do: assign(socket, :messages, [])
 
   defp assign_form(socket, attrs \\ %{}) do
     form =
@@ -84,11 +90,16 @@ defmodule PriveeWeb.Chat.ChatLive do
     assign(socket, :form, form)
   end
 
-  defp subscribe_to_events(%{assigns: %{current_session: current_session, selected_session: selected_session}} = socket) do
-    with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id) do
-      socket
-    else
-      _ ->
+  defp subscribe_to_events(
+         %{assigns: %{current_session: current_session, selected_session: selected_session}} =
+           socket
+       ) do
+    case Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id) do
+      :ok ->
+        socket
+
+      error ->
+        Logger.warning("Failed to subscribe to chat events: '#{inspect(error)}'.")
         socket
     end
   end
