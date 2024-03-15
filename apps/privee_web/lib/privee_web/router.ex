@@ -59,7 +59,7 @@ defmodule PriveeWeb.Router do
     live_session :require_authenticated_session,
       on_mount: [{PriveeWeb.SessionAuth, :ensure_authenticated}] do
       live "/privee", PriveeSelectorLive
-      live "/chat/:session", ChatLive
+      live "/chat/:session", Chat.ChatLive
     end
   end
 

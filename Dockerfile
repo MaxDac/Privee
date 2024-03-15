@@ -78,7 +78,10 @@ COPY apps/privee_web/lib apps/privee_web/lib
 COPY apps/privee_web/assets apps/privee_web/assets
 
 # compile assets
-RUN npm i --prefix apps/privee_web/assets && cd apps/privee_web && mix assets.deploy
+RUN npm i --prefix apps/privee_web/assets && \
+  npm run check --prefix apps/privee_web/assets && \
+  cd apps/privee_web && \
+  mix assets.deploy
 
 # Compile the release
 RUN mix compile

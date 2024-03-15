@@ -5,6 +5,8 @@ defmodule PriveeWeb.Application do
 
   use Application
 
+  alias Privee.Chats
+
   @impl true
   def start(_type, _args) do
     children = [
@@ -13,8 +15,9 @@ defmodule PriveeWeb.Application do
       # {PriveeWeb.Worker, arg},
       # Start to serve requests, typically the last entry
       # ,
-      PriveeWeb.Endpoint
-      # {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]}
+      PriveeWeb.Endpoint,
+      # {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]},
+      Chats
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

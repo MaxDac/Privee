@@ -11,15 +11,15 @@ defmodule Privee.Sessions.Message do
   alias Privee.Sessions.Message
 
   @type t :: %__MODULE__{
-          text: String.t(),
-          from: String.t(),
+          text: non_neg_integer(),
+          from: non_neg_integer(),
           to: String.t()
         }
 
   embedded_schema do
     field :text, :string
-    field :from, :string
-    field :to, :string
+    field :from, :id
+    field :to, :id
   end
 
   @doc false

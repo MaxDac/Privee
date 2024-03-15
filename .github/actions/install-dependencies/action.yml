@@ -1,5 +1,5 @@
 name: dependencies
-description: 'Install required dependencies and compiles them'
+description: "Install required dependencies and compiles them"
 
 permissions:
   contents: read
@@ -47,7 +47,7 @@ runs:
       run: |
         mix deps.clean --all
         mix clean
-      
+
     # Step: Download project dependencies. If unchanged, uses
     # the cached version.
     - name: Install dependencies

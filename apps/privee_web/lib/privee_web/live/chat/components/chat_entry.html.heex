@@ -1,0 +1,22 @@
+<div dir={[
+  if @message.from == @current_session.id do
+    "rtl"
+  else
+    "ltr"
+  end
+]}>
+  <div class="p-3">
+    <div class={[
+      "flex flex-col w-full max-w-[500px] leading-1.5 p-4 border-gray-200 rounded-e-3xl rounded-ss-3xl",
+      if @message.from == @current_session.id do
+        "bg-gradient-to-r from-green-800 via-green-900 to-green-900 hover:bg-gradient-to-br"
+      else
+        "bg-gradient-to-l from-gray-800 via-gray-800 to-gray-700 hover:bg-gradient-to-tl"
+      end
+    ]}>
+      <p class="text-sm font-normal py-2.5 text-zinc-50">
+        <%= @message.text %>
+      </p>
+    </div>
+  </div>
+</div>

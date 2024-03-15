@@ -1,12 +1,12 @@
 name: build-nifs
-description: 'Build Zig NIFs in the project'
+description: "Build Zig NIFs in the project"
 
 inputs:
   zig:
     type: string
-    description: 'Zig compiler version'
+    description: "Zig compiler version"
     required: true
-    default: '0.11.0'
+    default: "0.11.0"
 
 permissions:
   contents: read

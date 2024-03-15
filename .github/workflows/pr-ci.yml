@@ -7,9 +7,9 @@ on:
       - synchronize
       - reopened
 
-    branches: 
+    branches:
       - main
-  
+
   push:
     branches: main
 
@@ -26,15 +26,14 @@ jobs:
     env:
       MIX_ENV: dev
 
-
     strategy:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ['26.2.2']
-        elixir: ['1.16.1']
-        zig: ['0.11.0']
-        node: ['18']
+        otp: ["26.2.2"]
+        elixir: ["1.16.1"]
+        zig: ["0.11.0"]
+        node: ["20"]
 
     steps:
       - name: Checkout code
@@ -42,7 +41,7 @@ jobs:
 
       - name: Loading tooling
         uses: ./.github/actions/load-tooling
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
@@ -59,12 +58,11 @@ jobs:
 
       - name: Check PR
         uses: ./.github/actions/check-pr
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
   test:
-
     runs-on: ubuntu-latest
 
     env:
@@ -72,10 +70,10 @@ jobs:
 
     services:
       db:
-        image: 'postgres:11'
-        ports: ['5432:5432']
+        image: "postgres:11"
+        ports: ["5432:5432"]
         env:
-          POSTGRES_PASSWORD: 'postgres'
+          POSTGRES_PASSWORD: "postgres"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -88,8 +86,9 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ['26.2.2']
-        elixir: ['1.16.1']
+        otp: ["26.2.2"]
+        elixir: ["1.16.1"]
+        zig: ["0.11.0"]
 
     steps:
       - name: Checkout code
@@ -97,7 +96,7 @@ jobs:
 
       - name: Loading tooling
         uses: ./.github/actions/load-tooling
-        with: 
+        with:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
           zig: ${{ matrix.zig }}
@@ -114,3 +113,29 @@ jobs:
 
       - name: Test PR
         uses: ./.github/actions/test-pr
+
+  client:
+    runs-on: ubuntu-latest
+
+    name: Pull Request CI check and test Node ${{ matrix.node }}
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        node: ["20"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "${{ matrix.node }}"
+
+      - name: Install dependencies
+        run: npm install --prefix apps/privee_web/assets
+
+      - name: Run npm command
+        run: npm run check --prefix apps/privee_web/assets

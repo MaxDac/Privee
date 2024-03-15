@@ -1,0 +1,7 @@
+<div :for={message <- @messages}>
+  <.chat_entry
+    message={message}
+    current_session={@current_session}
+    selected_session={@selected_session}
+  />
+</div>

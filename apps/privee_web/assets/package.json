@@ -1,8 +1,16 @@
 {
+  "scripts": {
+    "check:dev": "tsc && eslint --fix . && ava",
+    "check": "tsc && eslint . && ava"
+  },
   "dependencies": {
     "flowbite": "^2.3.0"
   },
   "devDependencies": {
-    "flowbite-typography": "^1.0.3"
+    "@types/node": "^20.11.28",
+    "ava": "^6.1.2",
+    "eslint": "^8.57.0",
+    "flowbite-typography": "^1.0.3",
+    "typescript": "^4.5.4"
   }
 }

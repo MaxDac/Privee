@@ -5,8 +5,12 @@ defmodule PriveeWeb.PriveeSelectorLive do
 
   use PriveeWeb, :live_view
 
+  alias PriveeWeb.Events
+
   alias Privee.Sessions
   alias Privee.Sessions.PriveeForm
+
+  require Logger
 
   @impl true
   def render(assigns) do
@@ -49,6 +53,7 @@ defmodule PriveeWeb.PriveeSelectorLive do
   def handle_event("validate", %{"privee_form" => params}, socket) do
     {:noreply,
      socket
+     |> subscribe_to_events()
      |> assign_form(params)}
   end
 
@@ -97,5 +102,16 @@ defmodule PriveeWeb.PriveeSelectorLive do
       _, _ ->
         []
     end)
+  end
+
+  defp subscribe_to_events(%{assigns: %{current_session: current_session}} = socket) do
+    case Events.subscribe_to_receiving_events(socket, current_session.id) do
+      :ok ->
+        socket
+
+      error ->
+        Logger.warning("Could not subscribe to receiving events '#{inspect(error)}'.")
+        socket
+    end
   end
 end
