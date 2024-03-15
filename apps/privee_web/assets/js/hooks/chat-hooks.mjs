@@ -5,7 +5,7 @@ import { pushNotification } from "../utils/push-notifications.mjs"
  * @param {any} Hooks LiveView Hooks 
  */
 export function addChatHooks(Hooks) { 
-  Hooks.ChatLive = {
+  Hooks.ChatScreen = {
     mounted() {
       scrollElementToEnd(this.el)
     },

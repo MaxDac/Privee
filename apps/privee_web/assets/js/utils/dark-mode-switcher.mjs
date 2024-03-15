@@ -79,14 +79,11 @@ export const setStartupTheme = () =>
   * and sets initial theme state.
   */
 export const addToggleDarkModeHandling = () => {
-  console.debug("invoking dark mode handling")
   setStartupTheme()
 
   const themeToggleButton = document.getElementById(themeToggleButtonId)
 
   themeToggleButton.addEventListener("click", () => {
-    console.debug("toggling")
-
     if (isDarkModeEnabled()) {
       trySetTheme(lightModelLabel)
     } else {

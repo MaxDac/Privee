@@ -26,7 +26,6 @@ jobs:
     env:
       MIX_ENV: dev
 
-
     strategy:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
@@ -34,7 +33,7 @@ jobs:
         otp: ['26.2.2']
         elixir: ['1.16.1']
         zig: ['0.11.0']
-        node: ['18']
+        node: ['20']
 
     steps:
       - name: Checkout code
@@ -64,7 +63,6 @@ jobs:
           elixir: ${{ matrix.elixir }}
 
   test:
-
     runs-on: ubuntu-latest
 
     env:
@@ -90,6 +88,7 @@ jobs:
       matrix:
         otp: ['26.2.2']
         elixir: ['1.16.1']
+        zig: ['0.11.0']
 
     steps:
       - name: Checkout code
@@ -114,3 +113,29 @@ jobs:
 
       - name: Test PR
         uses: ./.github/actions/test-pr
+
+  client: 
+    runs-on: ubuntu-latest
+
+    name: Pull Request CI check and test Node ${{ matrix.node }}
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        node: ['20']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '${{ matrix.node }}'
+  
+      - name: Install dependencies
+        run: npm install
+  
+      - name: Run npm command
+        run: npm run check
