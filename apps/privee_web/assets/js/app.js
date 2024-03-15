@@ -28,9 +28,9 @@ import topbar from "../vendor/topbar"
 import "flowbite/dist/flowbite.phoenix.js"
 
 // Importing utility functions
-import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher"
-import { askNotificationPermission } from "./utils/push-notifications"
-import { addChatHooks } from "./hooks/chat-hooks"
+import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
+import { askNotificationPermission } from "./utils/push-notifications.mjs"
+import { addChatHooks } from "./hooks/chat-hooks.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}

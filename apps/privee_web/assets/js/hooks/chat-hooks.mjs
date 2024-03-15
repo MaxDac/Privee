@@ -1,4 +1,4 @@
-import { pushNotification } from "../utils/push-notifications"
+import { pushNotification } from "../utils/push-notifications.mjs"
 
 /**
  * Adds hooks to the chat screen to automatically scroll to the bottom of the chat.
