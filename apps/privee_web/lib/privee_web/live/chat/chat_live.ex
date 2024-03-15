@@ -1,4 +1,4 @@
-defmodule PriveeWeb.ChatLive do
+defmodule PriveeWeb.Chat.ChatLive do
   @moduledoc """
   This component represents a privee, or a chat where two sessions can actually talk.
   """
@@ -8,10 +8,10 @@ defmodule PriveeWeb.ChatLive do
   alias Privee.Chats
   alias PriveeWeb.Events
 
-  import PriveeWeb.ChatComponents
-
   alias Privee.Sessions
   alias Privee.Sessions.Message
+
+  embed_templates "components/*"
 
   @chat_created_event "chat_created"
 
@@ -88,7 +88,7 @@ defmodule PriveeWeb.ChatLive do
     with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id) do
       socket
     else
-      _ -> 
+      _ ->
         socket
     end
   end
