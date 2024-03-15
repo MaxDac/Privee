@@ -8,14 +8,14 @@ const themeToggleButtonId = "theme-toggle"
 
 /**
   * Determines whether the local storage is avaialble or not.
-  * @returns {bool} `True` if the `localStorage` is available, `False` otherwise.
+  * @returns {boolean} `True` if the `localStorage` is available, `False` otherwise.
   */
 const isLocalStorageAvailable = () =>
-  localStorage && localStorage.getItem && localStorage.setItem
+  Boolean(localStorage && localStorage.getItem && localStorage.setItem)
 
 /**
   * Gets the setting value for the dark theme from the local storage.
-  * @returns {?bool} `True` if the setting from the local storage determines that the dark theme should be enabled,
+  * @returns {?boolean} `True` if the setting from the local storage determines that the dark theme should be enabled,
   * `False` if not, and `null` if the setting does not exist.
   */
 const getDarkThemeSettingFromLocalStorage = () => {
@@ -29,7 +29,7 @@ const getDarkThemeSettingFromLocalStorage = () => {
 
 /**
   * Determines whether the dark mode is enabled for the application or not.
-  * @returns {bool} `True` if the dark mode is enabled, `False` otherwise.
+  * @returns {boolean} `True` if the dark mode is enabled, `False` otherwise.
   */
 const isDarkModeEnabled = () => {
   const settingValue = getDarkThemeSettingFromLocalStorage()
@@ -39,11 +39,11 @@ const isDarkModeEnabled = () => {
   }
 
   return settingValue
-};
+}
 
 /**
   * Tries to set the theme for the page.
-  * @param {"dark"|"light"} The selected theme.
+  * @param {"dark"|"light"} theme The selected theme.
   */
 const trySetTheme = (theme) => {
   if (isLocalStorageAvailable()) {

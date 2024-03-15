@@ -59,6 +59,9 @@
                 "ziglang.vscode-zig",
                 "vadimcn.vscode-lldb",
 
+                // JS
+                "dbaeumer.vscode-eslint",
+
                 // Tooling 
                 "github.vscode-github-actions",
                 "GitHub.copilot",

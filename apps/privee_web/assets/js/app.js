@@ -18,15 +18,23 @@
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
+// @ts-ignore
 import { Socket } from "phoenix"
+// @ts-ignore
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
 // Importing Flowbite
 import "flowbite/dist/flowbite.phoenix.js"
 
-// Importing theming functions
-import { addToggleDarkModeHandling, setStartupTheme } from "./dark-mode-switcher"
+// Importing utility functions
+import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher"
+import { askNotificationPermission } from "./utils/push-notifications"
+import { addChatHooks } from "./hooks/chat-hooks"
+
+// Setting up LiveView hooks
+const Hooks = {}
+addChatHooks(Hooks)
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
@@ -46,6 +54,9 @@ window.addEventListener("phx:page-loading-stop", _info => {
 
 document.addEventListener("DOMContentLoaded", addToggleDarkModeHandling)
 
+// Asking for notification permission to the browser
+askNotificationPermission()
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 
@@ -53,5 +64,6 @@ liveSocket.connect()
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
+// @ts-ignore
 window.liveSocket = liveSocket
 

@@ -1,5 +1,6 @@
 // See the Tailwind configuration guide for advanced usage
 // https://tailwindcss.com/docs/configuration
+// @ts-nocheck
 
 const plugin = require("tailwindcss/plugin")
 const fs = require("fs")
@@ -19,7 +20,7 @@ module.exports = {
       }
     },
   },
-  darkMode: 'class',
+  darkMode: "class",
   plugins: [
     require("@tailwindcss/forms"),
     // Allows prefixing tailwind classes with LiveView classes to add rules
@@ -28,7 +29,7 @@ module.exports = {
     //     <div class="phx-click-loading:animate-ping">
     //
     require("flowbite/plugin"),
-    require('flowbite-typography'),
+    require("flowbite-typography"),
     plugin(({addVariant}) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
     plugin(({addVariant}) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
     plugin(({addVariant}) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),
