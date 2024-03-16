@@ -100,13 +100,17 @@ defmodule PriveeWeb.Chat.ChatLive do
          %{assigns: %{current_session: current_session, selected_session: selected_session}} =
            socket
        ) do
-    with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
-         :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
-      socket
-    else
-      error ->
-        Logger.warning("Failed to subscribe to chat events: '#{inspect(error)}'.")
+    if connected?(socket) do
+      with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
+          :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
         socket
+      else
+        error ->
+          Logger.warning("Failed to subscribe to chat events: '#{inspect(error)}'.")
+          socket
+      end
+    else
+      socket
     end
   end
 

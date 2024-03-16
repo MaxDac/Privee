@@ -79,6 +79,26 @@ defmodule Privee.Sessions do
   def get_session_by_session_name(session_name),
     do: Repo.get_by(Session, session_name: session_name)
 
+  @doc """
+  Generates a new session name available, i.e. non currently existing on the database.
+  """
+  def generate_new_available_session_name do
+    new_session_name = Ecto.UUID.generate()
+
+    if session_name_exists?(new_session_name) do
+      generate_new_available_session_name()
+    else
+      new_session_name
+    end
+  end
+
+  defp session_name_exists?(session_name) do
+    Session
+    |> from()
+    |> where([s], s.session_name == ^session_name)
+    |> Repo.exists?()
+  end
+
   ## Session registration
 
   @doc """
@@ -109,7 +129,7 @@ defmodule Privee.Sessions do
 
   """
   def change_session_registration(%Session{} = session, attrs \\ %{}) do
-    Session.registration_changeset(session, attrs, hash_session_name: false)
+    Session.registration_changeset(session, attrs, hash_recovery_phrase: false)
   end
 
   ## Session
@@ -164,13 +184,6 @@ defmodule Privee.Sessions do
         do: [],
         else: [{field, "The session name does not exist"}]
     end)
-  end
-
-  defp session_name_exists?(session_name) do
-    Session
-    |> from()
-    |> where([s], s.session_name == ^session_name)
-    |> Repo.exists?()
   end
 
   @doc """

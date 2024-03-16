@@ -64,6 +64,29 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       assert response =~ "Log out"
     end
 
+    test "creates account and even though the user does not specify the session name", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+
+      recovery_phrase = session_recovery_phrase()
+
+      form =
+        form(lv, "#registration_form",
+          session: %{
+            recovery_phrase: recovery_phrase
+          }
+        )
+
+      render_submit(form)
+      conn = follow_trigger_action(form, conn)
+
+      assert redirected_to(conn) == ~p"/privee"
+
+      # Now do a logged in request and assert on the menu
+      conn = get(conn, "/privee")
+      response = html_response(conn, 200)
+      assert response =~ "Log out"
+    end
+
     test "renders errors for duplicated session name", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
 

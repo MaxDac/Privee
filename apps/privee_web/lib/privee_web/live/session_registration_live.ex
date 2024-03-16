@@ -4,6 +4,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
   alias Privee.Sessions
   alias Privee.Sessions.Session
 
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="mx-auto sm:max-w-sm md:max-w-md">
@@ -39,9 +40,11 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
         <.input
           field={@form[:session_name]}
-          type="text"
+          type="search"
           label="Session Name"
-          placeholder="Write your session name."
+          placeholder="Write your own session name"
+          value={@automatic_session_name}
+          phx-debounce="1000"
           required
         />
 
@@ -51,6 +54,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
           label="Recovery phrase"
           placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
           rows="5"
+          phx-debounce="1000"
           required
         />
 
@@ -62,17 +66,20 @@ defmodule PriveeWeb.SessionRegistrationLive do
     """
   end
 
+  @impl true
   def mount(_params, _session, socket) do
     changeset = Sessions.change_session_registration(%Session{})
 
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
+      |> assign_automatic_session_name()
       |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}
   end
 
+  @impl true
   def handle_event("save", %{"session" => session_params}, socket) do
     case Sessions.register_session(session_params) do
       {:ok, session} ->
@@ -91,8 +98,9 @@ defmodule PriveeWeb.SessionRegistrationLive do
     end
   end
 
+  @impl true
   def handle_event("validate", %{"session" => session_params}, socket) do
-    changeset = Sessions.change_session_registration(%Session{}, session_params)
+    changeset = Sessions.change_session_registration(%Session{}, session_params) |> IO.inspect(label: "validation changeset")
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 
@@ -103,6 +111,15 @@ defmodule PriveeWeb.SessionRegistrationLive do
       assign(socket, form: form, check_errors: false)
     else
       assign(socket, form: form)
+    end
+  end
+
+  defp assign_automatic_session_name(socket) do
+    if connected?(socket) do
+      automatic_session_name = Sessions.generate_new_available_session_name()
+      assign(socket, :automatic_session_name, automatic_session_name)
+    else
+      assign(socket, :automatic_session_name, "")
     end
   end
 end

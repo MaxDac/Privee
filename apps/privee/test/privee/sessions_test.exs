@@ -1,9 +1,9 @@
 defmodule Privee.SessionsTest do
   use Privee.DataCase
 
-  alias Privee.Sessions
-
   import Privee.SessionsFixtures
+
+  alias Privee.Sessions
   alias Privee.Sessions.{PriveeForm, Session, SessionToken}
 
   describe "get_session_by_session_name_and_phrase/2" do
@@ -64,6 +64,13 @@ defmodule Privee.SessionsTest do
 
       assert %Session{session_name: ^session_name} =
                Sessions.get_session_by_session_name(session_name)
+    end
+  end
+
+  describe "generate_new_available_session_name/0" do
+    test "generates a new session name" do
+      assert session_name = Sessions.generate_new_available_session_name()
+      assert String.match?(session_name, ~r/^[a-z0-9-]{24,72}$/)
     end
   end
 
@@ -133,7 +140,7 @@ defmodule Privee.SessionsTest do
 
       assert changeset.valid?
       assert get_change(changeset, :session_name) == session_name
-      assert get_change(changeset, :hashed_recovery_phrase)
+      assert get_change(changeset, :recovery_phrase) == recovery_phrase
     end
   end
 
