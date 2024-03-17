@@ -13,19 +13,21 @@ defmodule Privee.Sessions.Message do
   @type t :: %__MODULE__{
           text: non_neg_integer(),
           from: non_neg_integer(),
-          to: String.t()
+          to: String.t(),
+          sender_session_name: String.t()
         }
 
   embedded_schema do
     field :text, :string
     field :from, :id
     field :to, :id
+    field :sender_session_name, :string
   end
 
   @doc false
   def changeset(%Message{} = message, attrs) do
     message
-    |> cast(attrs, [:text, :from, :to])
-    |> validate_required([:text, :from, :to])
+    |> cast(attrs, [:text, :from, :to, :sender_session_name])
+    |> validate_required([:text, :from, :to, :sender_session_name])
   end
 end

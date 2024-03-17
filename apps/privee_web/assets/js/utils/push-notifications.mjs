@@ -18,17 +18,25 @@ export const askNotificationPermission = () => {
   
 /**
     * Shows a notification with the given body and an optional title.
-    * @param {string} body - The body of the notification.
+    * @param {string} [body] - The body of the notification.
     * @param {string} [title] - The title of the notification.
+    * @param {string} [url] - The url to open when the notification is clicked.
     * @returns {Promise<?Notification>} - The notification.
     */
-export const pushNotification = (body, title) => {
+export const pushNotification = (body, title, url) => {
   const imageUrl = "/favicon.ico"
   const notificationTitle = title || " - Privee new notification"
 
   const notification = new Notification(notificationTitle, {
     body: body,
     icon: imageUrl
+  })
+
+  // Open the chat when the notification is clicked.
+  notification.addEventListener("click", (_) => {
+    if (url) {
+      window.open(url, "_blank")
+    }
   })
     
   return new Promise((resolve, _reject) => {
@@ -50,6 +58,7 @@ export const pushNotification = (body, title) => {
  * @param {PhoenixEvent} event The event triggered from the back-end.
  */
 export const phoenixPushEventHandler = (event) => {
-  pushNotification(event.detail.text, "Privee - Text received")
+  console.debug("Phoenix event received: ", event)
+  pushNotification(event.detail.text, "Privee - Text received", `/chat/${event.detail.session_name}`)
     .catch(e => console.error("Error showing notification: ", e))
 }
