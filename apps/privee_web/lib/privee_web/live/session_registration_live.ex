@@ -3,6 +3,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
   alias Privee.Sessions
   alias Privee.Sessions.Session
+  alias Privee.SessionNameProvider
 
   @impl true
   def render(assigns) do
@@ -116,7 +117,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
   defp assign_automatic_session_name(socket) do
     if connected?(socket) do
-      automatic_session_name = Sessions.generate_new_available_session_name()
+      {:ok, automatic_session_name} = SessionNameProvider.generate_new_available_session_name()
       assign(socket, :automatic_session_name, automatic_session_name)
     else
       assign(socket, :automatic_session_name, "")

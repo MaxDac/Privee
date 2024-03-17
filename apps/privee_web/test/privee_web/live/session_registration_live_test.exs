@@ -66,14 +66,14 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
 
     test "creates account and even though the user does not specify the session name", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      mocked_session_name = Privee.SessionNameProvider.Test.get_mocked_unique_session_name()
 
       session_name_input_element =
         lv
         |> element("#session_session_name")
         |> render()
 
-      assert session_name_input_element =~ "value=\""
-      refute session_name_input_element =~ "value=\"\""
+      assert session_name_input_element =~ "value=\"#{mocked_session_name}\""
     end
 
     test "renders errors for duplicated session name", %{conn: conn} do

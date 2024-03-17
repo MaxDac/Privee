@@ -22,6 +22,9 @@ config :privee,
 # at the `config/runtime.exs`.
 config :privee, Privee.Mailer, adapter: Swoosh.Adapters.Local
 
+# Selecting the session name provider implementation
+config :privee, :session_name_provider, Privee.SessionNameProvider.Impl
+
 config :privee_web,
   ecto_repos: [Privee.Repo],
   generators: [context_app: :privee]
