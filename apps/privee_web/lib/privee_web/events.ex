@@ -79,7 +79,7 @@ defmodule PriveeWeb.Events do
   end
 
   @doc """
-  Sends a notification event to the client, to trigger in turn a notification. 
+  Sends a notification event to the client, to trigger in turn a notification.
   """
   def send_notification_event_to_client(socket, payload)
 
@@ -90,7 +90,13 @@ defmodule PriveeWeb.Events do
     socket
   end
 
-  def send_notification_event_to_client(socket, %{text: text}) do
-    push_event(socket, @js_event, %{text: text})
+  def send_notification_event_to_client(
+        socket,
+        %{
+          sender_session_name: sender_session_name,
+          text: text
+        }
+      ) do
+    push_event(socket, @js_event, %{session_name: sender_session_name, text: text})
   end
 end

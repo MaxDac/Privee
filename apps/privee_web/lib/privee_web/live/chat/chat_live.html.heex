@@ -21,6 +21,12 @@
 
       <.input type="hidden" field={@form[:to]} value={@selected_session.id} />
 
+      <.input
+        type="hidden"
+        field={@form[:sender_session_name]}
+        value={@current_session.session_name}
+      />
+
       <.chat_input form={@form} />
     </.simple_form>
   </footer>
