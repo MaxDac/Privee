@@ -68,7 +68,7 @@ defmodule PriveeWeb.SessionControllerTest do
         })
 
       assert redirected_to(conn) == ~p"/privee"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Session created successfully"
     end
 
     # #19 - Use this test when the username will be available.
