@@ -19,10 +19,7 @@ defmodule Privee.SessionNameProvider do
   Returns a fresh unique session name.
   """
   def generate_new_available_session_name do
-    case @provider_implementation do
-      nil -> {:error, "No implementation for Privee.SessionNameProvider.Behaviour"}
-      module -> module.generate_new_available_session_name()
-    end
+    @provider_implementation.generate_new_available_session_name()
   end
 
   defmodule Impl do
