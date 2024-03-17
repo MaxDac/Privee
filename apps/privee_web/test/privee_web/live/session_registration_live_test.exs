@@ -4,6 +4,8 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
   import Phoenix.LiveViewTest
   import Privee.SessionsFixtures
 
+  alias Privee.SessionNameProvider.Test
+
   describe "Registration page" do
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/sessions/register")
@@ -64,9 +66,11 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       assert response =~ "Log out"
     end
 
-    test "creates account and even though the user does not specify the session name", %{conn: conn} do
+    test "creates account and even though the user does not specify the session name", %{
+      conn: conn
+    } do
       {:ok, lv, _html} = live(conn, ~p"/sessions/register")
-      mocked_session_name = Privee.SessionNameProvider.Test.get_mocked_unique_session_name()
+      mocked_session_name = Test.get_mocked_unique_session_name()
 
       session_name_input_element =
         lv

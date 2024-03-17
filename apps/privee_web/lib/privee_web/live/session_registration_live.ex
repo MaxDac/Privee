@@ -1,9 +1,9 @@
 defmodule PriveeWeb.SessionRegistrationLive do
   use PriveeWeb, :live_view
 
+  alias Privee.SessionNameProvider
   alias Privee.Sessions
   alias Privee.Sessions.Session
-  alias Privee.SessionNameProvider
 
   @impl true
   def render(assigns) do
@@ -101,7 +101,9 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
   @impl true
   def handle_event("validate", %{"session" => session_params}, socket) do
-    changeset = Sessions.change_session_registration(%Session{}, session_params) |> IO.inspect(label: "validation changeset")
+    changeset =
+      Sessions.change_session_registration(%Session{}, session_params)
+
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 

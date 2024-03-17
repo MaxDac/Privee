@@ -101,8 +101,9 @@ defmodule PriveeWeb.Chat.ChatLive do
            socket
        ) do
     if connected?(socket) do
-      with :ok <- Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
-          :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
+      with :ok <-
+             Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
+           :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
         socket
       else
         error ->
