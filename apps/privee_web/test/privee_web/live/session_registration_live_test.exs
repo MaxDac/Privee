@@ -8,9 +8,9 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
 
   describe "Registration page" do
     test "renders registration page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/sessions/register")
+      {:ok, _lv, html} = live(conn, ~p"/")
 
-      assert html =~ "Register"
+      assert html =~ "Create"
       assert html =~ "Log in"
     end
 
@@ -18,14 +18,14 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       result =
         conn
         |> log_in_session(session_fixture())
-        |> live(~p"/sessions/register")
+        |> live(~p"/")
         |> follow_redirect(conn, "/privee")
 
       assert {:ok, _conn} = result
     end
 
     test "renders errors for invalid data", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       result =
         lv
@@ -37,7 +37,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
           }
         )
 
-      assert result =~ "Register"
+      assert result =~ "Create"
       assert result =~ "must contain only alphabetic characters and punctuation"
       assert result =~ "should be at least 24 character"
     end
@@ -45,7 +45,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
 
   describe "register session" do
     test "creates account and logs the session in", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       session_name = unique_session_name()
 
@@ -69,7 +69,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
     test "creates account and even though the user does not specify the session name", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      {:ok, lv, _html} = live(conn, ~p"/")
       mocked_session_name = Test.get_mocked_unique_session_name()
 
       session_name_input_element =
@@ -81,7 +81,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
     end
 
     test "renders errors for duplicated session name", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       _session = session_fixture(%{session_name: unique_session_name()})
 
@@ -101,7 +101,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
 
   describe "registration navigation" do
     test "redirects to login page when the Log in button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/sessions/register")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
       {:ok, _login_live, login_html} =
         lv

@@ -6,10 +6,10 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
   describe "Log in page" do
     test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, _lv, html} = live(conn, ~p"/login")
 
       assert html =~ "Log in"
-      assert html =~ "Register"
+      assert html =~ "Create"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -29,7 +29,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       session_name = unique_session_name()
       _session = session_fixture(%{session_name: session_name, recovery_phrase: recovery_phrase})
 
-      {:ok, lv, _html} = live(conn, ~p"/")
+      {:ok, lv, _html} = live(conn, ~p"/login")
 
       form =
         form(lv, "#login_form",
@@ -48,7 +48,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
     test "redirects to login page with a flash error if there are no valid credentials", %{
       conn: conn
     } do
-      {:ok, lv, _html} = live(conn, ~p"/")
+      {:ok, lv, _html} = live(conn, ~p"/login")
 
       form =
         form(lv, "#login_form",
@@ -70,15 +70,15 @@ defmodule PriveeWeb.SessionLoginLiveTest do
 
   describe "login navigation" do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/")
+      {:ok, lv, _html} = live(conn, ~p"/login")
 
       {:ok, _login_live, login_html} =
         lv
-        |> element(~s|main a:fl-contains("Sign up")|)
+        |> element(~s|main a:fl-contains("Create a new one")|)
         |> render_click()
-        |> follow_redirect(conn, ~p"/sessions/register")
+        |> follow_redirect(conn, ~p"/")
 
-      assert login_html =~ "Register"
+      assert login_html =~ "Create"
     end
   end
 end

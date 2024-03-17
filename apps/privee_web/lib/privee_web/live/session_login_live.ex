@@ -5,13 +5,13 @@ defmodule PriveeWeb.SessionLoginLive do
     ~H"""
     <div class="mx-auto sm:max-w-sm md:max-w-md">
       <.header class="text-center">
-        Sign in to account
+        Sign in to existing session
         <:subtitle>
-          Don't have an account?
-          <.link navigate={~p"/sessions/register"} class="font-semibold text-brand hover:underline">
-            Sign up
+          Don't have a session?
+          <.link navigate={~p"/"} class="font-semibold text-brand hover:underline">
+            Create a new one
           </.link>
-          for an account now.
+          now.
         </:subtitle>
       </.header>
 
