@@ -2,7 +2,11 @@
   <div class="flex items-center gap-4">
     <a href="/">
       <div class="flex space-x-3">
-        <img src={~p"/images/PriveeLogoCenteredNoBackground.png"} class="invert dark:invert-0" width="36" />
+        <img
+          src={~p"/images/PriveeLogoCenteredNoBackground.png"}
+          class="invert dark:invert-0"
+          width="36"
+        />
         <strong class="text-lg text-zinc-900 dark:text-zinc-50 hidden sm:inline">Privée</strong>
       </div>
     </a>
@@ -26,11 +30,7 @@
       <.button_link href={~p"/login"}>
         Log in
       </.button_link>
-      <.button 
-        id="theme-toggle" 
-        data-theme-toggle="theme-toggle" 
-        aria-label="dark-theme-selector"
-      >
+      <.button id="theme-toggle" data-theme-toggle="theme-toggle" aria-label="dark-theme-selector">
         <svg
           id="theme-toggle-dark-icon"
           data-theme-selector="dark"
