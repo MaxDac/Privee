@@ -21,6 +21,7 @@ defmodule PriveeWeb.SessionLoginLive do
           type="text"
           label="Session Name"
           placeholder="Write your session name."
+          phx-debounce="500"
           required
         />
 
@@ -30,6 +31,7 @@ defmodule PriveeWeb.SessionLoginLive do
           label="Recovery phrase"
           placeholder="Your citation."
           rows="5"
+          phx-debounce="1000"
           required
         />
 

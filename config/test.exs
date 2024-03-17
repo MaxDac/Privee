@@ -16,6 +16,9 @@ config :privee, Privee.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
+# Selecting the session name provider implementation
+config :privee, :session_name_provider, Privee.SessionNameProvider.Test
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :privee_web, PriveeWeb.Endpoint,

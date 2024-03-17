@@ -112,13 +112,17 @@ defmodule PriveeWeb.PriveeSelectorLive do
   end
 
   defp subscribe_to_events(%{assigns: %{current_session: current_session}} = socket) do
-    case Events.subscribe_to_receiving_events(socket, current_session.id) do
-      :ok ->
-        socket
+    if connected?(socket) do
+      case Events.subscribe_to_receiving_events(socket, current_session.id) do
+        :ok ->
+          socket
 
-      error ->
-        Logger.warning("Could not subscribe to receiving events '#{inspect(error)}'.")
-        socket
+        error ->
+          Logger.warning("Could not subscribe to receiving events '#{inspect(error)}'.")
+          socket
+      end
+    else
+      socket
     end
   end
 end
