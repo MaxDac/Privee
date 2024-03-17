@@ -58,7 +58,6 @@ export const pushNotification = (body, title, url) => {
  * @param {PhoenixEvent} event The event triggered from the back-end.
  */
 export const phoenixPushEventHandler = (event) => {
-  console.debug("Phoenix event received: ", event)
   pushNotification(event.detail.text, "Privee - Text received", `/chat/${event.detail.session_name}`)
     .catch(e => console.error("Error showing notification: ", e))
 }

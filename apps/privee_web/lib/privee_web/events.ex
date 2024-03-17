@@ -90,11 +90,13 @@ defmodule PriveeWeb.Events do
     socket
   end
 
-  def send_notification_event_to_client(socket, %{
-    sender_session_name: sender_session_name,
-    text: text
-  } = params) do
-    IO.inspect(params, label: "notification params")
+  def send_notification_event_to_client(
+        socket,
+        %{
+          sender_session_name: sender_session_name,
+          text: text
+        }
+      ) do
     push_event(socket, @js_event, %{session_name: sender_session_name, text: text})
   end
 end

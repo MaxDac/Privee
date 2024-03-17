@@ -21,6 +21,7 @@ defmodule Privee.Sessions.Message do
     field :text, :string
     field :from, :id
     field :to, :id
+    # Added to simplify notification handling
     field :sender_session_name, :string
   end
 
