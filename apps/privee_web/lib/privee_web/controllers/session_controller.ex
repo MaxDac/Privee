@@ -5,7 +5,10 @@ defmodule PriveeWeb.SessionController do
   alias PriveeWeb.SessionAuth
 
   def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, "Account created successfully!")
+    create(conn, params, """
+    Session created successfully! 
+    Your session name has been automatically copied to the clipboard.
+    """)
   end
 
   def create(conn, params) do
