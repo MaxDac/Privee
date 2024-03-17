@@ -267,7 +267,7 @@ defmodule PriveeWeb.SessionAuthTest do
       assert redirected_to(conn) == ~p"/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "You must log in to access this page."
+               "You must have a session to access this page."
     end
 
     test "stores the path to redirect to on GET", %{conn: conn} do

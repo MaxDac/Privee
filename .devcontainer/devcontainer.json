@@ -44,6 +44,7 @@
                 "editor.fontFamily": "'FiraCode Nerd Font Mono', 'Courier New', monospace",
                 "editor.lineNumbers": "relative",
                 "terminal.integrated.fontSize": 12,
+                "editor.tabSize": 2,
                 "editor.rulers": [80, 120]
             },
             "extensions": [

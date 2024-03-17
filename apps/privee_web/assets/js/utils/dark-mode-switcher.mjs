@@ -2,9 +2,9 @@ const localStorageDarkModeKey = "color-theme"
 const darkModeLabel = "dark"
 const lightModelLabel = "light"
 
-const darkIconId = "theme-toggle-dark-icon"
-const lightIconId = "theme-toggle-light-icon"
-const themeToggleButtonId = "theme-toggle"
+const darkIndicatorDataSelector = "[data-theme-selector=\"dark\"]"
+const lightIndicatorDataSelector = "[data-theme-selector=\"light\"]"
+const themeToggleButtonDataThemeToggle = "[data-theme-toggle=\"theme-toggle\"]"
 
 /**
   * Determines whether the local storage is avaialble or not.
@@ -42,6 +42,18 @@ const isDarkModeEnabled = () => {
 }
 
 /**
+ * Removes all the items from the document.
+ * @param {NodeListOf<Element>} [items] The item to be removed.
+ */
+const removeItems = items => items.forEach(item => item.classList.add("hidden"))
+
+/**
+ * Re-add all the items from the document.
+ * @param {NodeListOf<Element>} [items] The item to be re-added.
+ */
+const reAddItems = items => items.forEach(item => item.classList.remove("hidden"))
+
+/**
   * Tries to set the theme for the page.
   * @param {"dark"|"light"} theme The selected theme.
   */
@@ -50,18 +62,18 @@ const trySetTheme = (theme) => {
     localStorage.setItem(localStorageDarkModeKey, theme)
   }
 
-  const themeToggleDarkIcon = document.getElementById(darkIconId)
-  const themeToggleLightIcon = document.getElementById(lightIconId)
+  const themeToggleDarkSelectors = document.querySelectorAll(darkIndicatorDataSelector)
+  const themeToggleLightSelectors = document.querySelectorAll(lightIndicatorDataSelector)
 
   if (theme === darkModeLabel) {
-    themeToggleDarkIcon.classList.add("hidden")
-    themeToggleLightIcon.classList.remove("hidden")
+    removeItems(themeToggleDarkSelectors)
+    reAddItems(themeToggleLightSelectors)
 
     document.documentElement.classList.remove(lightModelLabel)
     document.documentElement.classList.add(darkModeLabel)
   } else {
-    themeToggleDarkIcon.classList.remove("hidden")
-    themeToggleLightIcon.classList.add("hidden")
+    removeItems(themeToggleLightSelectors)
+    reAddItems(themeToggleDarkSelectors)
 
     document.documentElement.classList.remove(darkModeLabel)
     document.documentElement.classList.add(lightModelLabel)
@@ -81,13 +93,16 @@ export const setStartupTheme = () =>
 export const addToggleDarkModeHandling = () => {
   setStartupTheme()
 
-  const themeToggleButton = document.getElementById(themeToggleButtonId)
+  const themeToggleButtons = 
+    document.querySelectorAll(themeToggleButtonDataThemeToggle)
 
-  themeToggleButton.addEventListener("click", () => {
-    if (isDarkModeEnabled()) {
-      trySetTheme(lightModelLabel)
-    } else {
-      trySetTheme(darkModeLabel)
-    }
+  themeToggleButtons.forEach(themeToggleButton => {
+    themeToggleButton.addEventListener("click", () => {
+      if (isDarkModeEnabled()) {
+        trySetTheme(lightModelLabel)
+      } else {
+        trySetTheme(darkModeLabel)
+      }
+    })
   })
 }

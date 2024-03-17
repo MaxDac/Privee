@@ -46,8 +46,8 @@ defmodule PriveeWeb.Router do
 
     live_session :redirect_if_session_is_authenticated,
       on_mount: [{PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated}] do
-      live "/sessions/register", SessionRegistrationLive, :new
-      live "/", SessionLoginLive, :new
+      live "/", SessionRegistrationLive, :new
+      live "/login", SessionLoginLive, :new
     end
 
     post "/sessions/log_in", SessionController, :create
