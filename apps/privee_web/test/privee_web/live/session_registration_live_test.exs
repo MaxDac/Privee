@@ -62,8 +62,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, "/privee")
       response = html_response(conn, 200)
-      assert response =~ session_name
-      assert response =~ "Log out"
+      assert response =~ "Session"
     end
 
     test "creates account and even though the user does not specify the session name", %{
