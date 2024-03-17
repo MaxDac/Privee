@@ -31,7 +31,7 @@ import "flowbite/dist/flowbite.phoenix.js"
 import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, phoenixPushEventHandler } from "./utils/push-notifications.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
-import { copyToClipboard } from "./utils/clipboard.mjs"
+import { addSessionNameCopyListener, copyToClipboard } from "./utils/clipboard.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}
@@ -62,6 +62,7 @@ askNotificationPermission()
 // Setting the LiveView events
 window.addEventListener("phx:trigger_notification", phoenixPushEventHandler)
 window.addEventListener("phx:copy-to-clipboard", copyToClipboard)
+addSessionNameCopyListener()
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
