@@ -92,17 +92,30 @@ export const setStartupTheme = () =>
   */
 export const addToggleDarkModeHandling = () => {
   setStartupTheme()
+  addDarkModeToggleHandlers()
+}
 
+/**
+ * Adds the handlers for the buttons that toggle the dark mode theme.
+ */
+export const addDarkModeToggleHandlers = () => {
   const themeToggleButtons = 
     document.querySelectorAll(themeToggleButtonDataThemeToggle)
 
   themeToggleButtons.forEach(themeToggleButton => {
-    themeToggleButton.addEventListener("click", () => {
-      if (isDarkModeEnabled()) {
-        trySetTheme(lightModelLabel)
-      } else {
-        trySetTheme(darkModeLabel)
-      }
-    })
+    themeToggleButton.removeEventListener("click", themeToggleHandler)
+    themeToggleButton.addEventListener("click", themeToggleHandler)
   })
+}
+
+/**
+ * Handles the theme toggle. Not inlined because it has to be removed before
+ * being re-added again to avoid duplications.
+ */
+const themeToggleHandler = () => {
+  if (isDarkModeEnabled()) {
+    trySetTheme(lightModelLabel)
+  } else {
+    trySetTheme(darkModeLabel)
+  }
 }
