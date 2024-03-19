@@ -1,0 +1,144 @@
+defmodule PriveeWeb.ChatHelpersTest do
+  @moduledoc """
+  Tests for the ChatHelpers module.
+  """
+
+  use PriveeWeb.ConnCase, async: true
+
+  import Privee.SessionsFixtures
+  import PriveeWeb.Chat.ChatHelpers
+
+  alias Privee.Sessions.Message
+
+  describe "parse_messages/1" do
+    test " correctly returns an emtpy list with an empty list in input" do
+      assert [] == parse_messages([])
+    end
+
+    test " correctly returns no in_thread when a single message is passed" do
+      message = message_fixture()
+      assert [message] = parse_messages([message])
+      refute message.in_thread
+    end
+
+    test " correctly returns no in_thread when two message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+
+      assert [message_21, message_22] = parse_messages([message_11, message_12])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+    end
+
+    test " correctly returns no in_thread when three message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+      message_13 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 2"})
+
+      assert [message_21, message_22, message_23] =
+               parse_messages([message_11, message_12, message_13])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+      assert message_13.text == message_23.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+      refute message_23.in_thread
+    end
+
+    test " correctly returns ine in_thread when three message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+      message_13 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+
+      assert [message_21, message_22, message_23] =
+               parse_messages([message_11, message_12, message_13])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+      assert message_13.text == message_23.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+      assert message_23.in_thread
+    end
+  end
+
+  describe "add_message/2" do
+    test " correctly returns no in_thread when a single message is passed" do
+      message = message_fixture()
+      assert [message] = add_message(message, [])
+      refute message.in_thread
+    end
+
+    test " correctly returns no in_thread when two message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+
+      assert [message_21, message_22] = add_message(message_12, [message_11])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+    end
+
+    test " correctly returns no in_thread when three message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+      message_13 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 2"})
+
+      assert [message_21, message_22, message_23] =
+               add_message(message_13, [message_11, message_12])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+      assert message_13.text == message_23.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+      refute message_23.in_thread
+    end
+
+    test " correctly returns ine in_thread when three message from two different sessions are sent" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 = message_fixture(%{from: session_1.id, to: session_2.id, text: "text 1"})
+      message_12 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+      message_13 = message_fixture(%{from: session_2.id, to: session_1.id, text: "text 2"})
+
+      assert [message_21, message_22, message_23] =
+               add_message(message_13, [message_11, message_12])
+
+      assert message_11.text == message_21.text
+      assert message_12.text == message_22.text
+      assert message_13.text == message_23.text
+
+      refute message_21.in_thread
+      refute message_22.in_thread
+      assert message_23.in_thread
+    end
+  end
+end

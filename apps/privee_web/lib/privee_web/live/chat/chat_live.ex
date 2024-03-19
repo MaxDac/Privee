@@ -6,10 +6,12 @@ defmodule PriveeWeb.Chat.ChatLive do
   use PriveeWeb, :chat_live_view
 
   alias Privee.Chats
-  alias PriveeWeb.Events
-
   alias Privee.Sessions
   alias Privee.Sessions.Message
+
+  alias PriveeWeb.Events
+
+  import PriveeWeb.Chat.ChatHelpers
 
   require Logger
 
@@ -83,7 +85,7 @@ defmodule PriveeWeb.Chat.ChatLive do
          } = socket
        ) do
     messages = Chats.get_messages(current_session.id, selected_session.id)
-    assign(socket, :messages, messages)
+    assign(socket, :messages, parse_messages(messages))
   end
 
   defp assign_existing_messages(socket), do: assign(socket, :messages, [])
@@ -128,6 +130,6 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp assign_message(%{assigns: %{messages: messages}} = socket, message) do
-    assign(socket, :messages, messages ++ [message])
+    assign(socket, :messages, add_message(message, messages))
   end
 end

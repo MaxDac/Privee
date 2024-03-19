@@ -14,6 +14,7 @@ defmodule Privee.Sessions.Message do
           text: non_neg_integer(),
           from: non_neg_integer(),
           to: String.t(),
+          in_thread: boolean(),
           sender_session_name: String.t()
         }
 
@@ -21,6 +22,7 @@ defmodule Privee.Sessions.Message do
     field :text, :string
     field :from, :id
     field :to, :id
+    field :in_thread, :boolean, default: false
     # Added to simplify notification handling
     field :sender_session_name, :string
   end
