@@ -7,7 +7,12 @@
 ]}>
   <div class="px-3 py-0.5">
     <div class={[
-      "flex flex-col w-max min-w-[100px] sm:max-w-[500px] leading-1.5 px-5 py-3 border-gray-200 rounded-e-2xl rounded-ss-2xl",
+      "flex flex-col w-max min-w-[100px] sm:max-w-[500px] leading-1.5 px-5 py-3 border-gray-200",
+      if @message.in_thread do
+        "rounded-e-2xl"
+      else
+        "rounded-e-2xl rounded-ss-2xl"
+      end,
       if @message.from == @current_session.id do
         "bg-gradient-to-r from-green-800 via-green-900 to-green-900 hover:bg-gradient-to-br"
       else
