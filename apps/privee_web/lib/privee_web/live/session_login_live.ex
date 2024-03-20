@@ -8,7 +8,7 @@ defmodule PriveeWeb.SessionLoginLive do
         Sign in to existing session
         <:subtitle>
           Don't have a session?
-          <.link navigate={~p"/"} class="font-semibold text-brand hover:underline">
+          <.link navigate={~p"/"} class="font-semibold text-brand dark:text-brand-dark hover:underline">
             Create a new one
           </.link>
           now.
