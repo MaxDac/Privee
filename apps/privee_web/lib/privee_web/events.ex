@@ -80,23 +80,46 @@ defmodule PriveeWeb.Events do
 
   @doc """
   Sends a notification event to the client, to trigger in turn a notification.
+  It executes a preliminary filter on the notifications that must be sent to the 
+  client, based on the current and selected session, and on the payload 
+  information:
+
+  1. If the current session is not the receiver, the notification will not be sent.
+
+  2. If the sender is the selected session the user is currently chatting with,
+     the notification **will be sent**, because the Javascript must check 
+     whether the user is currently focusing on the chatting windows.
+     a. If the user is focusing on the chatting windows, the client will not 
+        trigger the notification.
+     b. Otherwise, it will trigger the notification.
   """
-  def send_notification_event_to_client(socket, payload)
+  def send_notification_event_to_client(socket, payload) do
+    case {socket.assigns, payload} do
+      # If the message is from the session the user is currently chatting with, send notification with warning.
+      {
+        %{current_session: %{id: to_id}, selected_session: %{id: from_id}},
+        %{to: to_id, from: from_id, sender_session_name: sender_session_name, text: text}
+      } ->
+        push_event(socket, @js_event, %{
+          session_name: sender_session_name,
+          text: text,
+          check_focus: true
+        })
 
-  # If the sender is the same session the current session is talking to, don't send the notification.
-  def send_notification_event_to_client(%{assigns: %{selected_session: %{id: from}}} = socket, %{
-        from: from
-      }) do
-    socket
-  end
+      # If the user is the receiver, but the sender is not the selected session, send the notification.
+      {
+        %{current_session: %{id: to_id}},
+        %{to: to_id, sender_session_name: sender_session_name, text: text}
+      } ->
+        push_event(socket, @js_event, %{
+          session_name: sender_session_name,
+          text: text,
+          check_focus: false
+        })
 
-  def send_notification_event_to_client(
-        socket,
-        %{
-          sender_session_name: sender_session_name,
-          text: text
-        }
-      ) do
-    push_event(socket, @js_event, %{session_name: sender_session_name, text: text})
+      # In all other cases, do not send the notification.
+      _ ->
+        socket
+    end
   end
 end
