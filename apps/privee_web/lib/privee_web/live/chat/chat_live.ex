@@ -22,13 +22,19 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
-    {:ok,
-     socket
+    case socket
      |> assign(:selected_session_name, selected_session_name)
-     |> assign_selected_session()
-     |> assign_existing_messages()
-     |> subscribe_to_events()
-     |> assign_form()}
+     |> assign_selected_session() do
+      {:ok, socket} ->
+        {:ok,
+         socket
+         |> assign_existing_messages()
+         |> subscribe_to_events()
+         |> assign_form()}
+
+      {:halt, socket} ->
+        {:ok, socket}
+    end
   end
 
   @impl true
@@ -48,6 +54,7 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
+    IO.inspect(params, label: "Delivering message")
     {:noreply,
      socket
      |> deliver_message(params)
@@ -68,11 +75,12 @@ defmodule PriveeWeb.Chat.ChatLive do
          %{assigns: %{selected_session_name: selected_session_name}} = socket
        ) do
     if selected_session = Sessions.get_session_by_session_name(selected_session_name) do
-      assign(socket, :selected_session, selected_session)
+      {:ok, assign(socket, :selected_session, selected_session)}
     else
-      socket
-      |> put_flash(:info, "You have to select a session to continue")
-      |> push_navigate(to: ~p"/privee")
+      {:halt,
+       socket
+       |> put_flash(:info, "You have to select a session to continue")
+       |> push_navigate(to: ~p"/privee")}
     end
   end
 
@@ -130,6 +138,9 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp assign_message(%{assigns: %{messages: messages}} = socket, message) do
+    IO.inspect(message, label: "received message")
+    stacktrace = Process.info(self(), :current_stacktrace)
+    IO.inspect(stacktrace, label: "stacktracke")
     assign(socket, :messages, add_message(message, messages))
   end
 end
