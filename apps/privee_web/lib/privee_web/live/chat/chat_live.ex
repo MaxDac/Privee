@@ -54,8 +54,6 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
-    IO.inspect(params, label: "Delivering message")
-
     {:noreply,
      socket
      |> deliver_message(params)
@@ -139,9 +137,6 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp assign_message(%{assigns: %{messages: messages}} = socket, message) do
-    IO.inspect(message, label: "received message")
-    stacktrace = Process.info(self(), :current_stacktrace)
-    IO.inspect(stacktrace, label: "stacktracke")
     assign(socket, :messages, add_message(message, messages))
   end
 end
