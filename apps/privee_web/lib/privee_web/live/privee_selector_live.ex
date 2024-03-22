@@ -15,36 +15,6 @@ defmodule PriveeWeb.PriveeSelectorLive do
   @message_received_event "message_received"
 
   @impl true
-  def render(assigns) do
-    ~H"""
-    <div class="mx-auto sm:max-w-sm md:max-w-md">
-      <.header class="text-center">
-        Create a new Privée
-        <:subtitle>
-          Specify the session name you would like to chat with.
-        </:subtitle>
-      </.header>
-
-      <.simple_form for={@form} id="privee_form" phx-change="validate" phx-submit="create">
-        <.input
-          field={@form[:session_name]}
-          type="text"
-          label="Session Name"
-          placeholder="The session name you'd like to contact."
-          required
-        />
-
-        <:actions>
-          <.button phx-disable-with="Creating..." class="w-full">
-            Start Privée <span aria-hidden="true">→</span>
-          </.button>
-        </:actions>
-      </.simple_form>
-    </div>
-    """
-  end
-
-  @impl true
   def mount(_params, _session, socket) do
     {:ok,
      socket
