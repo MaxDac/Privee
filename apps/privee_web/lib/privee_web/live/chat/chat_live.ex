@@ -23,8 +23,8 @@ defmodule PriveeWeb.Chat.ChatLive do
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
     case socket
-     |> assign(:selected_session_name, selected_session_name)
-     |> assign_selected_session() do
+         |> assign(:selected_session_name, selected_session_name)
+         |> assign_selected_session() do
       {:ok, socket} ->
         {:ok,
          socket
@@ -55,6 +55,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
     IO.inspect(params, label: "Delivering message")
+
     {:noreply,
      socket
      |> deliver_message(params)

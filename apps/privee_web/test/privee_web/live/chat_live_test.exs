@@ -66,12 +66,14 @@ defmodule PriveeWeb.ChatLiveTest do
 
       _ =
         sender_lv
-        |> form("#chat_form", %{message: %{
-          from: selected_session.id,
-          to: current_session.id,
-          sender_session_name: selected_session.session_name,
-          text: message_text
-        }})
+        |> form("#chat_form", %{
+          message: %{
+            from: selected_session.id,
+            to: current_session.id,
+            sender_session_name: selected_session.session_name,
+            text: message_text
+          }
+        })
         |> render_submit()
 
       assert render(lv) =~ message_text
