@@ -8,8 +8,6 @@ defmodule PriveeWeb.ChatHelpersTest do
   import Privee.SessionsFixtures
   import PriveeWeb.Chat.ChatHelpers
 
-  alias Privee.Sessions.Message
-
   describe "parse_messages/1" do
     test " correctly returns an emtpy list with an empty list in input" do
       assert [] == parse_messages([])
