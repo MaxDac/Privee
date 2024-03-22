@@ -97,17 +97,25 @@ defmodule PriveeWeb.Events do
     case {socket.assigns, payload} do
       # If the message is from the session the user is currently chatting with, send notification with warning.
       {
-        %{current_session: %{id: to_id}, selected_session: %{id: from_id}}, 
+        %{current_session: %{id: to_id}, selected_session: %{id: from_id}},
         %{to: to_id, from: from_id, sender_session_name: sender_session_name, text: text}
       } ->
-        push_event(socket, @js_event, %{session_name: sender_session_name, text: text, check_focus: true})
+        push_event(socket, @js_event, %{
+          session_name: sender_session_name,
+          text: text,
+          check_focus: true
+        })
 
       # If the user is the receiver, but the sender is not the selected session, send the notification.
       {
-        %{current_session: %{id: to_id}}, 
+        %{current_session: %{id: to_id}},
         %{to: to_id, sender_session_name: sender_session_name, text: text}
       } ->
-        push_event(socket, @js_event, %{session_name: sender_session_name, text: text, check_focus: false})
+        push_event(socket, @js_event, %{
+          session_name: sender_session_name,
+          text: text,
+          check_focus: false
+        })
 
       # In all other cases, do not send the notification.
       _ ->
