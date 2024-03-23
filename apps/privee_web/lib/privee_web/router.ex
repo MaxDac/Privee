@@ -45,7 +45,10 @@ defmodule PriveeWeb.Router do
     pipe_through [:browser, :redirect_if_session_is_authenticated]
 
     live_session :redirect_if_session_is_authenticated,
-      on_mount: [{PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated}] do
+      on_mount: [
+        {PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated},
+        {PriveeWeb.Navigation, :home}
+      ] do
       live "/", SessionRegistrationLive, :new
       live "/login", SessionLoginLive, :new
     end
@@ -57,7 +60,10 @@ defmodule PriveeWeb.Router do
     pipe_through [:browser, :require_authenticated_session]
 
     live_session :require_authenticated_session,
-      on_mount: [{PriveeWeb.SessionAuth, :ensure_authenticated}] do
+      on_mount: [
+        {PriveeWeb.SessionAuth, :ensure_authenticated},
+        {PriveeWeb.Navigation, :logged}
+      ] do
       live "/privee", PriveeSelectorLive
       live "/chat/:session", Chat.ChatLive
     end

@@ -21,6 +21,24 @@ defmodule PriveeWeb.ChatLiveTest do
       assert html =~ selected_session.session_name
     end
 
+    test "redirects to the privee page when the logo is clicked", %{conn: conn} do
+      current_session = session_fixture()
+      selected_session = session_fixture(%{session_name: generate_new_unique_session_name()})
+
+      # Rebinding the logged on connection
+      conn = log_in_session(conn, current_session)
+
+      {:ok, lv, _html} = live(conn, ~p"/chat/#{selected_session.session_name}")
+
+      {:ok, _, html} =
+        lv
+        |> element("#logo-button")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/privee")
+
+      assert html =~ "Create a new Privée"
+    end
+
     test "redirects to the register view when the user is not logged in", %{conn: conn} do
       selected_session = session_fixture()
 
