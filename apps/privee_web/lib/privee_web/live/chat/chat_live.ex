@@ -25,7 +25,7 @@ defmodule PriveeWeb.Chat.ChatLive do
     case socket
          |> assign(:selected_session_name, selected_session_name)
          |> assign_selected_session() do
-      {:ok, socket} ->
+      {:cont, socket} ->
         {:ok,
          socket
          |> assign_existing_messages()
@@ -74,7 +74,7 @@ defmodule PriveeWeb.Chat.ChatLive do
          %{assigns: %{selected_session_name: selected_session_name}} = socket
        ) do
     if selected_session = Sessions.get_session_by_session_name(selected_session_name) do
-      {:ok, assign(socket, :selected_session, selected_session)}
+      {:cont, assign(socket, :selected_session, selected_session)}
     else
       {:halt,
        socket

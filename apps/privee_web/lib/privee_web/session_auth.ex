@@ -135,7 +135,7 @@ defmodule PriveeWeb.SessionAuth do
   the current_session:
 
       defmodule PriveeWeb.PageLive do
-        use PriveeWeb, :live_viewYou must have a session to access this page
+        use PriveeWeb, :live_view
 
         on_mount {PriveeWeb.SessionAuth, :mount_current_session}
         ...
