@@ -94,7 +94,6 @@ defmodule PriveeWeb.Events do
      b. Otherwise, it will trigger the notification.
   """
   def send_notification_event_to_client(socket, payload) do
-    IO.inspect({socket.assigns, payload}, label: "send_notification_event_to_client")
     case {socket.assigns, payload} do
       # If the message is from the session the user is currently chatting with, send notification with warning.
       {

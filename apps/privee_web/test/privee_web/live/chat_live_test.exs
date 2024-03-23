@@ -77,15 +77,13 @@ defmodule PriveeWeb.ChatLiveTest do
         |> render_submit()
 
       expected_event = %{
-        from: selected_session.id,
-        to: current_session.id,
-        sender_session_name: selected_session.session_name,
-        text: message_text
+        session_name: selected_session.session_name,
+        text: message_text,
+        check_focus: true
       }
 
-      assert_push_event sender_lv, "message_received", expected_event
-
       assert render(lv) =~ message_text
+      assert_push_event(lv, "trigger_notification", ^expected_event)
       assert render(sender_lv) =~ message_text
     end
   end
