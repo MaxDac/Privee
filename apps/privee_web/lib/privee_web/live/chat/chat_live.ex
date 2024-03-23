@@ -22,13 +22,19 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:selected_session_name, selected_session_name)
-     |> assign_selected_session()
-     |> assign_existing_messages()
-     |> subscribe_to_events()
-     |> assign_form()}
+    case socket
+         |> assign(:selected_session_name, selected_session_name)
+         |> assign_selected_session() do
+      {:cont, socket} ->
+        {:ok,
+         socket
+         |> assign_existing_messages()
+         |> subscribe_to_events()
+         |> assign_form()}
+
+      {:halt, socket} ->
+        {:ok, socket}
+    end
   end
 
   @impl true
@@ -68,11 +74,12 @@ defmodule PriveeWeb.Chat.ChatLive do
          %{assigns: %{selected_session_name: selected_session_name}} = socket
        ) do
     if selected_session = Sessions.get_session_by_session_name(selected_session_name) do
-      assign(socket, :selected_session, selected_session)
+      {:cont, assign(socket, :selected_session, selected_session)}
     else
-      socket
-      |> put_flash(:info, "You have to select a session to continue")
-      |> push_navigate(to: ~p"/privee")
+      {:halt,
+       socket
+       |> put_flash(:info, "You have to select a session to continue")
+       |> push_navigate(to: ~p"/privee")}
     end
   end
 

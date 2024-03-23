@@ -80,16 +80,16 @@ defmodule PriveeWeb.Events do
 
   @doc """
   Sends a notification event to the client, to trigger in turn a notification.
-  It executes a preliminary filter on the notifications that must be sent to the 
-  client, based on the current and selected session, and on the payload 
+  It executes a preliminary filter on the notifications that must be sent to the
+  client, based on the current and selected session, and on the payload
   information:
 
   1. If the current session is not the receiver, the notification will not be sent.
 
   2. If the sender is the selected session the user is currently chatting with,
-     the notification **will be sent**, because the Javascript must check 
+     the notification **will be sent**, because the Javascript must check
      whether the user is currently focusing on the chatting windows.
-     a. If the user is focusing on the chatting windows, the client will not 
+     a. If the user is focusing on the chatting windows, the client will not
         trigger the notification.
      b. Otherwise, it will trigger the notification.
   """
