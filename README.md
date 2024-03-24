@@ -66,7 +66,7 @@ There are other extensions that helps with developing the application:
 Normally, every Erlang instance should be connected to one another manually. The package **libcluster** anyway 
 offers a way of doing it automatically inside a service pod.
 
-For more information consult the [package information](https://hex.pm/packages/libcluster) and the 
+For more information refer the [package information](https://hex.pm/packages/libcluster) and the 
 [guide to set it up](https://www.poeticoding.com/connecting-elixir-nodes-with-libcluster-locally-and-on-kubernetes/).
 
 There is also an interesting guide in parts on [how to configure Elixir nodes on Kubernetes](https://david-delassus.medium.com/elixir-and-kubernetes-a-love-story-721cc6a5c7d5), 
