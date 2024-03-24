@@ -1,6 +1,11 @@
 /**
+  * @typedef {Object} PhoenixEventDetail This type represents a custom Phoenix event.
+  * @property {string} session_name The logged user session name.
+  */
+
+/**
   * @typedef {Object & Event} PhoenixEvent This type represents a custom Phoenix event.
-  * @property {any} detail The event details
+  * @property {PhoenixEventDetail} detail The event details
   */
 
 /**
@@ -46,3 +51,14 @@ function copyButtonHandler() {
   */
 const copyTextToClipboard = text =>
   navigator.clipboard.writeText(text)
+
+/**
+  * The event listener for the session name copy event triggered from the back end.
+  * It has been moved in this file to keep the `app.js` file clean.
+  * @param {PhoenixEvent} event The event sent from the back end.
+  */
+export const phoenixEventListener = event => 
+  copySessionNameToClipboardBackEndEventHandler(event)
+    .then(() => console.debug("Session name correctly copied to clipboard."))
+    .catch(error => console.debug("Failed to copy session name to clipboard.", error))
+
