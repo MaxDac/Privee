@@ -10,7 +10,7 @@ defmodule Privee.Sessions.SessionToken do
   @rand_size 32
 
   # It is very important to keep the reset password token expiry short,
-  # since someone with access to the email may take over the account.
+  # since someone with access to the session name may take over the account.
   @session_validity_in_days 60
 
   schema "sessions_tokens" do
