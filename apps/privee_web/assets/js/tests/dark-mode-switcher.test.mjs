@@ -1,44 +1,6 @@
 import test from "ava"
-import { setStartupTheme } from "../utils/dark-mode-switcher.mjs"
+import { addDarkModeToggleHandlers, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { getDom } from "./mock-utils.mjs"
-
-/**
- * Returns the local storage mock.
- * @returns {Storage} The local storage mock.
- */
-export const getLocalStorageMock = () => {
-  let store = {}
-
-  return {
-    /**
-     * @param {string | number} key
-     */
-    getItem(key) {
-      return store[key]
-    },
-    /**
-     * @param {string | number} key
-     * @param {any} value
-     */
-    setItem(key, value) {
-      store[key] = value
-    },
-    /**
-     * @param {string | number} key
-     */
-    removeItem(key) {
-      delete store[key]
-    },
-    getAll() {
-      return { ...store }
-    },
-    clear() {
-      store = {}
-    },
-    length: Object.keys(store).length,
-    key: (/** @type {string | number} */ i) => Object.keys[i]
-  }
-}
 
 const html =
   `
@@ -53,36 +15,101 @@ const html =
   </button>
   `
 
-test.beforeEach(() => {
-  try {
-    const dom = getDom(html)
-    const { window } = dom
+/**
+ * Gets the toggle button in the mocked DOM.
+ * @returns {HTMLButtonElement} The button element.
+ */
+const getToggleButton = () => 
+  document.querySelector("[data-theme-toggle=\"theme-toggle\"]")
 
+test.before(() => {
+  const dom = getDom(html)
+  const { window } = dom
+
+  global.dom = dom
+  // @ts-ignore
+  global.window = {
+    ...window,
     // @ts-ignore
-    global.window = {
-      ...window,
-      // @ts-ignore
-      matchMedia: query => {
-        if (query === "(prefers-color-scheme: dark)") {
-          return { 
-            matches: true,
-            media: query,
-            onchange: null,
-          }
-        }
-      }
-    }
-
-    global.document = dom.window.document
-
-    global.localStorage = getLocalStorageMock()
-    global.localStorage.setItem("color-theme", "light")
-  } catch (error) {
-    console.error(error)
+    matchMedia: query => ({ 
+      matches: query === "(prefers-color-scheme: light)",
+    })
   }
+
+  global.document = dom.window.document
+
+  // global.localStorage = getLocalStorageMock()
+  global.localStorage = dom.window.localStorage
 })
 
-test("Browser switch to Dark mode when light mode was selected", t => {
+test.beforeEach(() => {
+  // Clearing local storage before each test
+  localStorage.clear()
+})
+
+test("Browser select automatically the light mode", t => {
   setStartupTheme()
+
+  const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+  const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+
+  t.is(global.localStorage.getItem("color-theme"), "light")
+  t.assert(lightElementClassList.contains("hidden"))
+  t.assert(!darkElementClassList.contains("hidden"))
+  t.assert(htmlElementClassList.contains("light"))
+})
+
+test("Browser automatically select light theme when it's configured in local storage", t => {
+  global.localStorage.setItem("color-theme", "dark")
+  setStartupTheme()
+
+  const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+  const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+
   t.is(global.localStorage.getItem("color-theme"), "dark")
+  t.assert(!lightElementClassList.contains("hidden"))
+  t.assert(darkElementClassList.contains("hidden"))
+  t.assert(htmlElementClassList.contains("dark"))
+})
+
+test("Browser toggle to dark mode when button is pressed", t => {
+  localStorage.clear()
+  setStartupTheme()
+  addDarkModeToggleHandlers()
+
+
+  let lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+  let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+
+  t.is(global.localStorage.getItem("color-theme"), "light")
+  t.assert(lightElementClassList.contains("hidden"))
+  t.assert(!darkElementClassList.contains("hidden"))
+  t.assert(htmlElementClassList.contains("light"))
+
+  // Clicking the item should toggle the theme
+  getToggleButton().click()
+
+  lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+  htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+
+  t.is(global.localStorage.getItem("color-theme"), "dark")
+  t.assert(!lightElementClassList.contains("hidden"))
+  t.assert(darkElementClassList.contains("hidden"))
+  t.assert(htmlElementClassList.contains("dark"))
+
+  // Clicking the item should toggle the theme back
+  getToggleButton().click()
+
+  lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+  htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+
+  t.is(global.localStorage.getItem("color-theme"), "light")
+  t.assert(lightElementClassList.contains("hidden"))
+  t.assert(!darkElementClassList.contains("hidden"))
+  t.assert(htmlElementClassList.contains("light"))
 })
