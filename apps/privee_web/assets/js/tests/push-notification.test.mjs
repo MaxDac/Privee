@@ -61,6 +61,13 @@ describe("Ask notification permission", () => {
 describe("Push notification", () => {
   test.serial("checking focus, does not trigger notification if the document is visible", async t => {
     const dom = getDom()
+    
+    // @ts-ignore
+    global.window = {
+      ...window,
+      open: (_url, _target, _features) => window
+    }
+
     global.document = {
       ...dom.window.document,
       hidden: false
@@ -77,6 +84,9 @@ describe("Push notification", () => {
 
   test.serial("checking focus, does trigger notification if the document is not visible", async t => {
     const dom = getDom()
+    
+    // @ts-ignore
+    global.window = window
 
     global.document = {
       ...dom.window.document,
@@ -109,6 +119,9 @@ describe("Push notification", () => {
 
   test.serial("not checking focus, does trigger notification independent of the document visibility", async t => {
     const dom = getDom()
+    
+    // @ts-ignore
+    global.window = window
 
     global.document = {
       ...dom.window.document,

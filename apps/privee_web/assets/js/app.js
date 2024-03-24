@@ -30,7 +30,7 @@ import "flowbite/dist/flowbite.phoenix.js"
 // Importing utility functions
 import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "./utils/push-notifications.mjs"
-import { addSessionNameCopyListener, copyToClipboardBackEndEventHandler } from "./utils/clipboard.mjs"
+import { addSessionNameCopyListener, copySessionNameToClipboardBackEndEventHandler } from "./utils/clipboard.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 
 // Setting up LiveView hooks
@@ -63,7 +63,12 @@ askNotificationPermission()
 
 // Setting the LiveView events
 window.addEventListener("phx:trigger_notification", pushBackEndNotification)
-window.addEventListener("phx:copy_to_clipboard", copyToClipboardBackEndEventHandler)
+window.addEventListener(
+  "phx:copy_to_clipboard", 
+  () => copySessionNameToClipboardBackEndEventHandler
+    .then(() => console.debug("Session name correctly copied to clipboard."))
+    .catch(error => console.debug("Failed to copy session name to clipboard.", error))
+)
 
 addSessionNameCopyListener()
 
