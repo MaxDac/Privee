@@ -55,6 +55,10 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
         )
 
       render_submit(form)
+
+      # This asserts that the session creation results in the copy to event being triggered
+      assert_push_event(lv, "copy_to_clipboard", %{session_name: ^session_name})
+
       conn = follow_trigger_action(form, conn)
 
       assert redirected_to(conn) == ~p"/privee"
