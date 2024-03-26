@@ -48,13 +48,19 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/")
 
       session_name = unique_session_name()
+      valid_form_attributes = valid_session_attributes(session_name: session_name)
 
       form =
         form(lv, "#registration_form",
-          session: valid_session_attributes(session_name: session_name)
+          session: Map.delete(valid_form_attributes, :public_key)
         )
-
-      render_submit(form)
+      
+      # Applying the hidden input value in the submit, as the `form` function is intended
+      # to simulate the user interaction only, and hidden inputs cannot be changed by the user.
+      # Please refer to [this](https://github.com/phoenixframework/phoenix_live_view/issues/988#issuecomment-646586166)
+      # and [this documentation](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveViewTest.html#render_submit/2)
+      # highlighted from [this](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveViewTest.html#render_submit/2).
+      render_submit(form, %{"session" => %{"public_key" => valid_form_attributes.public_key}})
 
       # This asserts that the session creation results in the copy to event being triggered
       assert_push_event(lv, "copy_to_clipboard", %{session_name: ^session_name})

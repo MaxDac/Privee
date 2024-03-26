@@ -11,6 +11,7 @@ defmodule Privee.Sessions.Session do
           session_name: String.t(),
           recovery_phrase: String.t(),
           hashed_recovery_phrase: String.t(),
+          public_key: String.t(),
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
@@ -19,6 +20,7 @@ defmodule Privee.Sessions.Session do
     field :session_name, :string
     field :recovery_phrase, :string, virtual: true, redact: true
     field :hashed_recovery_phrase, :string, redact: true
+    field :public_key, :string, redact: true
 
     timestamps()
   end
@@ -48,9 +50,10 @@ defmodule Privee.Sessions.Session do
   """
   def registration_changeset(session, attrs, opts \\ []) do
     session
-    |> cast(attrs, [:session_name, :recovery_phrase])
+    |> cast(attrs, [:session_name, :recovery_phrase, :public_key])
     |> validate_session_name(opts)
     |> validate_recovery_phrase(opts)
+    |> validate_public_key(opts)
   end
 
   @doc """
@@ -96,6 +99,10 @@ defmodule Privee.Sessions.Session do
     else
       changeset
     end
+  end
+
+  defp validate_public_key(changeset, _opts) do
+    validate_required(changeset, :public_key)
   end
 
   defp validate_unique_session_name(changeset, _opts) do

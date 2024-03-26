@@ -125,7 +125,7 @@ defmodule Privee.SessionsTest do
   describe "change_session_registration/2" do
     test "returns a changeset" do
       assert %Ecto.Changeset{} = changeset = Sessions.change_session_registration(%Session{})
-      assert changeset.required == [:recovery_phrase, :session_name]
+      assert changeset.required == [:public_key, :recovery_phrase, :session_name]
     end
 
     test "allows fields to be set" do
