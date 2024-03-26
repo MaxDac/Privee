@@ -68,16 +68,23 @@ test.serial("bindKeys rebinds the keys if called twice", async t => {
   t.truthy(privateKey)
 })
 
-test("handleSessionNamePrivateKeyRegistrationEvent should handle session name copy event", t => {
+test("handleSessionNamePrivateKeyRegistrationEvent should handle session name copy event", async t => {
+  const dom = new JSDOM(html)
   global.indexedDB = indexedDB
-  // Create a mock event object
+  global.document = dom.window.document
+
+  await bindKeys()
+
   const event = {
-    // Add properties based on your requirements
+    detail: {
+      sessionName: "test-session-name"
+    }
   }
 
-  handleSessionNamePrivateKeyRegistrationEvent(event)
+  await handleSessionNamePrivateKeyRegistrationEvent(event)
+  
+  const privateKey = getObject("test-session-name")
 
-  // Assert that the event is handled correctly
-  // You can add more specific assertions based on your requirements
-  t.pass()
+  t.is(typeof privateKey, "object")
+  t.truthy(privateKey)
 })

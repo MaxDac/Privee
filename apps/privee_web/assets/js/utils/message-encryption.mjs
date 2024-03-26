@@ -32,10 +32,11 @@ export const bindKeys = async () => {
   * The event listener for the session name copy event triggered from the back end.
   * It has been moved in this file to keep the `app.js` file clean.
   * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
+  * @returns {Promise<void>} A promise that resolves when the private key has been stored.
   */
 export const handleSessionNamePrivateKeyRegistrationEvent = event => {
   const sessionName = event.detail.sessionName
-  getObject("private_key")
+  return getObject("private_key")
     .then(privateKey => storeObject(sessionName, privateKey))
     .then(() => deleteObject("private_key"))
     .then(() => console.debug("The private key has been stored with the right key."))
