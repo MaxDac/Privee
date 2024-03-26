@@ -51,10 +51,8 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       valid_form_attributes = valid_session_attributes(session_name: session_name)
 
       form =
-        form(lv, "#registration_form",
-          session: Map.delete(valid_form_attributes, :public_key)
-        )
-      
+        form(lv, "#registration_form", session: Map.delete(valid_form_attributes, :public_key))
+
       # Applying the hidden input value in the submit, as the `form` function is intended
       # to simulate the user interaction only, and hidden inputs cannot be changed by the user.
       # Please refer to [this](https://github.com/phoenixframework/phoenix_live_view/issues/988#issuecomment-646586166)

@@ -5,7 +5,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
   alias Privee.Sessions
   alias Privee.Sessions.Session
 
-  @copy_to_clipboard_client_action_key "copy_to_clipboard"
+  @handle_new_session_registration "handle_new_session_registration"
 
   @impl true
   def mount(_params, _session, socket) do
@@ -28,7 +28,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
 
         {:noreply,
          socket
-         |> push_event(@copy_to_clipboard_client_action_key, %{session_name: session.session_name})
+         |> push_event(@handle_new_session_registration, %{session_name: session.session_name})
          |> assign(trigger_submit: true)
          |> assign_form(changeset)}
 
