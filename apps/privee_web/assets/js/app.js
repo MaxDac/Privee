@@ -30,11 +30,13 @@ import "flowbite/dist/flowbite.phoenix.js"
 // Importing utility functions
 import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "./utils/push-notifications.mjs"
-import { addSessionNameCopyListener, phoenixEventListener } from "./utils/clipboard.mjs"
+import { addSessionNameCopyListener, handleSessionNameCopyToClipboardRegistrationEvent } from "./utils/clipboard.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
+import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}
+addRegistrationHooks(Hooks)
 addChatHooks(Hooks)
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
@@ -63,7 +65,9 @@ askNotificationPermission()
 
 // Setting the LiveView events
 window.addEventListener("phx:trigger_notification", pushBackEndNotification)
-window.addEventListener("phx:copy_to_clipboard", phoenixEventListener)
+window.addEventListener("phx:handle_new_session_registration", event => {
+  handleSessionNameCopyToClipboardRegistrationEvent(event)
+})
 
 addSessionNameCopyListener()
 

@@ -27,14 +27,16 @@
     phx-trigger-action={@trigger_submit}
     action={~p"/sessions/log_in?_action=registered"}
     method="post"
+    phx-hook="RegistrationScreen"
   >
     <.error :if={@check_errors}>
       Oops, something went wrong! Please check the errors below.
     </.error>
 
-    <.input
-      field={@form[:public_key]}
-      type="hidden" />
+    <.input 
+      field={@form[:public_key]} 
+      type="hidden"
+      id="session-registration-public-key" />
 
     <.input
       field={@form[:session_name]}

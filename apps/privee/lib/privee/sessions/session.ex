@@ -102,7 +102,7 @@ defmodule Privee.Sessions.Session do
   end
 
   defp validate_public_key(changeset, _opts) do
-    validate_required(changeset, :public_key)
+    validate_required(changeset, :public_key, message: "The public key has not been generated")
   end
 
   defp validate_unique_session_name(changeset, _opts) do
