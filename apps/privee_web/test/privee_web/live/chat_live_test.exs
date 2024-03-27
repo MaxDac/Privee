@@ -13,11 +13,17 @@ defmodule PriveeWeb.ChatLiveTest do
       current_session = session_fixture()
       selected_session = session_fixture(%{session_name: generate_new_unique_session_name()})
 
-      {:ok, _lv, html} =
+      {:ok, lv, html} =
         conn
         |> log_in_session(current_session)
         |> live(~p"/chat/#{selected_session.session_name}")
 
+      expected_event_payload = %{
+        current: current_session.public_key,
+        selected: selected_session.public_key
+      }
+
+      assert_push_event(lv, "sending_keys", ^expected_event_payload)
       assert html =~ selected_session.session_name
     end
 
@@ -68,7 +74,8 @@ defmodule PriveeWeb.ChatLiveTest do
     end
 
     test "renders a chat message", %{conn: conn} do
-      message_text = "some message"
+      message_text_from = "some message from"
+      message_text_to = "some message to"
       current_session = session_fixture()
       selected_session = session_fixture(%{session_name: generate_new_unique_session_name()})
 
@@ -88,21 +95,27 @@ defmodule PriveeWeb.ChatLiveTest do
           message: %{
             from: selected_session.id,
             to: current_session.id,
-            sender_session_name: selected_session.session_name,
-            text: message_text
+            sender_session_name: selected_session.session_name
           }
         })
-        |> render_submit()
+        |> render_submit(%{
+          "message" => %{
+            "text_from" => message_text_from,
+            "text_to" => message_text_to
+          }
+        })
 
       expected_event = %{
         session_name: selected_session.session_name,
-        text: message_text,
+        text: message_text_to,
         check_focus: true
       }
 
-      assert render(lv) =~ message_text
+      assert render(lv) =~ message_text_to
+
       assert_push_event(lv, "trigger_notification", ^expected_event)
-      assert render(sender_lv) =~ message_text
+
+      assert render(sender_lv) =~ message_text_from
     end
   end
 end

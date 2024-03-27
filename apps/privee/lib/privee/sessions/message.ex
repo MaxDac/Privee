@@ -11,7 +11,8 @@ defmodule Privee.Sessions.Message do
   alias Privee.Sessions.Message
 
   @type t :: %__MODULE__{
-          text: non_neg_integer(),
+          text_from: String.t(),
+          text_to: String.t(),
           from: non_neg_integer(),
           to: String.t(),
           in_thread: boolean(),
@@ -19,7 +20,8 @@ defmodule Privee.Sessions.Message do
         }
 
   embedded_schema do
-    field :text, :string
+    field :text_from, :string
+    field :text_to, :string
     field :from, :id
     field :to, :id
     field :in_thread, :boolean, default: false
@@ -30,7 +32,7 @@ defmodule Privee.Sessions.Message do
   @doc false
   def changeset(%Message{} = message, attrs) do
     message
-    |> cast(attrs, [:text, :from, :to, :sender_session_name])
-    |> validate_required([:text, :from, :to, :sender_session_name])
+    |> cast(attrs, [:text_from, :text_to, :from, :to, :sender_session_name])
+    |> validate_required([:text_from, :text_to, :from, :to, :sender_session_name])
   end
 end

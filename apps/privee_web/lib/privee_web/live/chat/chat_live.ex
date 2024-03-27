@@ -17,6 +17,7 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   embed_templates "components/*"
 
+  @keys_send_event "sending_keys"
   @chat_created_event "chat_created"
   @message_received_event "message_received"
 
@@ -28,6 +29,7 @@ defmodule PriveeWeb.Chat.ChatLive do
       {:cont, socket} ->
         {:ok,
          socket
+         |> send_public_keys()
          |> assign_existing_messages()
          |> subscribe_to_events()
          |> assign_form()}
@@ -103,6 +105,16 @@ defmodule PriveeWeb.Chat.ChatLive do
       |> to_form()
 
     assign(socket, :form, form)
+  end
+
+  defp send_public_keys(
+         %{assigns: %{current_session: current_session, selected_session: selected_session}} =
+           socket
+       ) do
+    push_event(socket, @keys_send_event, %{
+      current: current_session.public_key,
+      selected: selected_session.public_key
+    })
   end
 
   defp subscribe_to_events(

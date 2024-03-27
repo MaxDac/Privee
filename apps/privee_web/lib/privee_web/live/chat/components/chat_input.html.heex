@@ -1,3 +1,5 @@
 <div>
-  <.input field={@form[:text]} placeholder="Write your message here" phx-debounce="500" required />
+  <.input id="text-from" type="hidden" field={@form[:text_from]} />
+  <.input id="text-to" type="hidden" field={@form[:text_to]} />
+  <input id="chat-text" placeholder="Write your message here" />
 </div>
