@@ -6,6 +6,7 @@ defmodule PriveeWeb.ChatHelpersTest do
   use PriveeWeb.ConnCase, async: true
 
   import Privee.SessionsFixtures
+  import Privee.MessageFixtures
   import PriveeWeb.Chat.ChatHelpers
 
   describe "parse_messages/1" do
