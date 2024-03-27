@@ -61,7 +61,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       render_submit(form, %{"session" => %{"public_key" => valid_form_attributes.public_key}})
 
       # This asserts that the session creation results in the copy to event being triggered
-      assert_push_event(lv, "copy_to_clipboard", %{session_name: ^session_name})
+      assert_push_event(lv, "handle_new_session_registration", %{session_name: ^session_name})
 
       conn = follow_trigger_action(form, conn)
 
