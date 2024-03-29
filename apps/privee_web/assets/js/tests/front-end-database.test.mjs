@@ -34,7 +34,7 @@ describe("getObject", () => {
     global.indexedDB = indexedDB
 
     const retrievedObject = await getObject("nonexistent")
-    expect(retrievedObject.toBe(undefined)
+    expect(retrievedObject).toBe(undefined)
   })
 })
 
@@ -42,8 +42,7 @@ test("storeObject stores the object", async () => {
   global.indexedDB = indexedDB
 
   const object = { a: 1, b: "2" }
-  await storeObject("test", object)
-    .catch((e) => expect.fail(JSON.stringify(e)))
+  await storeObject("test", object).catch((e) => expect.fail(JSON.stringify(e)))
 })
 
 test("deleteObject removes the object with the given key", async () => {

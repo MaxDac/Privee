@@ -122,3 +122,4 @@ describe("setStartupTheme", () => {
     expect(!darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("light"))
   })
+})

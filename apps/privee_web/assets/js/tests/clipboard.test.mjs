@@ -26,11 +26,10 @@ describe("copySessionNameToClipboardBackEndEventHandler", () => {
 
     const event = { detail: { session_name: sessionName } }
 
-    return copySessionNameToClipboardBackEndEventHandler(event)
-      .catch((e) => expect.fail(e))
+    return copySessionNameToClipboardBackEndEventHandler(event).catch((e) => expect.fail(e))
   })
 
-  it("ccopy session name to clipboard correctly report the error", () => {
+  it("ccopy session name to clipboard correctly report the error", async () => {
     const sessionName = "session name"
     const errorMessage = "some error"
     const copyError = new Error(errorMessage)
@@ -46,8 +45,12 @@ describe("copySessionNameToClipboardBackEndEventHandler", () => {
 
     const event = { detail: { session_name: sessionName } }
 
-    return copySessionNameToClipboardBackEndEventHandler(event)
-      .then((_) => expect.fail("The copy operation should not have succeeded"))
+    try {
+      await copySessionNameToClipboardBackEndEventHandler(event)
+      expect.fail("The copy operation should not have succeeded")
+    } catch (e) {
+      expect(e).toBe(copyError)
+    }
   })
 })
 

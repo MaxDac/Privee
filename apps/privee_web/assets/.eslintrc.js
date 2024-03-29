@@ -4,6 +4,7 @@ module.exports = {
     node: true,
     es2021: true,
   },
+  plugins: ["jsdoc", "prettier"],
   extends: ["eslint:recommended", "plugin:prettier/recommended"],
   overrides: [
     {
@@ -35,6 +36,9 @@ module.exports = {
     "linebreak-style": ["error", "unix"],
     quotes: ["error", "double"],
     semi: ["error", "never"],
+    "jsdoc/valid-types": "error",
+    "jsdoc/require-param-type": "error",
+    "jsdoc/require-returns-type": "error",
     "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
   },
 }

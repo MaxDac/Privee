@@ -1,4 +1,4 @@
-import { test, describe, it, expect } from "vitest"
+import { describe, it, expect } from "vitest"
 import {
   testExports,
   generateNewKeyPair,
@@ -36,7 +36,8 @@ describe("stringToArrayData", () => {
 
 describe("arrayDataToString", () => {
   it("should convert an ArrayBuffer to a string", () => {
-    const input = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33]).buffer
+    const input = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33])
+      .buffer
     const expected = "Hello, World!"
     const result = arrayDataToString(input)
     expect(result).toStrictEqual(expected)
