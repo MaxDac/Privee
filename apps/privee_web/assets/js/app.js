@@ -36,6 +36,7 @@ import {
 } from "./utils/clipboard.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
+import { handleSendingPrivateKey } from "./utils/chat.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}
@@ -66,9 +67,11 @@ askNotificationPermission().then(console.debug).catch(console.error)
 
 // Setting the LiveView events
 window.addEventListener("phx:trigger_notification", pushBackEndNotification)
-window.addEventListener("phx:handle_new_session_registration", (event) => {
-  handleSessionNameCopyToClipboardRegistrationEvent(event)
-})
+window.addEventListener(
+  "phx:handle_new_session_registration",
+  handleSessionNameCopyToClipboardRegistrationEvent,
+)
+window.addEventListener("phx:sending_keys", handleSendingPrivateKey)
 
 addSessionNameCopyListener()
 

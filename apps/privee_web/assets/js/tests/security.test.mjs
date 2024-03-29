@@ -1,7 +1,6 @@
 import test from "ava"
 import {
-  stringToArrayData,
-  arrayDataToString,
+  testExports,
   generateNewKeyPair,
   convertPublicKeyToString,
   importStringPublicKey,
@@ -9,7 +8,9 @@ import {
   decryptMessage,
 } from "../utils/security.mjs"
 
-test("stringToArrayData should convert a string to an ArrayBuffer", (t) => {
+const { stringToArrayData, arrayDataToString } = testExports
+
+test("stringToArrayData should convert a string to an ArrayBuffer base64 representation", (t) => {
   const input = "Hello, World!"
   const expected = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33])
     .buffer

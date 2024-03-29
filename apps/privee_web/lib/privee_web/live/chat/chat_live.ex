@@ -56,6 +56,7 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
+    IO.inspect(params, label: "Sending the chat")
     {:noreply,
      socket
      |> deliver_message(params)
@@ -137,7 +138,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp deliver_message(socket, params) do
-    changeset = Sessions.change_message(%Message{}, params)
+    changeset = Sessions.change_message(%Message{}, params) |> IO.inspect(label: "Change message")
 
     if changeset.valid? do
       message = Ecto.Changeset.apply_changes(changeset)

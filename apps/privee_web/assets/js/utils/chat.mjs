@@ -5,7 +5,7 @@
  * @property {string} selected The selected session public key in string format.
  */
 
-import { arrayDataToString, encryptMessage, importStringPublicKey } from "./security.mjs"
+import { encryptMessage, importStringPublicKey } from "./security.mjs"
 
 const chatFormSelector = "#chat-form"
 const chatTextInputSelector = "#chat-text"
@@ -35,11 +35,17 @@ export const handleSendingPrivateKey = async (e) => {
 /**
  * Handles the chat input by encrypting the content of the text input, and then
  * putting the values into the related hidden inputs.
- * @param {KeyboardEvent} _e The submit event.
+ * @param {KeyboardEvent} e The submit event.
  * @returns {Promise<void>} The result of the operation.
  */
-export const handleChatInput = async (_e) => {
-  /** @type {HTMLFormElement} */ const chatForm = document.querySelector(chatFormSelector)
+export const handleChatInput = async (e) => {
+  if (e.key !== "Enter") {
+    return
+  }
+
+  e.preventDefault()
+
+  /** @type {HTMLFormElement} */ const formElement = document.querySelector(chatFormSelector)
   /** @type {HTMLInputElement} */ const chatTextInput =
     document.querySelector(chatTextInputSelector)
   /** @type {HTMLInputElement} */ const fromHiddenInput =
@@ -55,14 +61,23 @@ export const handleChatInput = async (_e) => {
     return
   }
 
-  const encryptedFrom = arrayDataToString(await encryptMessage(text, currentPublicKey))
-  const encryptedTo = arrayDataToString(await encryptMessage(text, selectedPublicKey))
+  const encryptedFrom = await encryptMessage(text, currentPublicKey)
+  const encryptedTo = await encryptMessage(text, selectedPublicKey)
 
   fromHiddenInput.value = encryptedFrom
   toHiddenInput.value = encryptedTo
   chatTextInput.value = ""
 
-  chatForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+  formElement.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+}
+
+/**
+ * Adds the chat input handler to the chat form.
+ */
+export const addChatInputHandler = () => {
+  /** @type {HTMLInputElement} */ const chatTextInput =
+    document.querySelector(chatTextInputSelector)
+  chatTextInput.addEventListener("keypress", handleChatInput)
 }
 
 export const testExports = {

@@ -1,3 +1,4 @@
+import { addChatInputHandler } from "../utils/chat.mjs"
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
 
@@ -11,6 +12,7 @@ export function addChatHooks(Hooks) {
       // Readding the event listener for the chat menu buttons.
       addSessionNameCopyListener()
       addDarkModeToggleHandlers()
+      addChatInputHandler()
       scrollElementToEnd(this.el)
     },
     updated() {

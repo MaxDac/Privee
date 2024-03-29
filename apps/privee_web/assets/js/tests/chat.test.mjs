@@ -1,12 +1,7 @@
 import test from "ava"
 import { JSDOM } from "jsdom"
 import { testExports, handleSendingPrivateKey, handleChatInput } from "../utils/chat.mjs"
-import {
-  convertPublicKeyToString,
-  decryptMessage,
-  generateNewKeyPair,
-  stringToArrayData,
-} from "../utils/security.mjs"
+import { convertPublicKeyToString, decryptMessage, generateNewKeyPair } from "../utils/security.mjs"
 
 const html = `
   <form id="chat-form">
@@ -103,14 +98,8 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
     t.not(hiddenTextFrom.value, "")
     t.not(hiddenTextTo.value, "")
 
-    const fromMessage = await decryptMessage(
-      stringToArrayData(hiddenTextFrom.value),
-      currentPrivateKey,
-    )
-    const toMessage = await decryptMessage(
-      stringToArrayData(hiddenTextTo.value),
-      selectedPrivateKey,
-    )
+    const fromMessage = await decryptMessage(hiddenTextFrom.value, currentPrivateKey)
+    const toMessage = await decryptMessage(hiddenTextTo.value, selectedPrivateKey)
 
     t.is(inputText, fromMessage)
     t.is(inputText, toMessage)
@@ -120,7 +109,7 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
     testResolve()
   })
 
-  await handleChatInput(new KeyboardEvent("submit"))
+  await handleChatInput(new KeyboardEvent("keypress", { key: "Enter" }))
 
   await new Promise((resolve) => {
     // Binding the resolve function to the testResolve variable.
