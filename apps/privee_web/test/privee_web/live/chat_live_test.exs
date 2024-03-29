@@ -91,7 +91,7 @@ defmodule PriveeWeb.ChatLiveTest do
 
       _ =
         sender_lv
-        |> form("#chat_form", %{
+        |> form("#chat-form", %{
           message: %{
             from: selected_session.id,
             to: current_session.id,
