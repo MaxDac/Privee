@@ -62,6 +62,7 @@
 
                 // JS
                 "dbaeumer.vscode-eslint",
+                "vitest.explorer",
 
                 // Tooling 
                 "github.vscode-github-actions",

@@ -3,7 +3,7 @@
     "format": "prettier --write --config ./.prettierrc .",
     "check:dev": "npm run format && tsc && eslint --fix --ext .js,.mjs . && npm run test",
     "check": "prettier --check . && tsc && eslint --ext .js,.mjs . && npm run test",
-    "test": "NODE_ENV=test ava"
+    "test": "NODE_ENV=test vitest"
   },
   "dependencies": {
     "flowbite": "^2.3.0"
