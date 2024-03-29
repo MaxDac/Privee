@@ -1,4 +1,4 @@
-import test from "ava"
+import { test, describe, it, expect } from "vitest"
 import { indexedDB } from "fake-indexeddb"
 import {
   storeObject,
@@ -7,43 +7,45 @@ import {
   purgeDatabase,
 } from "../utils/front-end-database.mjs"
 
-test.serial("getObject returns undefined if the database does not exist", async (t) => {
-  global.indexedDB = indexedDB
+describe("getObject", () => {
+  it("returns undefined if the database does not exist", async () => {
+    global.indexedDB = indexedDB
 
-  try {
-    await getObject("test")
-  } catch (e) {
-    t.is(e, "There are no databases with the given name.")
-  }
+    try {
+      await getObject("test")
+      expect.fail()
+    } catch (e) {
+      expect(e).toBe("There are no databases with the given name.")
+    }
+  })
+
+  it("retrieves the object given the proper key", async () => {
+    global.indexedDB = indexedDB
+
+    const object = { a: 1, b: "2" }
+    await storeObject("test", object)
+
+    const retrievedObject = await getObject("test")
+    expect(retrievedObject).toStrictEqual(object)
+    expect(retrievedObject).toStrictEqual(object)
+  })
+
+  it("getObject returns null if key does not exist", async () => {
+    global.indexedDB = indexedDB
+
+    const retrievedObject = await getObject("nonexistent")
+    expect(retrievedObject).toBe(undefined)
+  })
 })
 
-test.serial("getObject retrieves the object given the proper key", async (t) => {
+test("storeObject stores the object", async () => {
   global.indexedDB = indexedDB
 
   const object = { a: 1, b: "2" }
-  await storeObject("test", object)
-
-  const retrievedObject = await getObject("test")
-  t.deepEqual(retrievedObject, object)
+  await storeObject("test", object).catch((e) => expect.fail(JSON.stringify(e)))
 })
 
-test.serial("getObject returns null if key does not exist", async (t) => {
-  global.indexedDB = indexedDB
-
-  const retrievedObject = await getObject("nonexistent")
-  t.is(retrievedObject, undefined)
-})
-
-test.serial("storeObject stores the object", async (t) => {
-  global.indexedDB = indexedDB
-
-  const object = { a: 1, b: "2" }
-  await storeObject("test", object)
-    .then(() => t.pass())
-    .catch((e) => t.fail(String(e)))
-})
-
-test.serial("deleteObject removes the object with the given key", async (t) => {
+test("deleteObject removes the object with the given key", async () => {
   global.indexedDB = indexedDB
 
   const object = { a: 1, b: "2" }
@@ -52,12 +54,12 @@ test.serial("deleteObject removes the object with the given key", async (t) => {
   await deleteObject("test")
     .then(() => getObject("test"))
     .then((retrievedObject) => {
-      t.is(retrievedObject, undefined)
+      expect(retrievedObject).toBe(undefined)
     })
-    .catch((e) => t.fail(String(e)))
+    .catch((e) => expect.fail(JSON.stringify(e)))
 })
 
-test.serial("purgeDatabase removes all data from the IndexedDB", async (t) => {
+test("purgeDatabase removes all data from the IndexedDB", async () => {
   global.indexedDB = indexedDB
 
   const object1 = { a: 1, b: "2" }
@@ -69,11 +71,11 @@ test.serial("purgeDatabase removes all data from the IndexedDB", async (t) => {
   await purgeDatabase()
     .then(() => getObject("test1"))
     .then((retrievedObject) => {
-      t.is(retrievedObject, undefined)
+      expect(retrievedObject).toBe(undefined)
     })
     .then(() => getObject("test2"))
     .then((retrievedObject) => {
-      t.is(retrievedObject, undefined)
+      expect(retrievedObject).toBe(undefined)
     })
-    .catch((e) => t.fail(String(e)))
+    .catch((e) => expect.fail(JSON.stringify(e)))
 })

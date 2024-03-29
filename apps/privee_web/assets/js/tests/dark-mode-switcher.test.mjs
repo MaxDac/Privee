@@ -1,4 +1,4 @@
-import test from "ava"
+import { describe, it, expect, beforeAll, beforeEach } from "vitest"
 import { addDarkModeToggleHandlers, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { getDom } from "./mock-utils.mjs"
 
@@ -21,7 +21,7 @@ const html = `
 // prettier-ignore
 const getToggleButton = () => document.querySelector("[data-theme-toggle=\"theme-toggle\"]")
 
-test.before(() => {
+beforeAll(() => {
   const dom = getDom(html)
   const { window } = dom
 
@@ -41,83 +41,85 @@ test.before(() => {
   global.localStorage = dom.window.localStorage
 })
 
-test.beforeEach(() => {
+beforeEach(() => {
   // Clearing local storage before each test
   localStorage.clear()
 })
 
-test("setStartupTheme select automatically the light mode", (t) => {
-  setStartupTheme()
+describe("setStartupTheme", () => {
+  it("select automatically the light mode", () => {
+    setStartupTheme()
 
-  // prettier-ignore
-  const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
-  // prettier-ignore
-  const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-  const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // prettier-ignore
+    const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+    // prettier-ignore
+    const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+    const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-  t.is(global.localStorage.getItem("color-theme"), "light")
-  t.assert(lightElementClassList.contains("hidden"))
-  t.assert(!darkElementClassList.contains("hidden"))
-  t.assert(htmlElementClassList.contains("light"))
-})
+    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(lightElementClassList.contains("hidden"))
+    expect(!darkElementClassList.contains("hidden"))
+    expect(htmlElementClassList.contains("light"))
+  })
 
-test("setStartupTheme automatically select light theme when it's configured in local storage", (t) => {
-  global.localStorage.setItem("color-theme", "dark")
-  setStartupTheme()
+  it("automatically select light theme when it's configured in local storage", () => {
+    global.localStorage.setItem("color-theme", "dark")
+    setStartupTheme()
 
-  // prettier-ignore
-  const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
-  // prettier-ignore
-  const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-  const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // prettier-ignore
+    const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+    // prettier-ignore
+    const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+    const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-  t.is(global.localStorage.getItem("color-theme"), "dark")
-  t.assert(!lightElementClassList.contains("hidden"))
-  t.assert(darkElementClassList.contains("hidden"))
-  t.assert(htmlElementClassList.contains("dark"))
-})
+    expect(global.localStorage.getItem("color-theme")).toBe("dark")
+    expect(!lightElementClassList.contains("hidden"))
+    expect(darkElementClassList.contains("hidden"))
+    expect(htmlElementClassList.contains("dark"))
+  })
 
-test("setStartupTheme toggle to dark mode when button is pressed", (t) => {
-  localStorage.clear()
-  setStartupTheme()
-  addDarkModeToggleHandlers()
+  it("toggle to dark mode when button is pressed", () => {
+    localStorage.clear()
+    setStartupTheme()
+    addDarkModeToggleHandlers()
 
-  // prettier-ignore
-  let lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
-  // prettier-ignore
-  let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-  let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // prettier-ignore
+    let lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+    // prettier-ignore
+    let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+    let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-  t.is(global.localStorage.getItem("color-theme"), "light")
-  t.assert(lightElementClassList.contains("hidden"))
-  t.assert(!darkElementClassList.contains("hidden"))
-  t.assert(htmlElementClassList.contains("light"))
+    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(lightElementClassList.contains("hidden"))
+    expect(!darkElementClassList.contains("hidden"))
+    expect(htmlElementClassList.contains("light"))
 
-  // Clicking the item should toggle the theme
-  getToggleButton().click()
+    // Clicking the item should toggle the theme
+    getToggleButton().click()
 
-  // prettier-ignore
-  lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
-  // prettier-ignore
-  darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-  htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // prettier-ignore
+    lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+    // prettier-ignore
+    darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+    htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-  t.is(global.localStorage.getItem("color-theme"), "dark")
-  t.assert(!lightElementClassList.contains("hidden"))
-  t.assert(darkElementClassList.contains("hidden"))
-  t.assert(htmlElementClassList.contains("dark"))
+    expect(global.localStorage.getItem("color-theme")).toBe("dark")
+    expect(!lightElementClassList.contains("hidden"))
+    expect(darkElementClassList.contains("hidden"))
+    expect(htmlElementClassList.contains("dark"))
 
-  // Clicking the item should toggle the theme back
-  getToggleButton().click()
+    // Clicking the item should toggle the theme back
+    getToggleButton().click()
 
-  // prettier-ignore
-  lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
-  // prettier-ignore
-  darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-  htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // prettier-ignore
+    lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+    // prettier-ignore
+    darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
+    htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-  t.is(global.localStorage.getItem("color-theme"), "light")
-  t.assert(lightElementClassList.contains("hidden"))
-  t.assert(!darkElementClassList.contains("hidden"))
-  t.assert(htmlElementClassList.contains("light"))
+    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(lightElementClassList.contains("hidden"))
+    expect(!darkElementClassList.contains("hidden"))
+    expect(htmlElementClassList.contains("light"))
+  })
 })

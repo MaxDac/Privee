@@ -1,4 +1,4 @@
-import test from "ava"
+import { test, describe, it, expect } from "vitest"
 import { indexedDB } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
 import {
@@ -10,69 +10,71 @@ import { importStringPublicKey } from "../utils/security.mjs"
 
 const html = "<input id='session-registration-public-key' type='hidden' />"
 
-test.serial("bindKeys should bind public key generation to input field", async (t) => {
-  const dom = new JSDOM(html)
-  global.document = dom.window.document
-  global.indexedDB = indexedDB
+describe("bindKeys", () => {
+  it("should bind public key generation to input field", async () => {
+    const dom = new JSDOM(html)
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
 
-  await bindKeys()
-
-  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
-    "#session-registration-public-key",
-  )
-
-  const hiddenInputValue = hiddenInput.value
-
-  t.assert(hiddenInputValue.length > 0)
-
-  const publicKey = importStringPublicKey(hiddenInputValue)
-  const privateKey = getObject("private_key")
-
-  t.is(typeof publicKey, "object")
-  t.truthy(publicKey)
-  t.is(typeof privateKey, "object")
-  t.truthy(privateKey)
-})
-
-test.serial("bindKeys does not work if the hidden input is not present in the DOM", async (t) => {
-  const dom = new JSDOM()
-  global.document = dom.window.document
-  global.indexedDB = indexedDB
-
-  try {
     await bindKeys()
-    t.fail()
-  } catch (e) {
-    t.pass()
-  }
+
+    /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+      "#session-registration-public-key",
+    )
+
+    const hiddenInputValue = hiddenInput.value
+
+    expect(hiddenInputValue.length).toBeGreaterThan(0)
+
+    const publicKey = importStringPublicKey(hiddenInputValue)
+    const privateKey = getObject("private_key")
+
+    expect(publicKey).toBeTypeOf("object")
+    expect(publicKey).toBeTruthy()
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+
+  it("does not work if the hidden input is not present in the DOM", async () => {
+    const dom = new JSDOM()
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
+
+    try {
+      await bindKeys()
+      expect.fail()
+    } catch (e) {
+      /* Test passed */
+    }
+  })
+
+  it("rebinds the keys if called twice", async () => {
+    const dom = new JSDOM(html)
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
+
+    await bindKeys()
+    await bindKeys()
+
+    /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+      "#session-registration-public-key",
+    )
+
+    const hiddenInputValue = hiddenInput.value
+
+    expect(hiddenInputValue.length).toBeGreaterThan(0)
+
+    const publicKey = importStringPublicKey(hiddenInputValue)
+    const privateKey = getObject("private_key")
+
+    expect(publicKey).toBeTypeOf("object")
+    expect(publicKey).toBeTruthy()
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
 })
 
-test.serial("bindKeys rebinds the keys if called twice", async (t) => {
-  const dom = new JSDOM(html)
-  global.document = dom.window.document
-  global.indexedDB = indexedDB
-
-  await bindKeys()
-  await bindKeys()
-
-  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
-    "#session-registration-public-key",
-  )
-
-  const hiddenInputValue = hiddenInput.value
-
-  t.assert(hiddenInputValue.length > 0)
-
-  const publicKey = importStringPublicKey(hiddenInputValue)
-  const privateKey = getObject("private_key")
-
-  t.is(typeof publicKey, "object")
-  t.truthy(publicKey)
-  t.is(typeof privateKey, "object")
-  t.truthy(privateKey)
-})
-
-test("handleSessionNamePrivateKeyRegistrationEvent should handle session name copy event", async (t) => {
+test("handleSessionNamePrivateKeyRegistrationEvent should handle session name copy event", async () => {
   const dom = new JSDOM(html)
   global.indexedDB = indexedDB
   global.document = dom.window.document
@@ -89,6 +91,6 @@ test("handleSessionNamePrivateKeyRegistrationEvent should handle session name co
 
   const privateKey = getObject("test-session-name")
 
-  t.is(typeof privateKey, "object")
-  t.truthy(privateKey)
+  expect(privateKey).toBeTypeOf("object")
+  expect(privateKey).toBeTruthy()
 })

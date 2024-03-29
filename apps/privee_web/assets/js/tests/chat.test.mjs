@@ -48,13 +48,16 @@ describe("handleSendingPrivateKey", () => {
     expect(selectedPublicKeyFromModule).toBeTruthy()
 
     expect(await convertPublicKeyToString(currentPublicKeyFromModule)).toBe(currentPublicKeyString)
-    expect(await convertPublicKeyToString(selectedPublicKeyFromModule)).toBe(selectedPublicKeyString)
+    expect(await convertPublicKeyToString(selectedPublicKeyFromModule)).toBe(
+      selectedPublicKeyString,
+    )
   })
 })
 
 describe("handleChatInput", () => {
   it(" should encrypt and set the values of hidden inputs", async () => {
-    const { publicKey: currentPublicKey, privateKey: currentPrivateKey } = await generateNewKeyPair()
+    const { publicKey: currentPublicKey, privateKey: currentPrivateKey } =
+      await generateNewKeyPair()
 
     const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } =
       await generateNewKeyPair()
@@ -96,8 +99,8 @@ describe("handleChatInput", () => {
     form.addEventListener("submit", async (e) => {
       e.preventDefault()
 
-      expect(hiddenTextFrom.value).toBe("")
-      expect(hiddenTextTo.value).toBe("")
+      expect(hiddenTextFrom.value).not.toBe("")
+      expect(hiddenTextTo.value).not.toBe("")
 
       const fromMessage = await decryptMessage(hiddenTextFrom.value, currentPrivateKey)
       const toMessage = await decryptMessage(hiddenTextTo.value, selectedPrivateKey)

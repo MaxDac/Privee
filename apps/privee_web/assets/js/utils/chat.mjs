@@ -1,5 +1,5 @@
 /**
- * @typedef {Object} SessionsPublicKey The payload of the event that sends the
+ * @typedef {object} SessionsPublicKey The payload of the event that sends the
  * public key of the session to the server.
  * @property {string} current The current session public key in string format.
  * @property {string} selected The selected session public key in string format.
@@ -13,7 +13,7 @@ const fromHiddenInputSelector = "#text-from"
 const toHiddenInputSelector = "#text-to"
 
 /**
- * @typedef {Object & Event} SessionsPublicKeyEvent The event that sends the
+ * @typedef {object & Event} SessionsPublicKeyEvent The event that sends the
  * public keys of the two sessions of the chat page.
  * @property {SessionsPublicKey} detail The payload of the event.
  */
