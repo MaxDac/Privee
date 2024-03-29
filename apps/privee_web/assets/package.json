@@ -1,8 +1,8 @@
 {
   "scripts": {
     "format": "prettier --write --config ./.prettierrc .",
-    "check:dev": "npm run format && eslint --fix --ext .js,.mjs . && npm run test",
-    "check": "prettier --check . && eslint --ext .js,.mjs . && npm run test",
+    "check:dev": "npm run format && tsc && eslint --fix --ext .js,.mjs . && vitest run",
+    "check": "prettier --check . && tsc && eslint --ext .js,.mjs . && vitest run",
     "test": "NODE_ENV=test vitest"
   },
   "dependencies": {
@@ -11,6 +11,7 @@
   "devDependencies": {
     "@types/jsdom": "^21.1.6",
     "@types/node": "^20.11.28",
+    "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-jsdoc": "^48.2.2",
@@ -19,6 +20,7 @@
     "flowbite-typography": "^1.0.3",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
+    "typescript": "^5.4.3",
     "vitest": "^1.4.0"
   }
 }

@@ -2,12 +2,12 @@ import { handleSessionNameCopyToClipboardRegistrationEvent } from "./clipboard.m
 import { handleSessionNamePrivateKeyRegistrationEvent } from "./message-encryption.mjs"
 
 /**
- * @typedef {Object} PhoenixSessionNameEventDetail This type represents a custom Phoenix event.
+ * @typedef {object} PhoenixSessionNameEventDetail This type represents a custom Phoenix event.
  * @property {string} session_name The logged user session name.
  */
 
 /**
- * @typedef {Object & Event} PhoenixSessionNameEvent This type represents a custom Phoenix event.
+ * @typedef {object & Event} PhoenixSessionNameEvent This type represents a custom Phoenix event.
  * @property {PhoenixSessionNameEventDetail} detail The event details
  */
 

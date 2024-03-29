@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "moduleResolution": "Node",
+    "module": "ES6",
+    "allowJs": true,
+    "checkJs": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["**/*.js", "**/*.mjs"],
+  // Excluding tests as vitest is giving compilation errors
+  "exclude": ["node_modules", "vendor/topbar.js", "js/tests"]
+}

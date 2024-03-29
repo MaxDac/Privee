@@ -14,14 +14,14 @@ export const askNotificationPermission = () => {
 }
 
 /**
- * @typedef {Object} EventDetails Represents the details of the event sent from the back end. For more information read `events.ex` file.
+ * @typedef {object} EventDetails Represents the details of the event sent from the back end. For more information read `events.ex` file.
  * @property {string} [text] The text of the message that triggered the notification.
  * @property {string} [session_name] The session name that sent the message.
  * @property {boolean} [check_focus] Whether to check if the window is in focus before triggering the notification.
  */
 
 /**
- * @typedef {Object & Event} PhoenixEvent This type represents a custom Phoenix event.
+ * @typedef {object & Event} PhoenixEvent This type represents a custom Phoenix event.
  * @property {EventDetails} detail The event details
  */
 
