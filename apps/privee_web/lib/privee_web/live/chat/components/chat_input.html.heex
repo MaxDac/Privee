@@ -1,5 +1,10 @@
 <div>
   <.input id="text-from" type="hidden" field={@form[:text_from]} />
   <.input id="text-to" type="hidden" field={@form[:text_to]} />
-  <.input id="chat-text" field={@form[:text]} phx-debounce="blur" placeholder="Write your message here" />
+  <.input
+    id="chat-text"
+    field={@form[:text]}
+    phx-debounce="blur"
+    placeholder="Write your message here"
+  />
 </div>
