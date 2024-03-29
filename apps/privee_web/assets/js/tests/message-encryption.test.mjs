@@ -1,7 +1,10 @@
 import test from "ava"
 import { indexedDB } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
-import { bindKeys, handleSessionNamePrivateKeyRegistrationEvent } from "../utils/message-encryption.mjs"
+import {
+  bindKeys,
+  handleSessionNamePrivateKeyRegistrationEvent,
+} from "../utils/message-encryption.mjs"
 import { getObject } from "../utils/front-end-database.mjs"
 import { importStringPublicKey } from "../utils/security.mjs"
 
@@ -14,7 +17,9 @@ test.serial("bindKeys should bind public key generation to input field", async (
 
   await bindKeys()
 
-  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector("#session-registration-public-key")
+  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+    "#session-registration-public-key",
+  )
 
   const hiddenInputValue = hiddenInput.value
 
@@ -50,7 +55,9 @@ test.serial("bindKeys rebinds the keys if called twice", async (t) => {
   await bindKeys()
   await bindKeys()
 
-  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector("#session-registration-public-key")
+  /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+    "#session-registration-public-key",
+  )
 
   const hiddenInputValue = hiddenInput.value
 

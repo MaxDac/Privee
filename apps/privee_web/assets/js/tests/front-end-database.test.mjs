@@ -1,6 +1,11 @@
 import test from "ava"
 import { indexedDB } from "fake-indexeddb"
-import { storeObject, getObject, deleteObject, purgeDatabase } from "../utils/front-end-database.mjs"
+import {
+  storeObject,
+  getObject,
+  deleteObject,
+  purgeDatabase,
+} from "../utils/front-end-database.mjs"
 
 test.serial("getObject returns undefined if the database does not exist", async (t) => {
   global.indexedDB = indexedDB

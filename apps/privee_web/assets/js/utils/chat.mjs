@@ -40,9 +40,12 @@ export const handleSendingPrivateKey = async (e) => {
  */
 export const handleChatInput = async (_e) => {
   /** @type {HTMLFormElement} */ const chatForm = document.querySelector(chatFormSelector)
-  /** @type {HTMLInputElement} */ const chatTextInput = document.querySelector(chatTextInputSelector)
-  /** @type {HTMLInputElement} */ const fromHiddenInput = document.querySelector(fromHiddenInputSelector)
-  /** @type {HTMLInputElement} */ const toHiddenInput = document.querySelector(toHiddenInputSelector)
+  /** @type {HTMLInputElement} */ const chatTextInput =
+    document.querySelector(chatTextInputSelector)
+  /** @type {HTMLInputElement} */ const fromHiddenInput =
+    document.querySelector(fromHiddenInputSelector)
+  /** @type {HTMLInputElement} */ const toHiddenInput =
+    document.querySelector(toHiddenInputSelector)
 
   const text = chatTextInput.value
 

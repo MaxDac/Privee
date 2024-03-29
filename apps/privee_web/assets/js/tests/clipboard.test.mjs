@@ -1,6 +1,9 @@
 import test from "ava"
 import { JSDOM } from "jsdom"
-import { addSessionNameCopyListener, copySessionNameToClipboardBackEndEventHandler } from "../utils/clipboard.mjs"
+import {
+  addSessionNameCopyListener,
+  copySessionNameToClipboardBackEndEventHandler,
+} from "../utils/clipboard.mjs"
 
 test("copySessionNameToClipboardBackEndEventHandler copy session name to clipboard following back end event", (t) => {
   const sessionName = "session name"

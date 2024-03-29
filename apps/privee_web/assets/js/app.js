@@ -30,7 +30,10 @@ import "flowbite/dist/flowbite.phoenix.js"
 // Importing utility functions
 import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "./utils/push-notifications.mjs"
-import { addSessionNameCopyListener, handleSessionNameCopyToClipboardRegistrationEvent } from "./utils/clipboard.mjs"
+import {
+  addSessionNameCopyListener,
+  handleSessionNameCopyToClipboardRegistrationEvent,
+} from "./utils/clipboard.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
 

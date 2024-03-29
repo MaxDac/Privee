@@ -45,7 +45,9 @@ const requestOperationFromDb = (operation) =>
         const dbRequest = indexedDB.open(dbName)
 
         dbRequest.onsuccess = () => {
-          const keyStore = dbRequest.result.transaction(tableName, "readwrite").objectStore(tableName)
+          const keyStore = dbRequest.result
+            .transaction(tableName, "readwrite")
+            .objectStore(tableName)
 
           const request = operation(keyStore)
 

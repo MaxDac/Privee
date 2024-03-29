@@ -17,45 +17,51 @@ test.serial(
   },
 )
 
-test.serial("askNotificationPermission asks for permission, user accepts, reports the right result", async (t) => {
-  const dom = getDom()
-  const window = {
-    ...dom.window,
-    Notification: {
-      requestPermission: () => Promise.resolve(),
-      permission: "granted",
-    },
-  }
+test.serial(
+  "askNotificationPermission asks for permission, user accepts, reports the right result",
+  async (t) => {
+    const dom = getDom()
+    const window = {
+      ...dom.window,
+      Notification: {
+        requestPermission: () => Promise.resolve(),
+        permission: "granted",
+      },
+    }
 
-  // @ts-ignore
-  global.window = window
-  // @ts-ignore
-  global.Notification = window.Notification
+    // @ts-ignore
+    global.window = window
+    // @ts-ignore
+    global.Notification = window.Notification
 
-  const expected = "Permission: granted"
-  const result = await askNotificationPermission()
-  t.is(result, expected)
-})
+    const expected = "Permission: granted"
+    const result = await askNotificationPermission()
+    t.is(result, expected)
+  },
+)
 
-test.serial("askNotificationPermission asks for permission, user denies, reports the right result", async (t) => {
-  const dom = getDom()
-  const window = {
-    ...dom.window,
-    Notification: {
-      requestPermission: () => Promise.resolve(),
-      permission: "denied",
-    },
-  }
+test.serial(
+  "askNotificationPermission asks for permission, user denies, reports the right result",
+  async (t) => {
+    const dom = getDom()
+    const window = {
+      ...dom.window,
+      Notification: {
+        requestPermission: () => Promise.resolve(),
+        permission: "denied",
+      },
+    }
 
-  // @ts-ignore
-  global.window = window
-  // @ts-ignore
-  global.Notification = window.Notification
+    // @ts-ignore
+    global.window = window
+    // @ts-ignore
+    global.Notification = window.Notification
 
-  const expected = "Permission: denied"
-  const result = await askNotificationPermission()
-  t.is(result, expected)
-})
+    const expected = "Permission: denied"
+    const result = await askNotificationPermission()
+    t.is(result, expected)
+  },
+)
 
 test.serial(
   "pushBackEndNotification checking focus, does not trigger notification if the document is visible",

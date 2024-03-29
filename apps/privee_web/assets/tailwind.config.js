@@ -7,7 +7,12 @@ const fs = require("fs")
 const path = require("path")
 
 module.exports = {
-  content: ["./js/**/*.js", "../lib/privee_web.ex", "../lib/privee_web/**/*.*ex", "./node_modules/flowbite/**/*.js"],
+  content: [
+    "./js/**/*.js",
+    "../lib/privee_web.ex",
+    "../lib/privee_web/**/*.*ex",
+    "./node_modules/flowbite/**/*.js",
+  ],
   theme: {
     extend: {
       colors: {
@@ -26,10 +31,18 @@ module.exports = {
     //
     require("flowbite/plugin"),
     require("flowbite-typography"),
-    plugin(({ addVariant }) => addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"])),
-    plugin(({ addVariant }) => addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"])),
-    plugin(({ addVariant }) => addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"])),
-    plugin(({ addVariant }) => addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"])),
+    plugin(({ addVariant }) =>
+      addVariant("phx-no-feedback", [".phx-no-feedback&", ".phx-no-feedback &"]),
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-click-loading", [".phx-click-loading&", ".phx-click-loading &"]),
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-submit-loading", [".phx-submit-loading&", ".phx-submit-loading &"]),
+    ),
+    plugin(({ addVariant }) =>
+      addVariant("phx-change-loading", [".phx-change-loading&", ".phx-change-loading &"]),
+    ),
 
     // Embeds Heroicons (https://heroicons.com) into your app.css bundle
     // See your `CoreComponents.icon/1` for more information.

@@ -1,7 +1,12 @@
 import test from "ava"
 import { JSDOM } from "jsdom"
 import { testExports, handleSendingPrivateKey, handleChatInput } from "../utils/chat.mjs"
-import { convertPublicKeyToString, decryptMessage, generateNewKeyPair, stringToArrayData } from "../utils/security.mjs"
+import {
+  convertPublicKeyToString,
+  decryptMessage,
+  generateNewKeyPair,
+  stringToArrayData,
+} from "../utils/security.mjs"
 
 const html = `
   <form id="chat-form">
@@ -11,18 +16,21 @@ const html = `
   </form>
 `
 
-test.serial("handleSendingPrivateKey should return an error when the keys are not present", async (t) => {
-  const event = {
-    detail: {},
-  }
+test.serial(
+  "handleSendingPrivateKey should return an error when the keys are not present",
+  async (t) => {
+    const event = {
+      detail: {},
+    }
 
-  try {
-    await handleSendingPrivateKey(event)
-    t.fail("It should have thrown an exception")
-  } catch (e) {
-    t.pass()
-  }
-})
+    try {
+      await handleSendingPrivateKey(event)
+      t.fail("It should have thrown an exception")
+    } catch (e) {
+      t.pass()
+    }
+  },
+)
 
 test.serial("handleSendingPrivateKey should store the public key", async (t) => {
   const { publicKey: currentPublicKey } = await generateNewKeyPair()
@@ -52,7 +60,8 @@ test.serial("handleSendingPrivateKey should store the public key", async (t) => 
 test.serial("handleChatInput should encrypt and set the values of hidden inputs", async (t) => {
   const { publicKey: currentPublicKey, privateKey: currentPrivateKey } = await generateNewKeyPair()
 
-  const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } = await generateNewKeyPair()
+  const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } =
+    await generateNewKeyPair()
 
   const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
   const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
@@ -94,8 +103,14 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
     t.not(hiddenTextFrom.value, "")
     t.not(hiddenTextTo.value, "")
 
-    const fromMessage = await decryptMessage(stringToArrayData(hiddenTextFrom.value), currentPrivateKey)
-    const toMessage = await decryptMessage(stringToArrayData(hiddenTextTo.value), selectedPrivateKey)
+    const fromMessage = await decryptMessage(
+      stringToArrayData(hiddenTextFrom.value),
+      currentPrivateKey,
+    )
+    const toMessage = await decryptMessage(
+      stringToArrayData(hiddenTextTo.value),
+      selectedPrivateKey,
+    )
 
     t.is(inputText, fromMessage)
     t.is(inputText, toMessage)

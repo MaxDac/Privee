@@ -13,7 +13,8 @@ const themeToggleButtonDataThemeToggle = "[data-theme-toggle=\"theme-toggle\"]"
  * Determines whether the local storage is avaialble or not.
  * @returns {boolean} `True` if the `localStorage` is available, `False` otherwise.
  */
-const isLocalStorageAvailable = () => Boolean(localStorage && localStorage.getItem && localStorage.setItem)
+const isLocalStorageAvailable = () =>
+  Boolean(localStorage && localStorage.getItem && localStorage.setItem)
 
 /**
  * Gets the setting value for the dark theme from the local storage.
@@ -24,7 +25,8 @@ const getDarkThemeSettingFromLocalStorage = () => {
   if (isLocalStorageAvailable()) {
     return (
       localStorage.getItem(localStorageDarkModeKey) === darkModeLabel ||
-      (!(localStorageDarkModeKey in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      (!(localStorageDarkModeKey in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
     )
   } else {
     return false
@@ -87,7 +89,8 @@ const trySetTheme = (theme) => {
 /**
  * Sets the theme at startup.
  */
-export const setStartupTheme = () => trySetTheme(isDarkModeEnabled() ? darkModeLabel : lightModelLabel)
+export const setStartupTheme = () =>
+  trySetTheme(isDarkModeEnabled() ? darkModeLabel : lightModelLabel)
 
 /**
  * Adds all the handlers to toggle the Dark mode theme in the page,
