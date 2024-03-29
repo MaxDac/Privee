@@ -42,14 +42,14 @@ addChatHooks(Hooks)
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: Hooks
+  params: { _csrf_token: csrfToken },
+  hooks: Hooks,
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
-window.addEventListener("phx:page-loading-stop", _info => {
+topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
+window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300))
+window.addEventListener("phx:page-loading-stop", (_info) => {
   topbar.hide()
 
   // Adding this because for some reason it gets reset at page load.
@@ -59,13 +59,11 @@ window.addEventListener("phx:page-loading-stop", _info => {
 document.addEventListener("DOMContentLoaded", addToggleDarkModeHandling)
 
 // Asking for notification permission to the browser
-askNotificationPermission()
-  .then(console.debug)
-  .catch(console.error)
+askNotificationPermission().then(console.debug).catch(console.error)
 
 // Setting the LiveView events
 window.addEventListener("phx:trigger_notification", pushBackEndNotification)
-window.addEventListener("phx:handle_new_session_registration", event => {
+window.addEventListener("phx:handle_new_session_registration", (event) => {
   handleSessionNameCopyToClipboardRegistrationEvent(event)
 })
 
@@ -80,4 +78,3 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 // @ts-ignore
 window.liveSocket = liveSocket
-

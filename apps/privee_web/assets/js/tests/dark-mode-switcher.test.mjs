@@ -2,8 +2,7 @@ import test from "ava"
 import { addDarkModeToggleHandlers, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { getDom } from "./mock-utils.mjs"
 
-const html =
-  `
+const html = `
   <button id="theme-toggle" aria-label="dark-theme-selector" data-theme-toggle="theme-toggle">
     <svg id="theme-toggle-dark-icon" data-theme-selector="dark" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
       <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
@@ -19,8 +18,8 @@ const html =
  * Gets the toggle button in the mocked DOM.
  * @returns {HTMLButtonElement} The button element.
  */
-const getToggleButton = () => 
-  document.querySelector("[data-theme-toggle=\"theme-toggle\"]")
+// prettier-ignore
+const getToggleButton = () => document.querySelector("[data-theme-toggle=\"theme-toggle\"]")
 
 test.before(() => {
   const dom = getDom(html)
@@ -31,9 +30,9 @@ test.before(() => {
   global.window = {
     ...window,
     // @ts-ignore
-    matchMedia: query => ({ 
+    matchMedia: (query) => ({
       matches: query === "(prefers-color-scheme: light)",
-    })
+    }),
   }
 
   global.document = dom.window.document
@@ -47,10 +46,12 @@ test.beforeEach(() => {
   localStorage.clear()
 })
 
-test("setStartupTheme select automatically the light mode", t => {
+test("setStartupTheme select automatically the light mode", (t) => {
   setStartupTheme()
 
+  // prettier-ignore
   const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  // prettier-ignore
   const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
   const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
@@ -60,11 +61,13 @@ test("setStartupTheme select automatically the light mode", t => {
   t.assert(htmlElementClassList.contains("light"))
 })
 
-test("setStartupTheme automatically select light theme when it's configured in local storage", t => {
+test("setStartupTheme automatically select light theme when it's configured in local storage", (t) => {
   global.localStorage.setItem("color-theme", "dark")
   setStartupTheme()
 
+  // prettier-ignore
   const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  // prettier-ignore
   const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
   const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
@@ -74,13 +77,14 @@ test("setStartupTheme automatically select light theme when it's configured in l
   t.assert(htmlElementClassList.contains("dark"))
 })
 
-test("setStartupTheme toggle to dark mode when button is pressed", t => {
+test("setStartupTheme toggle to dark mode when button is pressed", (t) => {
   localStorage.clear()
   setStartupTheme()
   addDarkModeToggleHandlers()
 
-
+  // prettier-ignore
   let lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  // prettier-ignore
   let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
   let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
@@ -92,7 +96,9 @@ test("setStartupTheme toggle to dark mode when button is pressed", t => {
   // Clicking the item should toggle the theme
   getToggleButton().click()
 
+  // prettier-ignore
   lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  // prettier-ignore
   darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
   htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
@@ -104,7 +110,9 @@ test("setStartupTheme toggle to dark mode when button is pressed", t => {
   // Clicking the item should toggle the theme back
   getToggleButton().click()
 
+  // prettier-ignore
   lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
+  // prettier-ignore
   darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
   htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 

@@ -2,53 +2,53 @@ import test from "ava"
 import { JSDOM } from "jsdom"
 import { addSessionNameCopyListener, copySessionNameToClipboardBackEndEventHandler } from "../utils/clipboard.mjs"
 
-test("copySessionNameToClipboardBackEndEventHandler copy session name to clipboard following back end event", t => {
+test("copySessionNameToClipboardBackEndEventHandler copy session name to clipboard following back end event", (t) => {
   const sessionName = "session name"
-  
+
   const dom = new JSDOM()
   global.navigator = {
     ...dom.window.navigator,
     clipboard: {
       ...dom.window.navigator.clipboard,
-      writeText: text => {
+      writeText: (text) => {
         if (text === sessionName) {
           return Promise.resolve()
         } else {
           return Promise.reject("The text is not what was expected.")
         }
-      }
-    }
+      },
+    },
   }
-  
+
   const event = { detail: { session_name: sessionName } }
-  
+
   return copySessionNameToClipboardBackEndEventHandler(event)
-    .then(_ => t.pass())
-    .catch(e => t.fail(e))
+    .then((_) => t.pass())
+    .catch((e) => t.fail(e))
 })
 
-test("copySessionNameToClipboardBackEndEventHandler ccopy session name to clipboard correctly report the error", t => {
+test("copySessionNameToClipboardBackEndEventHandler ccopy session name to clipboard correctly report the error", (t) => {
   const sessionName = "session name"
   const errorMessage = "some error"
   const copyError = new Error(errorMessage)
-  
+
   const dom = new JSDOM()
   global.navigator = {
     ...dom.window.navigator,
     clipboard: {
       ...dom.window.navigator.clipboard,
-      writeText: _text => Promise.reject(copyError)
-    }
+      writeText: (_text) => Promise.reject(copyError),
+    },
   }
-  
+
   const event = { detail: { session_name: sessionName } }
-  
+
   return copySessionNameToClipboardBackEndEventHandler(event)
-    .then(_ => t.fail("The copy operation should not have succeeded"))
-    .catch(_e => t.pass())
+    .then((_) => t.fail("The copy operation should not have succeeded"))
+    .catch((_e) => t.pass())
 })
 
-test("addSessionNameCopyListener: The button click results in the session name copy to the clipboard invocation", t => {
+test("addSessionNameCopyListener: The button click results in the session name copy to the clipboard invocation", (t) => {
   const sessionName = "some-session-name"
 
   const buttonHtml = `
@@ -57,7 +57,7 @@ test("addSessionNameCopyListener: The button click results in the session name c
 
   let result = false
 
-  const copyHandler = text => {
+  const copyHandler = (text) => {
     if (text === sessionName) {
       result = true
       return Promise.resolve()
@@ -76,8 +76,8 @@ test("addSessionNameCopyListener: The button click results in the session name c
     ...dom.window.navigator,
     clipboard: {
       ...dom.window.navigator.clipboard,
-      writeText: copyHandler
-    }
+      writeText: copyHandler,
+    },
   }
 
   addSessionNameCopyListener()

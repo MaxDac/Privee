@@ -2,27 +2,29 @@ import test from "ava"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 
-test.serial("askNotificationPermission asks for permission, browser does not support notifications, reports the right result", t => {
-  const dom = getDom()
-  
-  // @ts-ignore
-  global.window = dom.window
-  // @ts-ignore
-  global.Notification = dom.window.Notification
+test.serial(
+  "askNotificationPermission asks for permission, browser does not support notifications, reports the right result",
+  (t) => {
+    const dom = getDom()
 
-  const expected = "This browser does not support notifications."
-  return askNotificationPermission()
-    .catch(error => t.is(error, expected))
-})
+    // @ts-ignore
+    global.window = dom.window
+    // @ts-ignore
+    global.Notification = dom.window.Notification
 
-test.serial("askNotificationPermission asks for permission, user accepts, reports the right result", async t => {
+    const expected = "This browser does not support notifications."
+    return askNotificationPermission().catch((error) => t.is(error, expected))
+  },
+)
+
+test.serial("askNotificationPermission asks for permission, user accepts, reports the right result", async (t) => {
   const dom = getDom()
   const window = {
     ...dom.window,
     Notification: {
       requestPermission: () => Promise.resolve(),
-      permission: "granted"
-    }
+      permission: "granted",
+    },
   }
 
   // @ts-ignore
@@ -35,14 +37,14 @@ test.serial("askNotificationPermission asks for permission, user accepts, report
   t.is(result, expected)
 })
 
-test.serial("askNotificationPermission asks for permission, user denies, reports the right result", async t => {
+test.serial("askNotificationPermission asks for permission, user denies, reports the right result", async (t) => {
   const dom = getDom()
   const window = {
     ...dom.window,
     Notification: {
       requestPermission: () => Promise.resolve(),
-      permission: "denied"
-    }
+      permission: "denied",
+    },
   }
 
   // @ts-ignore
@@ -55,95 +57,104 @@ test.serial("askNotificationPermission asks for permission, user denies, reports
   t.is(result, expected)
 })
 
-test.serial("pushBackEndNotification checking focus, does not trigger notification if the document is visible", async t => {
-  const dom = getDom()
-  
-  // @ts-ignore
-  global.window = {
-    ...window,
-    open: (_url, _target, _features) => window
-  }
+test.serial(
+  "pushBackEndNotification checking focus, does not trigger notification if the document is visible",
+  async (t) => {
+    const dom = getDom()
 
-  global.document = {
-    ...dom.window.document,
-    hidden: false
-  }
-
-  const notification = await pushBackEndNotification({
-    detail: {
-      check_focus: true
+    // @ts-ignore
+    global.window = {
+      ...window,
+      open: (_url, _target, _features) => window,
     }
-  })
 
-  t.falsy(notification)
-})
-
-test.serial("pushBackEndNotification checking focus, does trigger notification if the document is not visible", async t => {
-  const dom = getDom()
-  
-  // @ts-ignore
-  global.window = window
-
-  global.document = {
-    ...dom.window.document,
-    hidden: true,
-    visibilityState: "visible",
-    addEventListener: (type, callback) => {
-      if (type === "visibilitychange") {
-        callback()
-      }
+    global.document = {
+      ...dom.window.document,
+      hidden: false,
     }
-  }
 
-  // @ts-ignore
-  global.Notification = NotificationMock
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: true,
+      },
+    })
 
-  const notificationText = "Hello, world!"
+    t.falsy(notification)
+  },
+)
 
-  const notification = await pushBackEndNotification({
-    detail: {
-      check_focus: true,
-      text: notificationText
+test.serial(
+  "pushBackEndNotification checking focus, does trigger notification if the document is not visible",
+  async (t) => {
+    const dom = getDom()
+
+    // @ts-ignore
+    global.window = window
+
+    global.document = {
+      ...dom.window.document,
+      hidden: true,
+      visibilityState: "visible",
+      addEventListener: (type, callback) => {
+        if (type === "visibilitychange") {
+          callback()
+        }
+      },
     }
-  })
 
-  t.truthy(notification)
-  t.is(notification.title, "Privee - Text received")
-  t.is(notification.body, notificationText)
-  t.is(notification.icon, "/favicon.ico")
-})
+    // @ts-ignore
+    global.Notification = NotificationMock
 
-test.serial("pushBackEndNotification not checking focus, does trigger notification independent of the document visibility", async t => {
-  const dom = getDom()
-  
-  // @ts-ignore
-  global.window = window
+    const notificationText = "Hello, world!"
 
-  global.document = {
-    ...dom.window.document,
-    hidden: false,
-    visibilityState: "visible",
-    addEventListener: (type, callback) => {
-      if (type === "visibilitychange") {
-        callback()
-      }
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: true,
+        text: notificationText,
+      },
+    })
+
+    t.truthy(notification)
+    t.is(notification.title, "Privee - Text received")
+    t.is(notification.body, notificationText)
+    t.is(notification.icon, "/favicon.ico")
+  },
+)
+
+test.serial(
+  "pushBackEndNotification not checking focus, does trigger notification independent of the document visibility",
+  async (t) => {
+    const dom = getDom()
+
+    // @ts-ignore
+    global.window = window
+
+    global.document = {
+      ...dom.window.document,
+      hidden: false,
+      visibilityState: "visible",
+      addEventListener: (type, callback) => {
+        if (type === "visibilitychange") {
+          callback()
+        }
+      },
     }
-  }
 
-  // @ts-ignore
-  global.Notification = NotificationMock
+    // @ts-ignore
+    global.Notification = NotificationMock
 
-  const notificationText = "Hello, world!"
+    const notificationText = "Hello, world!"
 
-  const notification = await pushBackEndNotification({
-    detail: {
-      check_focus: false,
-      text: notificationText
-    }
-  })
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: false,
+        text: notificationText,
+      },
+    })
 
-  t.truthy(notification)
-  t.is(notification.title, "Privee - Text received")
-  t.is(notification.body, notificationText)
-  t.is(notification.icon, "/favicon.ico")
-})
+    t.truthy(notification)
+    t.is(notification.title, "Privee - Text received")
+    t.is(notification.body, notificationText)
+    t.is(notification.icon, "/favicon.ico")
+  },
+)

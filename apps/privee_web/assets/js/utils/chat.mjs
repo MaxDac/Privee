@@ -15,7 +15,7 @@ const toHiddenInputSelector = "#text-to"
 /**
  * @typedef {Object & Event} SessionsPublicKeyEvent The event that sends the
  * public keys of the two sessions of the chat page.
- * @property {SessionsPublicKey} detail The payload of the event.  
+ * @property {SessionsPublicKey} detail The payload of the event.
  */
 
 var currentPublicKey = null
@@ -26,20 +26,20 @@ var selectedPublicKey = null
  * @param {SessionsPublicKeyEvent} e The event payload.
  * @returns {Promise<void>} A promise that resolves when the public key is stored.
  */
-export const handleSendingPrivateKey = async e => {
+export const handleSendingPrivateKey = async (e) => {
   const { current, selected } = e.detail
   currentPublicKey = await importStringPublicKey(current)
   selectedPublicKey = await importStringPublicKey(selected)
 }
 
 /**
-  * Handles the chat input by encrypting the content of the text input, and then
-  * putting the values into the related hidden inputs.
-  * @param {KeyboardEvent} _e The submit event.
-  * @returns {Promise<void>} The result of the operation.
-  */
-export const handleChatInput = async _e => {
-  /** @type {HTMLFormElement} */  const chatForm = document.querySelector(chatFormSelector)
+ * Handles the chat input by encrypting the content of the text input, and then
+ * putting the values into the related hidden inputs.
+ * @param {KeyboardEvent} _e The submit event.
+ * @returns {Promise<void>} The result of the operation.
+ */
+export const handleChatInput = async (_e) => {
+  /** @type {HTMLFormElement} */ const chatForm = document.querySelector(chatFormSelector)
   /** @type {HTMLInputElement} */ const chatTextInput = document.querySelector(chatTextInputSelector)
   /** @type {HTMLInputElement} */ const fromHiddenInput = document.querySelector(fromHiddenInputSelector)
   /** @type {HTMLInputElement} */ const toHiddenInput = document.querySelector(toHiddenInputSelector)
@@ -73,5 +73,5 @@ export const testExports = {
    * Gets the selected public key.
    * @returns {CryptoKey} The selected public key.
    */
-  getSelectedPublicKey: () => selectedPublicKey
+  getSelectedPublicKey: () => selectedPublicKey,
 }

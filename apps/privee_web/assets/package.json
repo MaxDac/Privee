@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "check:dev": "tsc && eslint --fix . && npm run test",
-    "check": "tsc && eslint . && npm run test",
-    "test": "ava"
+    "format": "prettier --write --config ./.prettierrc .",
+    "check:dev": "tsc && eslint --fix --ext .js,.mjs . && npm run test",
+    "check": "tsc && eslint --ext .js,.mjs . && npm run test",
+    "test": "NODE_ENV=test ava"
   },
   "dependencies": {
     "flowbite": "^2.3.0"
@@ -12,6 +13,8 @@
     "@types/node": "^20.11.28",
     "ava": "^6.1.2",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
     "fake-indexeddb": "^5.0.2",
     "flowbite-typography": "^1.0.3",
     "jsdom": "^24.0.0",

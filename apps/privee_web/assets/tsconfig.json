@@ -7,12 +7,6 @@
     "checkJs": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "**/*.js",
-    "**/*.mjs"
-  ],
-  "exclude": [
-    "node_modules",
-    "vendor/topbar.js"
-  ]
+  "include": ["**/*.js", "**/*.mjs"],
+  "exclude": ["node_modules", "vendor/topbar.js"]
 }

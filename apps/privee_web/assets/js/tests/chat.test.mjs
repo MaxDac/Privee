@@ -1,10 +1,6 @@
 import test from "ava"
 import { JSDOM } from "jsdom"
-import { 
-  testExports,
-  handleSendingPrivateKey, 
-  handleChatInput 
-} from "../utils/chat.mjs"
+import { testExports, handleSendingPrivateKey, handleChatInput } from "../utils/chat.mjs"
 import { convertPublicKeyToString, decryptMessage, generateNewKeyPair, stringToArrayData } from "../utils/security.mjs"
 
 const html = `
@@ -15,9 +11,9 @@ const html = `
   </form>
 `
 
-test.serial("handleSendingPrivateKey should return an error when the keys are not present", async t => {
+test.serial("handleSendingPrivateKey should return an error when the keys are not present", async (t) => {
   const event = {
-    detail: {}
+    detail: {},
   }
 
   try {
@@ -28,7 +24,7 @@ test.serial("handleSendingPrivateKey should return an error when the keys are no
   }
 })
 
-test.serial("handleSendingPrivateKey should store the public key", async t => {
+test.serial("handleSendingPrivateKey should store the public key", async (t) => {
   const { publicKey: currentPublicKey } = await generateNewKeyPair()
   const { publicKey: selectedPublicKey } = await generateNewKeyPair()
   const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
@@ -37,8 +33,8 @@ test.serial("handleSendingPrivateKey should store the public key", async t => {
   const event = {
     detail: {
       current: currentPublicKeyString,
-      selected: selectedPublicKeyString
-    }
+      selected: selectedPublicKeyString,
+    },
   }
 
   await handleSendingPrivateKey(event)
@@ -53,16 +49,10 @@ test.serial("handleSendingPrivateKey should store the public key", async t => {
   t.is(selectedPublicKeyString, await convertPublicKeyToString(selectedPublicKeyFromModule))
 })
 
-test.serial("handleChatInput should encrypt and set the values of hidden inputs", async t => {
-  const { 
-    publicKey: currentPublicKey,
-    privateKey: currentPrivateKey
-  } = await generateNewKeyPair()
+test.serial("handleChatInput should encrypt and set the values of hidden inputs", async (t) => {
+  const { publicKey: currentPublicKey, privateKey: currentPrivateKey } = await generateNewKeyPair()
 
-  const { 
-    publicKey: selectedPublicKey,
-    privateKey: selectedPrivateKey
-  } = await generateNewKeyPair()
+  const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } = await generateNewKeyPair()
 
   const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
   const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
@@ -76,8 +66,8 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
   const publicKeysSendingEvent = {
     detail: {
       current: currentPublicKeyString,
-      selected: selectedPublicKeyString
-    }
+      selected: selectedPublicKeyString,
+    },
   }
 
   await handleSendingPrivateKey(publicKeysSendingEvent)
@@ -90,15 +80,15 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
 
   // Simulating filling the input with a message
   const inputText = "Hello, world!"
-  
+
   textbox.value = inputText
-  
+
   // Workaround for the event listener to be added and fired from the form.
   // This function will later be bound to the `Promise` that will resolve the test.
   let testResolve = null
 
   // Adding a submit event listener for the form to check the values of the hidden inputs
-  form.addEventListener("submit", async e => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault()
 
     t.not(hiddenTextFrom.value, "")
@@ -111,28 +101,24 @@ test.serial("handleChatInput should encrypt and set the values of hidden inputs"
     t.is(inputText, toMessage)
 
     t.is("", textbox.value)
-  
+
     testResolve()
   })
 
   await handleChatInput(new KeyboardEvent("submit"))
 
-  await new Promise(resolve => {
+  await new Promise((resolve) => {
     // Binding the resolve function to the testResolve variable.
-    // This will be resolved when the submit event is fired and handled by the 
+    // This will be resolved when the submit event is fired and handled by the
     // test event listener.
     testResolve = resolve
   })
 })
 
-test.serial("handleChatInput should do nothing when the chat input is empty", async t => {
-  const { 
-    publicKey: currentPublicKey,
-  } = await generateNewKeyPair()
+test.serial("handleChatInput should do nothing when the chat input is empty", async (t) => {
+  const { publicKey: currentPublicKey } = await generateNewKeyPair()
 
-  const { 
-    publicKey: selectedPublicKey,
-  } = await generateNewKeyPair()
+  const { publicKey: selectedPublicKey } = await generateNewKeyPair()
 
   const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
   const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
@@ -146,8 +132,8 @@ test.serial("handleChatInput should do nothing when the chat input is empty", as
   const publicKeysSendingEvent = {
     detail: {
       current: currentPublicKeyString,
-      selected: selectedPublicKeyString
-    }
+      selected: selectedPublicKeyString,
+    },
   }
 
   await handleSendingPrivateKey(publicKeysSendingEvent)
@@ -156,7 +142,7 @@ test.serial("handleChatInput should do nothing when the chat input is empty", as
   /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
   /** @type {HTMLInputElement} */ const hiddenTextFrom = document.querySelector("#text-from")
   /** @type {HTMLInputElement} */ const hiddenTextTo = document.querySelector("#text-to")
-  
+
   textbox.value = ""
 
   await handleChatInput(new KeyboardEvent("submit"))
