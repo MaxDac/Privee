@@ -3,7 +3,8 @@
     "format": "prettier --write --config ./.prettierrc .",
     "check:dev": "npm run format && tsc && eslint --fix --ext .js,.mjs . && vitest run",
     "check": "prettier --check . && tsc && eslint --ext .js,.mjs . && vitest run",
-    "test": "NODE_ENV=test vitest"
+    "test": "NODE_ENV=test vitest",
+    "test:verbose": "NODE_ENV=test vitest --silent=false"
   },
   "dependencies": {
     "flowbite": "^2.3.0"
