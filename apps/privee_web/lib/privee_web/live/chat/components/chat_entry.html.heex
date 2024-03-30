@@ -21,6 +21,7 @@
     ]}>
       <p
         data-message={if @message.from == @current_session.id, do: "from", else: "to"}
+        data-converted="false"
         class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
       >
         <!-- Adding &lrm; at the end to circumvent punctuation rtl direction -->

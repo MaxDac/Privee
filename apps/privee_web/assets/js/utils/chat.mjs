@@ -5,12 +5,19 @@
  * @property {string} selected The selected session public key in string format.
  */
 
-import { encryptMessage, importStringPublicKey } from "./security.mjs"
+import { querySelectorArrayOf } from "./dom-utils.mjs"
+import { getObject } from "./front-end-database.mjs"
+import { decryptMessage, encryptMessage, importStringPublicKey } from "./security.mjs"
 
 const chatFormSelector = "#chat-form"
 const chatTextInputSelector = "#chat-text"
 const fromHiddenInputSelector = "#text-from"
 const toHiddenInputSelector = "#text-to"
+
+const chatEntryFromSelector = "[data-from]"
+const chatEntryToSelector = "[data-to]"
+// prettier-ignore
+const chatEntryUnconverted="[data-converted=\"false\"]"
 
 /**
  * @typedef {object & Event} SessionsPublicKeyEvent The event that sends the
@@ -80,6 +87,36 @@ export const addChatInputHandler = () => {
   chatTextInput.addEventListener("keypress", handleChatInput)
 }
 
+/**
+ * Converts all the chat entries whose text is still in base64 encrypted format into normal
+ * chat entries.
+ * @param {string} sessionName The current session name.
+ */
+export const decryptChatEntriesText = async (sessionName) => {
+  const uncoveredChatEntries = querySelectorArrayOf(chatEntryUnconverted)
+
+  if (uncoveredChatEntries.length === 0) {
+    return Promise.resolve()
+  }
+
+  const privateKey = await getObject(sessionName)
+  const promises = uncoveredChatEntries.map((ce) => decryptChatEntryText(ce, privateKey))
+  await Promise.all(promises)
+}
+
+/**
+ * Converts a single chat entry element text by decrypting it.
+ * @param {HTMLElement} chatEntry The chat entry HTML element.
+ * @param {CryptoKey} privateKey The private key with which the chat text can be decrypted.
+ * @returns {Promise<string | void>} The execution result.
+ */
+const decryptChatEntryText = async (chatEntry, privateKey) => {
+  const encryptedText = chatEntry.innerHTML
+  const decryptedMessage = await decryptMessage(encryptedText, privateKey)
+  chatEntry.innerHTML = decryptedMessage
+  chatEntry.setAttribute("data-converted", "true")
+}
+
 export const testExports = {
   /**
    * Gets the current public key.
@@ -92,4 +129,6 @@ export const testExports = {
    * @returns {CryptoKey} The selected public key.
    */
   getSelectedPublicKey: () => selectedPublicKey,
+
+  decryptChatEntryText,
 }

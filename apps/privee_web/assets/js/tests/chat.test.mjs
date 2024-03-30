@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { JSDOM } from "jsdom"
-import { testExports, handleSendingPrivateKey, handleChatInput } from "../utils/chat.mjs"
-import { convertPublicKeyToString, decryptMessage, generateNewKeyPair } from "../utils/security.mjs"
+import { indexedDB } from "fake-indexeddb"
+import { testExports, handleSendingPrivateKey, handleChatInput, decryptChatEntriesText } from "../utils/chat.mjs"
+import { convertPublicKeyToString, decryptMessage, encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
+import { storeObject } from "../utils/front-end-database.mjs"
+import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
 
 const html = `
   <form id="chat-form">
@@ -157,5 +160,88 @@ describe("handleChatInput", () => {
 
     expect(hiddenTextFrom.value).toBe("")
     expect(hiddenTextTo.value).toBe("")
+  })
+})
+
+describe("Chat entries decryption", () => {
+  const messageHtml = (encryptedText, dataConverted = "false") => `
+    <div>
+      <p
+        data-message="from"
+        data-converted="${dataConverted}"
+        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
+      >
+        ${encryptedText}
+      </p>
+    </div>
+  `
+
+  it("decryptChatEntryText should decrypt the chat message inside the p element", async () => {
+    const { privateKey, publicKey } = await generateNewKeyPair()
+
+    const message = "some message"
+    const encryptedMessage = await encryptMessage(message, publicKey)
+
+    const html = messageHtml(encryptedMessage)
+    const dom = new JSDOM(html)
+
+    global.document = dom.window.document
+
+    // prettier-ignore
+    const element = document.querySelector("[data-converted=\"false\"]")
+
+    await testExports.decryptChatEntryText(element, privateKey)
+
+    const unconvertedElement = document.querySelector("[data-converted=\"false\"]")
+    const convertedElement = document.querySelector("[data-converted=\"true\"]")
+
+    expect(unconvertedElement).toBeNull()
+    expect(convertedElement.innerHTML).toEqual(message)
+    expect(convertedElement.dataset.converted).toEqual("true")
+  })
+
+  const chatEntriesContainer = (entries) => {
+    let string = "<div>"
+    
+    for (const entry of entries) {
+      string = `${string}${entry}`
+    }
+
+    return `${string}</div>`
+  }
+
+  it("decryptChatEntriesText should decrypt the chat entries", async () => {
+    const sessionName = "some-session-name"
+    const { privateKey, publicKey } = await generateNewKeyPair()
+
+    global.indexedDB = indexedDB
+
+    await storeObject(sessionName, privateKey)
+
+    const messages = await Promise.all(
+      ["0", "1", "2", "3", "4"]
+        .map(i => `Some message ${i}`)
+        .map(m => encryptMessage(m, publicKey))
+    )
+
+    const html = chatEntriesContainer(messages)
+
+    const dom = new JSDOM(html)
+
+    global.document = dom.window.document
+
+    await decryptChatEntriesText(sessionName)
+
+    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
+    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
+
+    expect(convertedElements.length).toEqual(5)
+    expect(unconvertedElements.length).toEqual(0)
+
+    for (const convertedElement of convertedElements) {
+      const expectedMessage = `Some message ${String(i)}`      
+      expect(convertedElement.innerHTML).toEqual(expectedMessage)
+      expect(convertedElement.dataset.converted).toEqual("true")
+    }
   })
 })
