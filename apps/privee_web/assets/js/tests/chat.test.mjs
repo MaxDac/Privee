@@ -164,7 +164,7 @@ describe("handleChatInput", () => {
 })
 
 describe("Chat entries decryption", () => {
-  const messageHtml = (encryptedText, dataConverted = "false") => `
+  const messageHtml = (encryptedText, dataConverted) => `
     <div>
       <p
         data-message="from"
@@ -182,7 +182,7 @@ describe("Chat entries decryption", () => {
     const message = "some message"
     const encryptedMessage = await encryptMessage(message, publicKey)
 
-    const html = messageHtml(encryptedMessage)
+    const html = messageHtml(encryptedMessage, "false")
     const dom = new JSDOM(html)
 
     global.document = dom.window.document
@@ -211,7 +211,7 @@ describe("Chat entries decryption", () => {
   }
 
   it("decryptChatEntriesText should decrypt the chat entries", async () => {
-    const sessionName = "some-session-name"
+    const sessionName = "some-other-session-name"
     const { privateKey, publicKey } = await generateNewKeyPair()
 
     global.indexedDB = indexedDB
@@ -224,7 +224,9 @@ describe("Chat entries decryption", () => {
         .map(m => encryptMessage(m, publicKey))
     )
 
-    const html = chatEntriesContainer(messages)
+    const messageEntries = messages.map((m) => messageHtml(m, "false"))
+
+    const html = chatEntriesContainer(messageEntries)
 
     const dom = new JSDOM(html)
 
@@ -238,10 +240,53 @@ describe("Chat entries decryption", () => {
     expect(convertedElements.length).toEqual(5)
     expect(unconvertedElements.length).toEqual(0)
 
-    for (const convertedElement of convertedElements) {
-      const expectedMessage = `Some message ${String(i)}`      
-      expect(convertedElement.innerHTML).toEqual(expectedMessage)
-      expect(convertedElement.dataset.converted).toEqual("true")
-    }
+    convertedElements.forEach((element, i) => {
+      const expectedMessage = `Some message ${String(i)}`
+      expect(element.innerHTML).toEqual(expectedMessage)
+      expect(element.dataset.converted).toEqual("true")
+    })
+  })
+
+  it("decryptChatEntriesText should decrypt only the chat entries not yet converted", async () => {
+    const sessionName = "some-session-name"
+    const { privateKey, publicKey } = await generateNewKeyPair()
+
+    global.indexedDB = indexedDB
+
+    await storeObject(sessionName, privateKey)
+
+    const messages = await Promise.all(
+      ["0", "1", "2", "3", "4"]
+        .map(i => `Some message ${i}`)
+        .map(m => encryptMessage(m, publicKey))
+    )
+
+    const messageEntries = messages.map((m, i) => messageHtml(m, i < 2 ? "false" : "true"))
+
+    const html = chatEntriesContainer(messageEntries)
+
+    const dom = new JSDOM(html)
+
+    global.document = dom.window.document
+
+    await decryptChatEntriesText(sessionName)
+
+    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
+    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
+
+    expect(convertedElements.length).toEqual(5)
+    expect(unconvertedElements.length).toEqual(0)
+
+    convertedElements.forEach((element, i) => {
+      const expectedMessage = `Some message ${String(i)}`
+
+      if (i < 2) {
+        expect(element.innerHTML).toEqual(expectedMessage)
+      } else {
+        expect(element.innerHTML).not.toEqual(expectedMessage)
+      }
+
+      expect(element.dataset.converted).toEqual("true")
+    })
   })
 })

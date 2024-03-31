@@ -1,4 +1,4 @@
-import { addChatInputHandler } from "../utils/chat.mjs"
+import { addChatInputHandler, decryptChatEntriesText } from "../utils/chat.mjs"
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
 
