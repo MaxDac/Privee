@@ -1,8 +1,18 @@
 import { describe, it, expect } from "vitest"
 import { JSDOM } from "jsdom"
 import { indexedDB } from "fake-indexeddb"
-import { testExports, handleSendingPrivateKey, handleChatInput, decryptChatEntriesText } from "../utils/chat.mjs"
-import { convertPublicKeyToString, decryptMessage, encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
+import {
+  testExports,
+  handleSendingPublicKey,
+  handleChatInput,
+  decryptChatEntriesText,
+} from "../utils/chat.mjs"
+import {
+  convertPublicKeyToString,
+  decryptMessage,
+  encryptMessage,
+  generateNewKeyPair,
+} from "../utils/security.mjs"
 import { storeObject } from "../utils/front-end-database.mjs"
 import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
 import { Constants } from "../utils/constants.mjs"
@@ -15,21 +25,21 @@ const html = `
   </form>
 `
 
-describe("handleSendingPrivateKey", () => {
+describe("handleSendingPublicKey", () => {
   it("should return an error when the keys are not present", async () => {
     const event = {
       detail: {},
     }
 
     try {
-      await handleSendingPrivateKey(event)
+      await handleSendingPublicKey(event)
       expect.fail("It should have thrown an exception")
     } catch (_e) {
       /* test passing */
     }
   })
 
-  it("handleSendingPrivateKey should store the public key", async () => {
+  it("handleSendingPublicKey should store the public key", async () => {
     const { publicKey: currentPublicKey } = await generateNewKeyPair()
     const { publicKey: selectedPublicKey } = await generateNewKeyPair()
     const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
@@ -42,7 +52,7 @@ describe("handleSendingPrivateKey", () => {
       },
     }
 
-    await handleSendingPrivateKey(event)
+    await handleSendingPublicKey(event)
 
     const currentPublicKeyFromModule = testExports.getCurrentPublicKey()
     const selectedPublicKeyFromModule = testExports.getSelectedPublicKey()
@@ -82,7 +92,7 @@ describe("handleChatInput", () => {
       },
     }
 
-    await handleSendingPrivateKey(publicKeysSendingEvent)
+    await handleSendingPublicKey(publicKeysSendingEvent)
 
     // @ts-ignore
     /** @type {HTMLFormElement} */ const form = document.querySelector("#chat-form")
@@ -148,7 +158,7 @@ describe("handleChatInput", () => {
       },
     }
 
-    await handleSendingPrivateKey(publicKeysSendingEvent)
+    await handleSendingPublicKey(publicKeysSendingEvent)
 
     // @ts-ignore
     /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
@@ -172,7 +182,7 @@ describe("Chat entries decryption", () => {
         data-converted="${dataConverted}"
         class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
       >
-        ${encryptedText}
+        ${encryptedText}&lrm;
       </p>
     </div>
   `
@@ -193,7 +203,9 @@ describe("Chat entries decryption", () => {
 
     await testExports.decryptChatEntryText(element, privateKey)
 
+    // prettier-ignore
     const unconvertedElement = document.querySelector("[data-converted=\"false\"]")
+    // prettier-ignore
     const convertedElement = document.querySelector("[data-converted=\"true\"]")
 
     expect(unconvertedElement).toBeNull()
@@ -203,7 +215,7 @@ describe("Chat entries decryption", () => {
 
   const chatEntriesContainer = (entries) => {
     let string = "<div>"
-    
+
     for (const entry of entries) {
       string = `${string}${entry}`
     }
@@ -221,8 +233,8 @@ describe("Chat entries decryption", () => {
 
     const messages = await Promise.all(
       ["0", "1", "2", "3", "4"]
-        .map(i => `Some message ${i}`)
-        .map(m => encryptMessage(m, publicKey))
+        .map((i) => `Some message ${i}`)
+        .map((m) => encryptMessage(m, publicKey)),
     )
 
     const messageEntries = messages.map((m) => messageHtml(m, "false"))
@@ -235,7 +247,9 @@ describe("Chat entries decryption", () => {
 
     await decryptChatEntriesText(sessionName)
 
+    // prettier-ignore
     const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
+    // prettier-ignore
     const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
 
     expect(convertedElements.length).toEqual(5)
@@ -258,8 +272,8 @@ describe("Chat entries decryption", () => {
 
     const messages = await Promise.all(
       ["0", "1", "2", "3", "4"]
-        .map(i => `Some message ${i}`)
-        .map(m => encryptMessage(m, publicKey))
+        .map((i) => `Some message ${i}`)
+        .map((m) => encryptMessage(m, publicKey)),
     )
 
     const messageEntries = messages.map((m, i) => messageHtml(m, i < 2 ? "false" : "true"))
@@ -272,7 +286,9 @@ describe("Chat entries decryption", () => {
 
     await decryptChatEntriesText(sessionName)
 
+    // prettier-ignore
     const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
+    // prettier-ignore
     const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
 
     expect(convertedElements.length).toEqual(5)
