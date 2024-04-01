@@ -137,7 +137,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp deliver_message(socket, params) do
-    changeset = Sessions.change_message(%Message{}, params) |> IO.inspect(label: "Change message")
+    changeset = Sessions.change_message(%Message{}, params)
 
     if changeset.valid? do
       message = Ecto.Changeset.apply_changes(changeset)

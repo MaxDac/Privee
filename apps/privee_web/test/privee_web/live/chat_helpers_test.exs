@@ -20,6 +20,37 @@ defmodule PriveeWeb.ChatHelpersTest do
       refute message.in_thread
     end
 
+    test " correctly returns the messages with indexes" do
+      session_1 = session_fixture()
+      session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      message_11 =
+        message_fixture(%{
+          from: session_1.id,
+          to: session_2.id,
+          text_from: "text 1",
+          text_to: "text 1"
+        })
+
+      message_12 =
+        message_fixture(%{
+          from: session_2.id,
+          to: session_1.id,
+          text_from: "text 2",
+          text_to: "text 2"
+        })
+
+      assert [message_21, message_22] = parse_messages([message_11, message_12])
+
+      assert message_11.text_from == message_21.text_from
+      assert message_11.text_to == message_21.text_to
+      assert message_12.text_from == message_22.text_from
+      assert message_12.text_to == message_22.text_to
+
+      assert message_21.index == 1
+      refute message_22.index == 2
+    end
+
     test " correctly returns no in_thread when two message from two different sessions are sent" do
       session_1 = session_fixture()
       session_2 = session_fixture(%{session_name: Ecto.UUID.generate()})
