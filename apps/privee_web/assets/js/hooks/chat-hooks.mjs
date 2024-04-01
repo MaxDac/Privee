@@ -20,7 +20,6 @@ export function addChatHooks(Hooks) {
     },
     handleChat() {
       const sessionName = this.el.dataset.sessionName
-      console.debug("session name at update", sessionName)
       decryptChatEntriesText(sessionName)
         .then(() => scrollElementToEnd(this.el))
         .then(() => console.debug("Decryption done"))

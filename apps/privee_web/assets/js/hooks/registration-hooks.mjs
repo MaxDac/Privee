@@ -7,7 +7,6 @@ import { bindKeys } from "../utils/message-encryption.mjs"
 export function addRegistrationHooks(Hooks) {
   Hooks.RegistrationScreen = {
     mounted() {
-      console.debug("Adding hooks to the registration screen.")
       bindKeys()
     },
   }
