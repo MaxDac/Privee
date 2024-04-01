@@ -1,3 +1,4 @@
+<%= # Adding `phx-update` tag to ignore back end updates when already converted %>
 <div id="chat-scree-container" phx-update="stream">
   <div :for={{_id, message} <- @streams.messages}>
     <.chat_entry
