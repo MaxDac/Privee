@@ -56,7 +56,6 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   @impl true
   def handle_event("create", %{"message" => params}, socket) do
-    IO.inspect(params, label: "Sending the chat")
     {:noreply,
      socket
      |> deliver_message(params)

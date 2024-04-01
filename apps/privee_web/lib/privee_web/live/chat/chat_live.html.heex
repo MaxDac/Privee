@@ -2,7 +2,12 @@
   <.header class="h-10 pt-5 pb-10 text-center">
     <%= @selected_session_name %>
   </.header>
-  <main id="chat-screen" class="flex-grow overflow-auto" phx-hook="ChatScreen" data-session-name={@current_session.session_name}>
+  <main
+    id="chat-screen"
+    class="flex-grow overflow-auto"
+    phx-hook="ChatScreen"
+    data-session-name={@current_session.session_name}
+  >
     <.chat_screen
       current_session={@current_session}
       selected_session={@selected_session}

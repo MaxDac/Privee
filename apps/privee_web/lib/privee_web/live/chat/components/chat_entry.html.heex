@@ -23,6 +23,7 @@
       <p
         data-message={if @message.from == @current_session.id, do: "from", else: "to"}
         data-converted="false"
+        data-chat-index={@message.index}
         class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
       >
         <%= if @message.from == @current_session.id,

@@ -42,7 +42,7 @@ export const addBackEndEventHandlers = () => {
 }
 
 /**
- * Handles the event of the registration of new sessions. 
+ * Handles the event of the registration of new sessions.
  * @param {Event} event The event that triggered the registration.
  * @returns {Promise<void>} A promise that resolves when the event is handled.
  */
