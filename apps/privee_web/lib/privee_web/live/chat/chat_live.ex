@@ -102,10 +102,11 @@ defmodule PriveeWeb.Chat.ChatLive do
     |> stream(:messages, messages)
   end
 
-  defp assign_existing_messages(socket), do:
-    socket
-    |> assign(:last_message, nil)
-    |> stream(:messages, [])
+  defp assign_existing_messages(socket),
+    do:
+      socket
+      |> assign(:last_message, nil)
+      |> stream(:messages, [])
 
   defp assign_form(socket, attrs \\ %{}) do
     form =

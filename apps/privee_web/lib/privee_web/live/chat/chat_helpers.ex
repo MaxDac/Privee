@@ -57,7 +57,6 @@ defmodule PriveeWeb.Chat.ChatHelpers do
   This function will be used when receiving a notification with another chat.
   """
   def add_message(message, last_message) do
-    IO.inspect last_message, label: "last_message"
     case {message, last_message} do
       {message, nil} ->
         Map.put(message, :id, 0)
