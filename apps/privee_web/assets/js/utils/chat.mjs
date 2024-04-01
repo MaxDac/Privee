@@ -98,7 +98,9 @@ export const addChatInputHandler = () => {
 export const decryptChatEntriesText = async (sessionName) => {
   const uncoveredChatEntries =
     querySelectorArrayOf(chatEntryUnconverted).filter(filterConvertedIndex)
+
   console.debug("chats to decrypt", uncoveredChatEntries)
+  console.debug("already converted index", convertedChatEntries)
 
   if (uncoveredChatEntries.length === 0) {
     return Promise.resolve()
@@ -128,7 +130,7 @@ const decryptChatEntryText = async (chatEntry, privateKey) => {
  * @param {HTMLElement} ce The chat entry.
  * @returns {boolean} If `true`, the chat has already been converted.
  */
-const filterConvertedIndex = (ce) => convertedChatEntries.indexOf(ce.dataset.chatIndex) === -1
+const filterConvertedIndex = (ce) => convertedChatEntries.indexOf(Number(ce.dataset.chatIndex)) === -1
 
 export const testExports = {
   /**

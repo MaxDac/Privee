@@ -1,10 +1,14 @@
+<%= # Adding `phx-update` tag to ignore back end updates when already converted %>
 <div dir={[
   if @message.from == @current_session.id do
     "rtl"
   else
     "ltr"
   end
-]}>
+]}
+  id={"chat-message-#{@message.index}"}
+  phx-update="ignore"
+>
   <div class="px-3 py-0.5">
     <div class={[
       "flex flex-col w-max min-w-[100px] sm:max-w-[500px] leading-1.5 px-5 py-3 border-gray-200",
@@ -19,7 +23,7 @@
         "bg-gradient-to-l from-gray-800 via-gray-800 to-gray-700 hover:bg-gradient-to-tl"
       end
     ]}>
-      <!-- Adding &lrm; at the end to circumvent punctuation rtl direction -->
+      <%= # Adding &lrm; at the end to circumvent punctuation rtl direction %>
       <p
         data-message={if @message.from == @current_session.id, do: "from", else: "to"}
         data-converted="false"
