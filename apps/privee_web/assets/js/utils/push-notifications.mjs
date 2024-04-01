@@ -3,11 +3,10 @@
  * if it supports it asks for permission to the user and logs the result.
  * @returns {Promise<string>} The result of the permission request.
  */
-export const askNotificationPermission = () => {
+export const askNotificationPermission = async () => {
   if ("Notification" in window) {
-    return Notification.requestPermission().then(() => {
-      return `Permission: ${Notification.permission === "granted" ? "granted" : "denied"}`
-    })
+    await Notification.requestPermission()
+    return `Permission: ${Notification.permission === "granted" ? "granted" : "denied"}`
   } else {
     return Promise.reject("This browser does not support notifications.")
   }

@@ -7,6 +7,7 @@ import {
 } from "../utils/message-encryption.mjs"
 import { getObject } from "../utils/front-end-database.mjs"
 import { importStringPublicKey } from "../utils/security.mjs"
+import { Constants } from "../utils/constants.mjs"
 
 const html = "<input id='session-registration-public-key' type='hidden' />"
 
@@ -27,7 +28,7 @@ describe("bindKeys", () => {
     expect(hiddenInputValue.length).toBeGreaterThan(0)
 
     const publicKey = importStringPublicKey(hiddenInputValue)
-    const privateKey = getObject("private_key")
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "private_key")
 
     expect(publicKey).toBeTypeOf("object")
     expect(publicKey).toBeTruthy()
@@ -65,7 +66,7 @@ describe("bindKeys", () => {
     expect(hiddenInputValue.length).toBeGreaterThan(0)
 
     const publicKey = importStringPublicKey(hiddenInputValue)
-    const privateKey = getObject("private_key")
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "private_key")
 
     expect(publicKey).toBeTypeOf("object")
     expect(publicKey).toBeTruthy()
@@ -89,7 +90,7 @@ test("handleSessionNamePrivateKeyRegistrationEvent should handle session name co
 
   await handleSessionNamePrivateKeyRegistrationEvent(event)
 
-  const privateKey = getObject("test-session-name")
+  const privateKey = getObject(Constants.dbName, Constants.tableName, "test-session-name")
 
   expect(privateKey).toBeTypeOf("object")
   expect(privateKey).toBeTruthy()

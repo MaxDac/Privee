@@ -13,10 +13,18 @@ export function addChatHooks(Hooks) {
       addSessionNameCopyListener()
       addDarkModeToggleHandlers()
       addChatInputHandler()
-      scrollElementToEnd(this.el)
+      this.handleChat()
     },
     updated() {
-      scrollElementToEnd(this.el)
+      this.handleChat()
+    },
+    handleChat() {
+      const sessionName = this.el.dataset.sessionName
+      console.debug("session name at update", sessionName)
+      decryptChatEntriesText(sessionName)
+        .then(() => scrollElementToEnd(this.el))
+        .then(() => console.debug("Decryption done"))
+        .catch((e) => console.error("An error in the decryption of the chats happened", e))
     },
   }
 

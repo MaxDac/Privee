@@ -39,3 +39,9 @@ export class NotificationMock {
     }
   }
 }
+
+/**
+ * Returns a random string.
+ * @returns {string} A random string.
+ */
+export const generateRandomString = () => Math.random().toString(36).substring(7)

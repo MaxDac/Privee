@@ -5,6 +5,7 @@
  * @property {string} selected The selected session public key in string format.
  */
 
+import { Constants } from "./constants.mjs"
 import { querySelectorArrayOf } from "./dom-utils.mjs"
 import { getObject } from "./front-end-database.mjs"
 import { decryptMessage, encryptMessage, importStringPublicKey } from "./security.mjs"
@@ -14,8 +15,6 @@ const chatTextInputSelector = "#chat-text"
 const fromHiddenInputSelector = "#text-from"
 const toHiddenInputSelector = "#text-to"
 
-const chatEntryFromSelector = "[data-from]"
-const chatEntryToSelector = "[data-to]"
 // prettier-ignore
 const chatEntryUnconverted="[data-converted=\"false\"]"
 
@@ -29,11 +28,11 @@ var currentPublicKey = null
 var selectedPublicKey = null
 
 /**
- * Handles the event that sends the public keys of the two sessions of the chat/
+ * Handles the event that sends the public keys of the two sessions of the chat.
  * @param {SessionsPublicKeyEvent} e The event payload.
  * @returns {Promise<void>} A promise that resolves when the public key is stored.
  */
-export const handleSendingPrivateKey = async (e) => {
+export const handleSendingPublicKey = async (e) => {
   const { current, selected } = e.detail
   currentPublicKey = await importStringPublicKey(current)
   selectedPublicKey = await importStringPublicKey(selected)
@@ -94,12 +93,16 @@ export const addChatInputHandler = () => {
  */
 export const decryptChatEntriesText = async (sessionName) => {
   const uncoveredChatEntries = querySelectorArrayOf(chatEntryUnconverted)
+  console.debug("chats to decrypt", uncoveredChatEntries)
 
   if (uncoveredChatEntries.length === 0) {
     return Promise.resolve()
   }
 
-  const privateKey = await getObject(sessionName)
+  const privateKey = await getObject(Constants.dbName, Constants.tableName, sessionName)
+  // @ts-ignore
+  window.currentPrivateKey = privateKey
+  console.debug("private key", window.currentPrivateKey)
   const promises = uncoveredChatEntries.map((ce) => decryptChatEntryText(ce, privateKey))
   await Promise.all(promises)
 }
@@ -111,7 +114,9 @@ export const decryptChatEntriesText = async (sessionName) => {
  * @returns {Promise<string | void>} The execution result.
  */
 const decryptChatEntryText = async (chatEntry, privateKey) => {
-  const encryptedText = chatEntry.innerHTML
+  console.debug(`Decrypting chat entry '${chatEntry.innerHTML.trim()}'`)
+  console.debug(`Decrypting chat entry 1 '${chatEntry.innerHTML.trim().slice(0, -1)}'`)
+  const encryptedText = chatEntry.innerHTML.trim().slice(0, -1)
   const decryptedMessage = await decryptMessage(encryptedText, privateKey)
   chatEntry.innerHTML = decryptedMessage
   chatEntry.setAttribute("data-converted", "true")

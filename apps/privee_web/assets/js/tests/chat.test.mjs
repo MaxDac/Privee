@@ -5,6 +5,7 @@ import { testExports, handleSendingPrivateKey, handleChatInput, decryptChatEntri
 import { convertPublicKeyToString, decryptMessage, encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
 import { storeObject } from "../utils/front-end-database.mjs"
 import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
+import { Constants } from "../utils/constants.mjs"
 
 const html = `
   <form id="chat-form">
@@ -216,7 +217,7 @@ describe("Chat entries decryption", () => {
 
     global.indexedDB = indexedDB
 
-    await storeObject(sessionName, privateKey)
+    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
     const messages = await Promise.all(
       ["0", "1", "2", "3", "4"]
@@ -253,7 +254,7 @@ describe("Chat entries decryption", () => {
 
     global.indexedDB = indexedDB
 
-    await storeObject(sessionName, privateKey)
+    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
     const messages = await Promise.all(
       ["0", "1", "2", "3", "4"]
