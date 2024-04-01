@@ -39,6 +39,8 @@ export const bindKeys = async () => {
  * @returns {Promise<void>} A promise that resolves when the private key has been stored.
  */
 export const handleSessionNamePrivateKeyRegistrationEvent = async (event) => {
+  // Adding a timeout to execute the function outside of the event loop, so that
+  // it would not depend on the page refresh after the form submission.
   setTimeout(async () => {
     const sessionName = event.detail.session_name
 

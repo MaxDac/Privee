@@ -100,9 +100,6 @@ export const decryptChatEntriesText = async (sessionName) => {
   }
 
   const privateKey = await getObject(Constants.dbName, Constants.tableName, sessionName)
-  // @ts-ignore
-  window.currentPrivateKey = privateKey
-  console.debug("private key", window.currentPrivateKey)
   const promises = uncoveredChatEntries.map((ce) => decryptChatEntryText(ce, privateKey))
   await Promise.all(promises)
 }
@@ -114,8 +111,6 @@ export const decryptChatEntriesText = async (sessionName) => {
  * @returns {Promise<string | void>} The execution result.
  */
 const decryptChatEntryText = async (chatEntry, privateKey) => {
-  console.debug(`Decrypting chat entry '${chatEntry.innerHTML.trim()}'`)
-  console.debug(`Decrypting chat entry 1 '${chatEntry.innerHTML.trim().slice(0, -1)}'`)
   const encryptedText = chatEntry.innerHTML.trim().slice(0, -1)
   const decryptedMessage = await decryptMessage(encryptedText, privateKey)
   chatEntry.innerHTML = decryptedMessage

@@ -100,7 +100,6 @@ export const encryptMessage = (message, publicKey) => {
  * @returns {Promise<string>} The decrypted message.
  */
 export const decryptMessage = async (encryptedMessage, privateKey) => {
-  console.debug("Decrypting message", encryptedMessage)
   const encryptedMessageBuffer = stringToArrayData(atob(encryptedMessage))
   const algorithmIdentifier = { name: algorithm }
   const decryptedMessageBuffer = await crypto.subtle.decrypt(
