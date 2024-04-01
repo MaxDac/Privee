@@ -36,6 +36,10 @@
                     "mixEnv": "test",
                     "beforeTest": "clear",
                 },
+                "vim.handleKeys": {
+                    "<C-d>": true,
+                    "<C-p>": false
+                },
                 "zig.initialSetupDone": true,
                 "zig.path": "",
                 "zig.zls.path": "",
@@ -54,7 +58,6 @@
                 "pantajoe.vscode-elixir-credo",
                 "phoenixframework.phoenix",
                 "bradlc.vscode-tailwindcss",
-                "eamodio.gitlens",
 
                 // Zig
                 "ziglang.vscode-zig",
@@ -62,6 +65,7 @@
 
                 // JS
                 "dbaeumer.vscode-eslint",
+                "vitest.explorer",
 
                 // Tooling 
                 "github.vscode-github-actions",
@@ -69,6 +73,7 @@
                 "GitHub.copilot-chat",
                 "ms-azuretools.vscode-docker",
                 "GitHub.vscode-pull-request-github",
+                "eamodio.gitlens",
 
                 // Postgres
                 "ms-ossdata.vscode-postgresql"

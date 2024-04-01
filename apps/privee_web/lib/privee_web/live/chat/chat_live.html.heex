@@ -2,17 +2,22 @@
   <.header class="h-10 pt-5 pb-10 text-center">
     <%= @selected_session_name %>
   </.header>
-  <main id="chat-screen" class="flex-grow overflow-auto" phx-hook="ChatScreen">
+  <main
+    id="chat-screen"
+    class="flex-grow overflow-auto"
+    phx-hook="ChatScreen"
+    data-session-name={@current_session.session_name}
+  >
     <.chat_screen
       current_session={@current_session}
       selected_session={@selected_session}
-      messages={@messages}
+      streams={@streams}
     />
   </main>
   <footer class="px-5 py-5">
     <.simple_form
       for={@form}
-      id="chat_form"
+      id="chat-form"
       phx-change="validate"
       phx-submit="create"
       class="space-y-4"

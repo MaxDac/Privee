@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "apps/privee_web/assets"
+		}
+	],
+	"settings": {}
+}

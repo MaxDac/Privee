@@ -11,6 +11,9 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
+      "env": {
+        "NODE_ENV": "test"
+      },
       "runtimeExecutable": "npm",
       "runtimeArgs": [
         "run",

@@ -17,6 +17,7 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   embed_templates "components/*"
 
+  @keys_send_event "sending_keys"
   @chat_created_event "chat_created"
   @message_received_event "message_received"
 
@@ -28,6 +29,7 @@ defmodule PriveeWeb.Chat.ChatLive do
       {:cont, socket} ->
         {:ok,
          socket
+         |> send_public_keys()
          |> assign_existing_messages()
          |> subscribe_to_events()
          |> assign_form()}
@@ -91,11 +93,20 @@ defmodule PriveeWeb.Chat.ChatLive do
            }
          } = socket
        ) do
-    messages = Chats.get_messages(current_session.id, selected_session.id)
-    assign(socket, :messages, parse_messages(messages))
+    {last_message, messages} =
+      Chats.get_messages(current_session.id, selected_session.id)
+      |> parse_messages()
+
+    socket
+    |> assign(:last_message, last_message)
+    |> stream(:messages, messages)
   end
 
-  defp assign_existing_messages(socket), do: assign(socket, :messages, [])
+  defp assign_existing_messages(socket),
+    do:
+      socket
+      |> assign(:last_message, nil)
+      |> stream(:messages, [])
 
   defp assign_form(socket, attrs \\ %{}) do
     form =
@@ -103,6 +114,16 @@ defmodule PriveeWeb.Chat.ChatLive do
       |> to_form()
 
     assign(socket, :form, form)
+  end
+
+  defp send_public_keys(
+         %{assigns: %{current_session: current_session, selected_session: selected_session}} =
+           socket
+       ) do
+    push_event(socket, @keys_send_event, %{
+      current: current_session.public_key,
+      selected: selected_session.public_key
+    })
   end
 
   defp subscribe_to_events(
@@ -136,7 +157,11 @@ defmodule PriveeWeb.Chat.ChatLive do
     socket
   end
 
-  defp assign_message(%{assigns: %{messages: messages}} = socket, message) do
-    assign(socket, :messages, add_message(message, messages))
+  defp assign_message(%{assigns: %{last_message: last_message}} = socket, message) do
+    new_message = add_message(message, last_message)
+
+    socket
+    |> assign(:last_message, new_message)
+    |> stream_insert(:messages, new_message)
   end
 end

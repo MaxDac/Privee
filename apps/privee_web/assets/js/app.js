@@ -28,11 +28,10 @@ import topbar from "../vendor/topbar"
 import "flowbite/dist/flowbite.phoenix.js"
 
 // Importing utility functions
-import { addToggleDarkModeHandling, setStartupTheme } from "./utils/dark-mode-switcher.mjs"
-import { askNotificationPermission, pushBackEndNotification } from "./utils/push-notifications.mjs"
-import { addSessionNameCopyListener, handleSessionNameCopyToClipboardRegistrationEvent } from "./utils/clipboard.mjs"
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
+import { exportDebugFunctions } from "./utils/debug.mjs"
+import { addBackEndEventHandlers } from "./hooks/event-handlers.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}
@@ -42,37 +41,23 @@ addChatHooks(Hooks)
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: Hooks
+  params: { _csrf_token: csrfToken },
+  hooks: Hooks,
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
-window.addEventListener("phx:page-loading-stop", _info => {
-  topbar.hide()
-
-  // Adding this because for some reason it gets reset at page load.
-  setStartupTheme()
-})
-
-document.addEventListener("DOMContentLoaded", addToggleDarkModeHandling)
-
-// Asking for notification permission to the browser
-askNotificationPermission()
-  .then(console.debug)
-  .catch(console.error)
-
-// Setting the LiveView events
-window.addEventListener("phx:trigger_notification", pushBackEndNotification)
-window.addEventListener("phx:handle_new_session_registration", event => {
-  handleSessionNameCopyToClipboardRegistrationEvent(event)
-})
-
-addSessionNameCopyListener()
+topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
+
+// Adds all the event handlers
+addBackEndEventHandlers()
+
+// Only activate this in debug mode
+/* eslint-disable */
+exportDebugFunctions()
+/* eslint-enable */
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
@@ -80,4 +65,3 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 // @ts-ignore
 window.liveSocket = liveSocket
-

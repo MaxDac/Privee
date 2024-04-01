@@ -14,7 +14,8 @@ defmodule Privee.MessageFixtures do
       |> check_message_to()
 
     Enum.into(attrs, %{
-      text: "Some text"
+      text_from: "Some text",
+      text_to: "Some text"
     })
   end
 
@@ -24,7 +25,8 @@ defmodule Privee.MessageFixtures do
     %Message{
       from: valid_attributes.from,
       to: valid_attributes.to,
-      text: valid_attributes.text
+      text_from: valid_attributes.text_from,
+      text_to: valid_attributes.text_to
     }
   end
 

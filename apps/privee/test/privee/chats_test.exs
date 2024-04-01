@@ -27,8 +27,19 @@ defmodule Privee.ChatsTest do
       session_1: session_1,
       session_2: session_2
     } do
-      message_1 = %Message{from: session_1.id, to: session_2.id, text: "Message 1"}
-      message_2 = %Message{from: session_2.id, to: session_1.id, text: "Message 2"}
+      message_1 = %Message{
+        from: session_1.id,
+        to: session_2.id,
+        text_from: "Message 1",
+        text_to: "Message 1"
+      }
+
+      message_2 = %Message{
+        from: session_2.id,
+        to: session_1.id,
+        text_from: "Message 2",
+        text_to: "Message 2"
+      }
 
       Chats.create_message(message_1)
       Chats.create_message(message_2)
@@ -36,14 +47,27 @@ defmodule Privee.ChatsTest do
       chat_screen_for_session_1 = Chats.get_messages(session_1.id, session_2.id)
 
       assert 2 == Enum.count(chat_screen_for_session_1)
-      assert Enum.any?(chat_screen_for_session_1, &(&1.text == message_1.text))
-      assert Enum.any?(chat_screen_for_session_1, &(&1.text == message_2.text))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_from == message_1.text_from))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_to == message_1.text_to))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_from == message_2.text_from))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_to == message_2.text_to))
     end
 
     test " allows insertion of two message with the same text, and returns them",
          %{session_1: session_1, session_2: session_2} do
-      message_1 = %Message{from: session_1.id, to: session_2.id, text: "Message 1"}
-      message_2 = %Message{from: session_1.id, to: session_2.id, text: "Message 1"}
+      message_1 = %Message{
+        from: session_1.id,
+        to: session_2.id,
+        text_from: "Message 1",
+        text_to: "Message 1"
+      }
+
+      message_2 = %Message{
+        from: session_1.id,
+        to: session_2.id,
+        text_from: "Message 1",
+        text_to: "Message 1"
+      }
 
       Chats.create_message(message_1)
       Chats.create_message(message_2)
@@ -51,8 +75,10 @@ defmodule Privee.ChatsTest do
       chat_screen_for_session_1 = Chats.get_messages(session_1.id, session_2.id)
 
       assert 2 == Enum.count(chat_screen_for_session_1)
-      assert Enum.any?(chat_screen_for_session_1, &(&1.text == message_1.text))
-      assert Enum.any?(chat_screen_for_session_1, &(&1.text == message_2.text))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_from == message_1.text_from))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_to == message_1.text_to))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_from == message_2.text_from))
+      assert Enum.any?(chat_screen_for_session_1, &(&1.text_to == message_2.text_to))
     end
   end
 end
