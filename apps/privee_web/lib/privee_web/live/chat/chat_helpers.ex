@@ -14,17 +14,27 @@ defmodule PriveeWeb.Chat.ChatHelpers do
     do:
       messages
       |> Enum.reverse()
-      |> parse_messages([])
+      |> parse_messages([], 0)
 
   @doc """
-  Adds a message to the previous list of messages already present in the chat.
+  Adds a message to the previous stream of messages already present in the chat.
+  Having that this message will be added to a stream, this function will return only
+  the last message, with the right properties associated.
   This function will be used when receiving a notification with another chat.
   """
   def add_message(message, previous_messages) do
-    parse_messages([message | Enum.reverse(previous_messages)], [])
+    case {message, previous_messages} do
+      {message, []} ->
+        Map.put(message, :id, 0)
+
+      {%{to: new_message_to}, [%{id: last_id, to: last_message_to} | _]} ->
+        message
+        |> Map.put(:in_thread, new_message_to == last_message_to)
+        |> Map.put(:id, last_id + 1)
+    end
   end
 
-  defp parse_messages(messages, acc, index \\ 0)
+  defp parse_messages(messages, acc, index)
 
   defp parse_messages([], acc, _), do: acc
 
@@ -35,7 +45,7 @@ defmodule PriveeWeb.Chat.ChatHelpers do
         [
           message
           |> Map.put(:in_thread, message.to == next.to)
-          |> Map.put(:index, index)
+          |> Map.put(:id, index)
           | acc
         ],
         index + 1
@@ -48,7 +58,7 @@ defmodule PriveeWeb.Chat.ChatHelpers do
         [
           message
           |> Map.put(:in_thread, false)
-          |> Map.put(:index, index)
+          |> Map.put(:id, index)
           | acc
         ],
         index + 1

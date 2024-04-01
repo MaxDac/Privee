@@ -5,10 +5,7 @@
   else
     "ltr"
   end
-]}
-  id={"chat-message-#{@message.index}"}
-  phx-update="ignore"
->
+]}>
   <div class="px-3 py-0.5">
     <div class={[
       "flex flex-col w-max min-w-[100px] sm:max-w-[500px] leading-1.5 px-5 py-3 border-gray-200",
@@ -27,8 +24,8 @@
       <p
         data-message={if @message.from == @current_session.id, do: "from", else: "to"}
         data-converted="false"
-        data-chat-index={@message.index}
-        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
+        id={"chat-message-#{@message.id}"}
+        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50 hidden"
       >
         <%= if @message.from == @current_session.id,
           do: @message.text_from,

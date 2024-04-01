@@ -83,14 +83,13 @@ export const importStringPublicKey = (publicKey) => {
  * @param {CryptoKey} publicKey The public key.
  * @returns {Promise<string>} The encrypted message.
  */
-export const encryptMessage = (message, publicKey) => {
+export const encryptMessage = async (message, publicKey) => {
   const encoder = new TextEncoder()
   const encodedMessage = encoder.encode(message)
 
-  return crypto.subtle
-    .encrypt({ name: algorithm }, publicKey, encodedMessage)
-    .then(arrayDataToString)
-    .then(btoa)
+  const encryptedBuffer = await crypto.subtle.encrypt({ name: algorithm }, publicKey, encodedMessage)
+  const encryptedString = arrayDataToString(encryptedBuffer)
+  return btoa(encryptedString)
 }
 
 /**

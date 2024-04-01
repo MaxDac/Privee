@@ -93,11 +93,16 @@ defmodule PriveeWeb.Chat.ChatLive do
            }
          } = socket
        ) do
-    messages = Chats.get_messages(current_session.id, selected_session.id)
-    assign(socket, :messages, parse_messages(messages))
+    messages =
+      Chats.get_messages(current_session.id, selected_session.id)
+      |> parse_messages()
+
+    socket
+    |> assign(:messages, messages)
+    |> stream(:messages, messages)
   end
 
-  defp assign_existing_messages(socket), do: assign(socket, :messages, [])
+  defp assign_existing_messages(socket), do: stream(socket, :messages, [])
 
   defp assign_form(socket, attrs \\ %{}) do
     form =
@@ -149,6 +154,10 @@ defmodule PriveeWeb.Chat.ChatLive do
   end
 
   defp assign_message(%{assigns: %{messages: messages}} = socket, message) do
-    assign(socket, :messages, add_message(message, messages))
+    new_message = add_message(message, messages)
+
+    socket
+    |> assign(:messages, [new_message | messages])
+    |> stream_insert(:messages, new_message)
   end
 end

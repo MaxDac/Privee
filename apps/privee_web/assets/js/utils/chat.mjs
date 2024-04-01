@@ -26,7 +26,6 @@ const chatEntryUnconverted="[data-converted=\"false\"]"
 
 var currentPublicKey = null
 var selectedPublicKey = null
-var convertedChatEntries = []
 
 /**
  * Handles the event that sends the public keys of the two sessions of the chat.
@@ -86,8 +85,6 @@ export const addChatInputHandler = () => {
     document.querySelector(chatTextInputSelector)
   chatTextInput.removeEventListener("keypress", handleChatInput)
   chatTextInput.addEventListener("keypress", handleChatInput)
-
-  convertedChatEntries = []
 }
 
 /**
@@ -96,11 +93,7 @@ export const addChatInputHandler = () => {
  * @param {string} sessionName The current session name.
  */
 export const decryptChatEntriesText = async (sessionName) => {
-  const uncoveredChatEntries =
-    querySelectorArrayOf(chatEntryUnconverted).filter(filterConvertedIndex)
-
-  console.debug("chats to decrypt", uncoveredChatEntries)
-  console.debug("already converted index", convertedChatEntries)
+  const uncoveredChatEntries = querySelectorArrayOf(chatEntryUnconverted)
 
   if (uncoveredChatEntries.length === 0) {
     return Promise.resolve()
@@ -122,15 +115,8 @@ const decryptChatEntryText = async (chatEntry, privateKey) => {
   const decryptedMessage = await decryptMessage(encryptedText, privateKey)
   chatEntry.innerHTML = decryptedMessage
   chatEntry.setAttribute("data-converted", "true")
-  convertedChatEntries.push(Number(chatEntry.dataset.chatIndex))
+  chatEntry.classList.remove("hidden")
 }
-
-/**
- * Determines whether the chat entry's text is already converted.
- * @param {HTMLElement} ce The chat entry.
- * @returns {boolean} If `true`, the chat has already been converted.
- */
-const filterConvertedIndex = (ce) => convertedChatEntries.indexOf(Number(ce.dataset.chatIndex)) === -1
 
 export const testExports = {
   /**

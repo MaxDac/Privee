@@ -1,7 +1,9 @@
-<div :for={message <- @messages}>
-  <.chat_entry
-    message={message}
-    current_session={@current_session}
-    selected_session={@selected_session}
-  />
+<div id="chat-scree-container" phx-update="stream">
+  <div :for={{_id, message} <- @streams.messages}>
+    <.chat_entry
+      message={message}
+      current_session={@current_session}
+      selected_session={@selected_session}
+    />
+  </div>
 </div>
