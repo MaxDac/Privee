@@ -87,7 +87,11 @@ export const encryptMessage = async (message, publicKey) => {
   const encoder = new TextEncoder()
   const encodedMessage = encoder.encode(message)
 
-  const encryptedBuffer = await crypto.subtle.encrypt({ name: algorithm }, publicKey, encodedMessage)
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    { name: algorithm },
+    publicKey,
+    encodedMessage,
+  )
   const encryptedString = arrayDataToString(encryptedBuffer)
   return btoa(encryptedString)
 }

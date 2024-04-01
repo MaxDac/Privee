@@ -4,6 +4,6 @@
  */
 export const querySelectorArrayOf = (selector) => {
   const elements = []
-  document.querySelectorAll(selector).forEach(e => elements.push(e))
+  document.querySelectorAll(selector).forEach((e) => elements.push(e))
   return elements
 }
