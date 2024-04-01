@@ -14,13 +14,13 @@ defmodule PriveeWeb.Chat.ChatHelpers do
     do:
       messages
       |> Enum.reverse()
-      |> parse_messages()
+      |> parse_messages([])
 
   @doc """
   Adds a message to the previous list of messages already present in the chat.
   This function will be used when receiving a notification with another chat.
   """
-  def add_message(message, previous_messages \\ []) do
+  def add_message(message, previous_messages) do
     parse_messages([message | Enum.reverse(previous_messages)], [])
   end
 
