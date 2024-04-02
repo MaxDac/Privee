@@ -2,6 +2,8 @@ import { Constants } from "./constants.mjs"
 import { deleteObject, getObject, storeObject } from "./front-end-database.mjs"
 import { convertPublicKeyToString, generateNewKeyPair } from "./security.mjs"
 
+const privateKeyCacheInvalidationTime = 1_000 * 60 * 5
+
 /**
  * Binds the public key generation to the input field, and save the correspondent
  * private key in the IndexedDB.
@@ -57,4 +59,32 @@ export const handleSessionNamePrivateKeyRegistrationEvent = (event) => {
       return console.error("An error occurred while storing the private key.")
     }
   }, 1)
+}
+
+var keyDictionary = new Map()
+
+/**
+ * Gets the private key for the session whose name is passed in input.
+ * @param {string} sessionName The session name, that would be the key to retrieve the private key.
+ * @returns {Promise<?CryptoKey>} The session private key.
+ */
+export const getPrivateKey = async (sessionName) => {
+  const cache = keyDictionary[sessionName]
+
+  if (cache && cache.lastUpdated > Date.now() - privateKeyCacheInvalidationTime) {
+    return cache.key
+  }
+
+  const key = await getObject(Constants.dbName, Constants.tableName, sessionName)
+
+  if (!key) {
+    return null
+  }
+
+  keyDictionary[sessionName] = {
+    lastUpdated: Date.now(),
+    key,
+  }
+
+  return getPrivateKey(sessionName)
 }

@@ -3,6 +3,7 @@ import { indexedDB } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
 import {
   bindKeys,
+  getPrivateKey,
   handleSessionNamePrivateKeyRegistrationEvent,
 } from "../utils/message-encryption.mjs"
 import { getObject } from "../utils/front-end-database.mjs"
@@ -75,23 +76,52 @@ describe("bindKeys", () => {
   })
 })
 
-test("handleSessionNamePrivateKeyRegistrationEvent should handle session name copy event", async () => {
-  const dom = new JSDOM(html)
-  global.indexedDB = indexedDB
-  global.document = dom.window.document
+describe("handleSessionNamePrivateKeyRegistrationEvent", () => {
+  test(" should handle session name copy event", async () => {
+    const dom = new JSDOM(html)
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
 
-  await bindKeys()
+    await bindKeys()
 
-  const event = {
-    detail: {
-      sessionName: "test-session-name",
-    },
-  }
+    const event = {
+      detail: {
+        sessionName: "test-session-name",
+      },
+    }
 
-  await handleSessionNamePrivateKeyRegistrationEvent(event)
+    handleSessionNamePrivateKeyRegistrationEvent(event)
 
-  const privateKey = getObject(Constants.dbName, Constants.tableName, "test-session-name")
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "test-session-name")
 
-  expect(privateKey).toBeTypeOf("object")
-  expect(privateKey).toBeTruthy()
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+})
+
+describe("getPrivateKey", () => {
+  it("should return the private key for the given session name", async () => {
+    const dom = new JSDOM(html)
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
+
+    await bindKeys()
+
+    const privateKey = await getPrivateKey("test-session-name")
+
+    console.debug("private key", privateKey)
+
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+
+  it("should return null if the private key is not found", async () => {
+    const dom = new JSDOM()
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
+
+    const privateKey = await getPrivateKey()
+
+    expect(privateKey).toBeNull()
+  })
 })
