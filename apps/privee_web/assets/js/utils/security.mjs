@@ -51,8 +51,11 @@ export const generateNewKeyPair = () =>
  * @param {CryptoKey} publicKey The generated public key.
  * @returns {Promise<string>} The public key in the string format.
  */
-export const convertPublicKeyToString = (publicKey) =>
-  crypto.subtle.exportKey(publicKeyFormat, publicKey).then(arrayDataToString).then(btoa)
+export const convertPublicKeyToString = async (publicKey) => {
+  const exportedKey = await crypto.subtle.exportKey(publicKeyFormat, publicKey)
+  const exportedKeyString = arrayDataToString(exportedKey)
+  return btoa(exportedKeyString)
+}
 
 /**
  * Imports a public key in string format in a `CryptoKey` format, basically

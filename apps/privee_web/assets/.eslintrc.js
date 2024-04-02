@@ -43,5 +43,6 @@ module.exports = {
     "jsdoc/require-param-type": "error",
     "jsdoc/require-returns-type": "error",
     "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    "require-await": "error",
   },
 }
