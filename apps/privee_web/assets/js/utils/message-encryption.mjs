@@ -43,22 +43,29 @@ export const bindKeys = async () => {
 export const handleSessionNamePrivateKeyRegistrationEvent = (event) => {
   // Adding a timeout to execute the function outside of the event loop, so that
   // it would not depend on the page refresh after the form submission.
-  setTimeout(async () => {
-    const sessionName = event.detail.session_name
+  setTimeout(async () => await handleSessionNamePrivateKeyRegistrationEventInternal(event), 1)
+}
 
-    try {
-      const privateKey = await getObject(
-        Constants.dbName,
-        Constants.tableName,
-        Constants.privateKeyTempKey,
-      )
-      await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
-      await deleteObject(Constants.dbName, Constants.tableName, Constants.privateKeyTempKey)
-      return console.debug("The private key has been stored with the right key.")
-    } catch {
-      return console.error("An error occurred while storing the private key.")
-    }
-  }, 1)
+/**
+ * The event listener for the session name copy event triggered from the back end.
+ * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
+ * @returns {Promise<void>}
+ */
+const handleSessionNamePrivateKeyRegistrationEventInternal = async (event) => {
+  const sessionName = event.detail.session_name
+
+  try {
+    const privateKey = await getObject(
+      Constants.dbName,
+      Constants.tableName,
+      Constants.privateKeyTempKey,
+    )
+    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
+    await deleteObject(Constants.dbName, Constants.tableName, Constants.privateKeyTempKey)
+    return console.debug("The private key has been stored with the right key.")
+  } catch {
+    return console.error("An error occurred while storing the private key.")
+  }
 }
 
 var keyDictionary = new Map()
@@ -87,4 +94,11 @@ export const getPrivateKey = async (sessionName) => {
   }
 
   return getPrivateKey(sessionName)
+}
+
+/**
+ * Exports which should be available only for testing.
+ */
+export const testExports = {
+  handleSessionNamePrivateKeyRegistrationEventInternal,
 }

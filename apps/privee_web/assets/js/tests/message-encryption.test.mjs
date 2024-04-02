@@ -1,11 +1,7 @@
 import { test, describe, it, expect } from "vitest"
 import { indexedDB } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
-import {
-  bindKeys,
-  getPrivateKey,
-  handleSessionNamePrivateKeyRegistrationEvent,
-} from "../utils/message-encryption.mjs"
+import { bindKeys, getPrivateKey, testExports } from "../utils/message-encryption.mjs"
 import { getObject } from "../utils/front-end-database.mjs"
 import { importStringPublicKey } from "../utils/security.mjs"
 import { Constants } from "../utils/constants.mjs"
@@ -90,7 +86,7 @@ describe("handleSessionNamePrivateKeyRegistrationEvent", () => {
       },
     }
 
-    handleSessionNamePrivateKeyRegistrationEvent(event)
+    await testExports.handleSessionNamePrivateKeyRegistrationEventInternal(event)
 
     const privateKey = getObject(Constants.dbName, Constants.tableName, "test-session-name")
 
@@ -107,9 +103,13 @@ describe("getPrivateKey", () => {
 
     await bindKeys()
 
-    const privateKey = await getPrivateKey("test-session-name")
+    await testExports.handleSessionNamePrivateKeyRegistrationEventInternal({
+      detail: {
+        session_name: "test-session-name",
+      },
+    })
 
-    console.debug("private key", privateKey)
+    const privateKey = await getPrivateKey("test-session-name")
 
     expect(privateKey).toBeTypeOf("object")
     expect(privateKey).toBeTruthy()
