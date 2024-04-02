@@ -5,9 +5,8 @@
  * @property {string} selected The selected session public key in string format.
  */
 
-import { Constants } from "./constants.mjs"
 import { querySelectorArrayOf } from "./dom-utils.mjs"
-import { getObject } from "./front-end-database.mjs"
+import { getPrivateKey } from "./message-encryption.mjs"
 import { decryptMessage, encryptMessage, importStringPublicKey } from "./security.mjs"
 
 const chatFormSelector = "#chat-form"
@@ -99,7 +98,7 @@ export const decryptChatEntriesText = async (sessionName) => {
     return Promise.resolve()
   }
 
-  const privateKey = await getObject(Constants.dbName, Constants.tableName, sessionName)
+  const privateKey = await getPrivateKey(sessionName)
   const promises = uncoveredChatEntries.map((ce) => decryptChatEntryText(ce, privateKey))
   await Promise.all(promises)
 }
