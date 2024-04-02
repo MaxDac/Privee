@@ -18,12 +18,16 @@ export function addChatHooks(Hooks) {
     updated() {
       this.handleChat()
     },
-    handleChat() {
+    async handleChat() {
       const sessionName = this.el.dataset.sessionName
-      decryptChatEntriesText(sessionName)
-        .then(() => scrollElementToEnd(this.el))
-        .then(() => console.debug("Decryption done"))
-        .catch((e) => console.error("An error in the decryption of the chats happened", e))
+
+      try {
+        await decryptChatEntriesText(sessionName)
+        scrollElementToEnd(this.el)
+        console.debug("Decryption done")
+      } catch (e) {
+        console.error("An error in the decryption of the chats happened", e)
+      }
     },
   }
 

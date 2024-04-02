@@ -131,15 +131,17 @@ describe("DB Operations", () => {
     await storeObject(dbName, tableName, "test1", object1)
     await storeObject(dbName, tableName, "test2", object2)
 
-    await purgeDatabase(dbName, tableName)
-      .then(() => getObject(dbName, tableName, "test1"))
-      .then((retrievedObject) => {
-        expect(retrievedObject).toBe(undefined)
-      })
-      .then(() => getObject(dbName, tableName, "test2"))
-      .then((retrievedObject) => {
-        expect(retrievedObject).toBe(undefined)
-      })
-      .catch((e) => expect.fail(JSON.stringify(e)))
+    try {
+      await purgeDatabase(dbName, tableName)
+      const retrievedObject = await getObject(dbName, tableName, "test1")
+
+      expect(retrievedObject).toBe(undefined)
+
+      await getObject(dbName, tableName, "test2")
+
+      expect(retrievedObject).toBe(undefined)
+    } catch (e) {
+      expect.fail(JSON.stringify(e))
+    }
   })
 })

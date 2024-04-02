@@ -3,7 +3,7 @@ import { NotificationMock, getDom } from "./mock-utils.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 
 describe("askNotificationPermission", () => {
-  it("asks for permission, browser does not support notifications, reports the right result", () => {
+  it("asks for permission, browser does not support notifications, reports the right result", async () => {
     const dom = getDom()
 
     // @ts-ignore
@@ -12,7 +12,13 @@ describe("askNotificationPermission", () => {
     global.Notification = dom.window.Notification
 
     const expected = "This browser does not support notifications."
-    return askNotificationPermission().catch((error) => expect(error).toBe(expected))
+
+    try {
+      await askNotificationPermission()
+      expect.fail("The function call should fail.")
+    } catch (error) {
+      expect(error).toBe(expected)
+    }
   })
 
   it("asks for permission, user accepts, reports the right result", async () => {

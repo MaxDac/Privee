@@ -36,9 +36,9 @@ export const bindKeys = async () => {
  * The event listener for the session name copy event triggered from the back end.
  * It has been moved in this file to keep the `app.js` file clean.
  * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
- * @returns {Promise<void>} A promise that resolves when the private key has been stored.
+ * @returns {void}
  */
-export const handleSessionNamePrivateKeyRegistrationEvent = async (event) => {
+export const handleSessionNamePrivateKeyRegistrationEvent = (event) => {
   // Adding a timeout to execute the function outside of the event loop, so that
   // it would not depend on the page refresh after the form submission.
   setTimeout(async () => {
