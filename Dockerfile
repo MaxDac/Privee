@@ -46,7 +46,7 @@ WORKDIR /app
 COPY nifs nifs
 
 # Building Zig dependencies
-RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-14.2.2/include
+RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-15.1.2/include
 
 # install hex + rebar
 RUN mix local.hex --force && \

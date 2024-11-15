@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     # The `runs-on` configuration must be set only at the top level workflow execution.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
 
@@ -63,7 +63,7 @@ jobs:
           elixir: ${{ matrix.elixir }}
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       MIX_ENV: test
@@ -115,7 +115,7 @@ jobs:
         uses: ./.github/actions/test-pr
 
   client:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     name: Pull Request CI check and test Node ${{ matrix.node }}
 
