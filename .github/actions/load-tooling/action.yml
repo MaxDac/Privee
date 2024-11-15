@@ -3,28 +3,21 @@ description: "Loads the Elixir, Erlang and Zig tooling"
 
 inputs:
   otp:
-    type: string
     description: "OTP version"
     required: true
     default: "27.1.2"
   elixir:
-    type: string
     description: "Elixir version"
     required: true
     default: "1.17.3"
   zig:
-    type: string
     description: "Zig compiler version"
     required: true
     default: "0.11.0"
   node:
-    type: string
     description: "Node version"
     required: true
     default: "18"
-
-permissions:
-  contents: read
 
 runs:
   using: "composite"

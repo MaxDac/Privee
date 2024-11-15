@@ -1,9 +1,6 @@
 name: Elixir CI - Compilation
 description: "Runs compilation checks on the codebase."
 
-permissions:
-  contents: read
-
 runs:
   using: "composite"
 
