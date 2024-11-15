@@ -37,13 +37,13 @@ defmodule Privee.MixProject do
   defp deps do
     [
       {:bcrypt_elixir, "~> 3.0"},
-      {:dns_cluster, "~> 0.1.1"},
+      {:dns_cluster, "~> 0.1.3"},
       {:phoenix_pubsub, "~> 2.1"},
-      {:ecto_sql, "~> 3.10"},
+      {:ecto_sql, "~> 3.12"},
       {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.2"},
-      {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"}
+      {:jason, "~> 1.4.4"},
+      {:swoosh, "~> 1.17"},
+      {:finch, "~> 0.19"}
     ]
   end
 

@@ -6,12 +6,12 @@ inputs:
     type: string
     description: "OTP version"
     required: true
-    default: "26.2.2"
+    default: "27.1.2"
   elixir:
     type: string
     description: "Elixir version"
     required: true
-    default: "1.16.1"
+    default: "1.17.3"
 
 permissions:
   contents: read

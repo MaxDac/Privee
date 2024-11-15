@@ -29,10 +29,10 @@ erl_crash.dump
 /.elixir-tools/
 
 # Zig output folders
-/nifs/zig-out/
+zig-out
 
 # Zig cache
-/nifs/zig-cache/
+.zig-cache
 
 # Node
 node_modules/

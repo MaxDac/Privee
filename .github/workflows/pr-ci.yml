@@ -11,7 +11,7 @@ on:
       - main
 
   push:
-    branches: main
+    branches: [main]
 
 permissions:
   contents: read
@@ -30,9 +30,9 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ["26.2.2"]
-        elixir: ["1.16.1"]
-        zig: ["0.11.0"]
+        otp: ["27.1.2"]
+        elixir: ["1.17.3"]
+        zig: ["0.13.0"]
         node: ["20"]
 
     steps:
@@ -86,9 +86,9 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ["26.2.2"]
-        elixir: ["1.16.1"]
-        zig: ["0.11.0"]
+        otp: ["27.1.2"]
+        elixir: ["1.17.3"]
+        zig: ["0.13.0"]
 
     steps:
       - name: Checkout code
