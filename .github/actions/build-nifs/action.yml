@@ -17,4 +17,4 @@ runs:
   steps:
     - name: Building NIFs
       shell: bash
-      run: zig build --build-file nifs/build.zig -- /opt/hostedtoolcache/otp/ubuntu-22.04/OTP-27.1.2/x64/erts-15.1.2/include
+      run: zig build --build-file nifs/build.zig -- /opt/hostedtoolcache/otp/ubuntu-24.04/OTP-27.1.2/x64/erts-15.1.2/include
