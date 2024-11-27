@@ -11,7 +11,7 @@ on:
       - main
 
   push:
-    branches: main
+    branches: [main]
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     # The `runs-on` configuration must be set only at the top level workflow execution.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
 
@@ -30,10 +30,10 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ["26.2.2"]
-        elixir: ["1.16.1"]
-        zig: ["0.11.0"]
-        node: ["20"]
+        otp: ["27.1.2"]
+        elixir: ["1.17.3"]
+        zig: ["0.13.0"]
+        node: ["22"]
 
     steps:
       - name: Checkout code
@@ -53,6 +53,13 @@ jobs:
       - name: Build NIfs
         uses: ./.github/actions/build-nifs
 
+      - name: Breakpoint if tests failed
+        if: failure()
+        uses: namespacelabs/breakpoint-action@v0
+        with:
+          duration: 30m
+          authorized-users: MaxDac
+
       - name: Build PR
         uses: ./.github/actions/compile-pr
 
@@ -63,7 +70,7 @@ jobs:
           elixir: ${{ matrix.elixir }}
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     env:
       MIX_ENV: test
@@ -86,9 +93,9 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        otp: ["26.2.2"]
-        elixir: ["1.16.1"]
-        zig: ["0.11.0"]
+        otp: ["27.1.2"]
+        elixir: ["1.17.3"]
+        zig: ["0.13.0"]
 
     steps:
       - name: Checkout code
@@ -115,7 +122,7 @@ jobs:
         uses: ./.github/actions/test-pr
 
   client:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     name: Pull Request CI check and test Node ${{ matrix.node }}
 
@@ -123,7 +130,7 @@ jobs:
       # Specify the OTP and Elixir versions to use when building
       # and running the workflow steps.
       matrix:
-        node: ["20"]
+        node: ["22"]
 
     steps:
       - name: Checkout code
@@ -137,5 +144,5 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix apps/privee_web/assets
 
-      - name: Run npm command
+      - name: Check npm dependencies
         run: npm run check --prefix apps/privee_web/assets

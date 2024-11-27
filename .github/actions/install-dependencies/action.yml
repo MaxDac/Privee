@@ -1,9 +1,6 @@
 name: dependencies
 description: "Install required dependencies and compiles them"
 
-permissions:
-  contents: read
-
 runs:
   using: "composite"
 

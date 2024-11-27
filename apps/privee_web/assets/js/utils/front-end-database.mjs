@@ -31,9 +31,7 @@ const openDb = (dbName, tableName) => {
       resolve({ transaction, keyStore })
     }
 
-    request.onerror = (e) => {
-      reject(e)
-    }
+    request.onerror = reject
   })
 }
 
@@ -55,9 +53,7 @@ const dbRequestToPromise = (openedDb, operation) =>
       resolve(e.target.result)
     }
 
-    request.onerror = (e) => {
-      reject(e)
-    }
+    request.onerror = reject
   })
 
 /**
@@ -90,7 +86,7 @@ export const getObject = async (dbName, tableName, key) => {
   try {
     const openedDb = await openDb(dbName, tableName)
     return await dbRequestToPromise(openedDb, (keyStore) => keyStore.get(key))
-  } catch (e) {
+  } catch {
     return undefined
   }
 }

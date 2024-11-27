@@ -41,7 +41,7 @@ describe("bindKeys", () => {
     try {
       await bindKeys()
       expect.fail()
-    } catch (e) {
+    } catch {
       /* Test passed */
     }
   })

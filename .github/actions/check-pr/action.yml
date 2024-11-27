@@ -3,18 +3,13 @@ description: "Cache PLTs for Dialyzer"
 
 inputs:
   otp:
-    type: string
     description: "OTP version"
     required: true
-    default: "26.2.2"
+    default: "27.1.2"
   elixir:
-    type: string
     description: "Elixir version"
     required: true
-    default: "1.16.1"
-
-permissions:
-  contents: read
+    default: "1.17.3"
 
 runs:
   using: "composite"

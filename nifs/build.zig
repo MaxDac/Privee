@@ -1,13 +1,13 @@
 const std = @import("std");
 
-const default_erlang_home: []const u8 = "/usr/local/lib/erlang/erts-14.2.2/include";
+const default_erlang_home: []const u8 = "/usr/local/lib/erlang/erts-15.1.2/include";
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
 
 /// Defines build params
-/// 
+///
 /// - `b`: the build params. The only custom build params that has to be passed after `--` is
 /// the Erlang home.
 /// Please refer to [this](https://stackoverflow.com/questions/72558202/can-i-pass-commandline-arguments-when-invoking-zig-build-run)
@@ -28,7 +28,7 @@ pub fn build(b: *std.Build) void {
         .name = "example_nif",
         // In this case the main source file is merely a path, however, in more
         // complicated build scripts, this could be a generated file.
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
@@ -36,7 +36,8 @@ pub fn build(b: *std.Build) void {
     // Including Erlang path for compilation.
     const erlang_home = getErlangHomeFromArguments(b.args);
     std.debug.print("Erlang home: '{s}'\n", .{erlang_home});
-    lib.addIncludePath(.{ .path = erlang_home });
+
+    lib.addIncludePath(.{ .cwd_relative = erlang_home });
 
     // Linking LibC for Erlang NIFs.
     lib.linkLibC();
@@ -49,7 +50,7 @@ pub fn build(b: *std.Build) void {
     // Creates a step for unit testing. This only builds the test executable
     // but does not run it.
     const main_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });

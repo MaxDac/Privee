@@ -16,8 +16,9 @@ defmodule PriveeWeb.CoreComponents do
   """
   use Phoenix.Component
 
+  use Gettext, backend: PriveeWeb.Gettext
+
   alias Phoenix.LiveView.JS
-  import PriveeWeb.Gettext
 
   alias Phoenix.HTML.Form
 

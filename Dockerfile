@@ -9,11 +9,11 @@
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20240130-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.16.1-erlang-26.2.2-debian-bullseye-20240130-slim
+#   - Ex: hexpm/elixir:1.17.3-erlang-27.1.2-debian-bullseye-20240130-slim
 #
-ARG ELIXIR_VERSION=1.16.1
-ARG OTP_VERSION=26.2.2
-ARG DEBIAN_VERSION=bullseye-20240130-slim
+ARG ELIXIR_VERSION=1.17.3
+ARG OTP_VERSION=27.1.2
+ARG DEBIAN_VERSION=bookworm-20241111-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -28,16 +28,16 @@ RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget cu
 
 WORKDIR /tmp
 
-# Installing Zig to compile NIFs 
+# Installing Zig to compile NIFs
 RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
-  tar -xf zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
-  mv zig-linux-x86_64-${ZIG_VERSION} /usr/local/lib/ && \
-  ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig && \
-  rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
+    tar -xf zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
+    mv zig-linux-x86_64-${ZIG_VERSION} /usr/local/lib/ && \
+    ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig && \
+    rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
 
-# Installing Node 
+# Installing Node
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-  apt-get install -y nodejs
+    apt-get install -y nodejs
 
 # prepare build dir
 WORKDIR /app
@@ -46,7 +46,7 @@ WORKDIR /app
 COPY nifs nifs
 
 # Building Zig dependencies
-RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-14.2.2/include
+RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-15.1.2/include
 
 # install hex + rebar
 RUN mix local.hex --force && \
@@ -79,9 +79,9 @@ COPY apps/privee_web/assets apps/privee_web/assets
 
 # compile assets
 RUN npm i --prefix apps/privee_web/assets && \
-  npm run check --prefix apps/privee_web/assets && \
-  cd apps/privee_web && \
-  mix assets.deploy
+    npm run check --prefix apps/privee_web/assets && \
+    cd apps/privee_web && \
+    mix assets.deploy
 
 # Compile the release
 RUN mix compile
@@ -97,8 +97,8 @@ RUN mix release
 FROM ${RUNNER_IMAGE}
 
 RUN apt-get update -y && \
-  apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen

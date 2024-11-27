@@ -1,9 +1,6 @@
 name: Elixir CI - Tests
 description: "Runs tests on the codebase."
 
-permissions:
-  contents: read
-
 runs:
   using: "composite"
 
