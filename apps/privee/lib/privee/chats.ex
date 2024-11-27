@@ -14,7 +14,6 @@ defmodule Privee.Chats do
   @impl true
   @doc """
   Creates the database table, returning the table name.
-  The settings will be determines 
   """
   def init(_opts) do
     _ = create_database()
@@ -29,7 +28,7 @@ defmodule Privee.Chats do
 
   @doc """
   Creates a message in the table. The message will be created twice, both for the
-  sender and for the receiver. This way, the lookup will be quicker, as it will 
+  sender and for the receiver. This way, the lookup will be quicker, as it will
   require only one match.
   """
   @impl true
@@ -63,7 +62,7 @@ defmodule Privee.Chats do
 
   @doc """
   Creates a message in the table. The message will be created twice, both for the
-  sender and for the receiver. This way, the lookup will be quicker, as it will 
+  sender and for the receiver. This way, the lookup will be quicker, as it will
   require only one match.
   """
   def create_message(message) do
