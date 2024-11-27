@@ -34,7 +34,7 @@ describe("handleSendingPublicKey", () => {
     try {
       await handleSendingPublicKey(event)
       expect.fail("It should have thrown an exception")
-    } catch (_e) {
+    } catch {
       /* test passing */
     }
   })

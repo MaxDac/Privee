@@ -2,7 +2,7 @@
   "scripts": {
     "format": "prettier --write --config ./.prettierrc .",
     "check:dev": "npm run format && tsc && eslint --fix --ext .js,.mjs . && vitest run",
-    "check": "prettier --check . && tsc && eslint --ext .js,.mjs . && vitest run",
+    "check": "prettier --check . && tsc && ESLINT_USE_FLAT_CONFIG=false eslint --ext .js,.mjs . && npm test",
     "test": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest run",
     "test:verbose": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest run --silent=false",
     "test:watch": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest --silent=false"

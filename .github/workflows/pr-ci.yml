@@ -144,5 +144,5 @@ jobs:
       - name: Install dependencies
         run: npm install --prefix apps/privee_web/assets
 
-      - name: Run npm command
+      - name: Check npm dependencies
         run: npm run check --prefix apps/privee_web/assets
