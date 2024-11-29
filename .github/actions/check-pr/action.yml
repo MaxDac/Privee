@@ -23,8 +23,6 @@ runs:
       with:
         key: |
           ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
-        restore-keys: |
-          ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
         path: |
           priv/plts
 
