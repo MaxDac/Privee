@@ -20,7 +20,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
-ARG ZIG_VERSION="0.11.0"
+ARG ZIG_VERSION="0.13.0"
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
@@ -36,7 +36,7 @@ RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERS
     rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
 
 # Installing Node
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs
 
 # prepare build dir
@@ -46,7 +46,7 @@ WORKDIR /app
 COPY nifs nifs
 
 # Building Zig dependencies
-RUN zig build --build-file nifs/build.zig -- /usr/local/lib/erlang/erts-15.1.2/include
+RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-15.1.2/include
 
 # install hex + rebar
 RUN mix local.hex --force && \

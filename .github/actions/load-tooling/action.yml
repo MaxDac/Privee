@@ -13,7 +13,7 @@ inputs:
   zig:
     description: "Zig compiler version"
     required: true
-    default: "0.11.0"
+    default: "0.13.0"
   node:
     description: "Node version"
     required: true
