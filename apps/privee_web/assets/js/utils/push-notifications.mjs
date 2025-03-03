@@ -1,3 +1,6 @@
+import { getPrivateKey } from "./message-encryption.mjs"
+import { decryptMessage } from "./security.mjs"
+
 /**
  * Determines whether the browser supports notifications, if not it logs it,
  * if it supports it asks for permission to the user and logs the result.
@@ -27,9 +30,9 @@ export const askNotificationPermission = async () => {
 /**
  * Handles the Phoenix back end event that requires triggering a notification.
  * @param {PhoenixEvent} event The event triggered from the back-end.
- * @returns {?Promise<Notification>} The notification that was triggered, undefined if no notification was triggered.
+ * @returns {Promise<?Notification>} The notification that was triggered, undefined if no notification was triggered.
  */
-export const pushBackEndNotification = (event) => {
+export const pushBackEndNotification = async (event) => {
   const mustCheckWindowFocus = event.detail.check_focus
   const browserWindowNotInFocus = document.hidden
 
@@ -37,22 +40,32 @@ export const pushBackEndNotification = (event) => {
     const title = "Privee - Text received"
     const url = `/chat/${event.detail.session_name}`
 
+    // Getting the private key to decrypt the message in the user notification.
+    const receiverSessionName = event.detail.receiver_session_name
+
+    let decryptedMessage = ""
+
+    if (receiverSessionName != null && receiverSessionName != "") {
+      const privateKey = await getPrivateKey(receiverSessionName)
+      decryptedMessage = await decryptMessage(event.detail.text, privateKey)
+    }
+
+    console.log("session name", receiverSessionName)
+
     const notification = new Notification(title, {
-      body: event.detail.text,
+      body: decryptedMessage ?? event.detail.text,
       icon: "/favicon.ico",
     })
 
     // Open the chat when the notification is clicked.
     notification.addEventListener("click", () => window.open(url, "_blank"))
 
-    return new Promise((resolve, _reject) => {
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          resolve(notification)
-        }
-      })
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        notification
+      }
     })
   } else {
-    return Promise.resolve(undefined)
+    return undefined
   }
 }

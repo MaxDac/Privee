@@ -108,10 +108,11 @@ defmodule PriveeWeb.Events do
 
       # If the user is the receiver, but the sender is not the selected session, send the notification.
       {
-        %{current_session: %{id: to_id}},
+        %{current_session: %{id: to_id, session_name: receiver_session_name}},
         %{to: to_id, sender_session_name: sender_session_name, text_to: text_to}
       } ->
         push_event(socket, @js_event, %{
+          receiver_session_name: receiver_session_name,
           session_name: sender_session_name,
           text: text_to,
           check_focus: false
