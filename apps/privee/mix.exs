@@ -42,7 +42,7 @@ defmodule Privee.MixProject do
       {:ecto_sql, "~> 3.12"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.4.4"},
-      {:swoosh, "~> 1.17"},
+      {:swoosh, "~> 1.5"},
       {:finch, "~> 0.19"}
     ]
   end

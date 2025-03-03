@@ -14,4 +14,4 @@ runs:
     - name: Building NIFs
       shell: bash
       working-directory: nifs
-      run: zig build -- /opt/hostedtoolcache/otp/ubuntu-24.04/OTP-27.1.2/x64/erts-15.1.2/include
+      run: zig build -- /opt/hostedtoolcache/otp/ubuntu-24.04/OTP-27.2.4/x64/erts-15.2.2/include

@@ -36,15 +36,15 @@ defmodule PriveeWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.14"},
+      {:phoenix, "~> 1.7.20"},
       {:phoenix_ecto, "~> 4.6"},
-      {:phoenix_html, "~> 4.1"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.17"},
-      {:floki, ">= 0.36.3", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:phoenix_html, "~> 4.2"},
+      {:phoenix_live_reload, "~> 1.5", only: :dev},
+      {:phoenix_live_view, "~> 1.0.5"},
+      {:floki, ">= 0.37.0", only: :test},
+      {:phoenix_live_dashboard, "~> 0.8.6"},
+      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3.1", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -52,12 +52,12 @@ defmodule PriveeWeb.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:telemetry_metrics, "~> 1.0"},
+      {:telemetry_metrics, "~> 1.1"},
       {:telemetry_poller, "~> 1.1"},
       {:gettext, "~> 0.26"},
       {:privee, in_umbrella: true},
       {:jason, "~> 1.4.4"},
-      {:bandit, "~> 1.5.7"},
+      {:bandit, "~> 1.5"},
       {:libcluster, "~> 3.4"}
     ]
   end
