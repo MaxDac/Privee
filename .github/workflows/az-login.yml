@@ -1,8 +1,10 @@
 name: Run Azure Login with OIDC
+
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Elixir CI - Compilation"]
+    types:
+      - completed
 
 permissions:
   id-token: write
