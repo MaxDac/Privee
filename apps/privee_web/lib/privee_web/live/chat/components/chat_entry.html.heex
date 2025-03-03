@@ -19,16 +19,16 @@
         "bg-gradient-to-l from-gray-800 via-gray-800 to-gray-700 hover:bg-gradient-to-tl"
       end
     ]}>
-      <%= # Adding &lrm; at the end to circumvent punctuation rtl direction %>
+      {# Adding &lrm; at the end to circumvent punctuation rtl direction}
       <p
         data-message={if @message.from == @current_session.id, do: "from", else: "to"}
         data-converted="false"
         id={"chat-message-#{@message.id}"}
         class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50 hidden"
       >
-        <%= if @message.from == @current_session.id,
+        {if @message.from == @current_session.id,
           do: @message.text_from,
-          else: @message.text_to %>&lrm;
+          else: @message.text_to}&lrm;
       </p>
     </div>
   </div>
