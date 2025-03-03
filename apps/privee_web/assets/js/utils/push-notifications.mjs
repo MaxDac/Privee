@@ -60,11 +60,16 @@ export const pushBackEndNotification = async (event) => {
     // Open the chat when the notification is clicked.
     notification.addEventListener("click", () => window.open(url, "_blank"))
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        notification
-      }
-    })
+    const sendNotification = () =>
+      new Promise((resolve, _reject) =>
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            resolve(notification)
+          }
+        }),
+      )
+
+    return await sendNotification()
   } else {
     return undefined
   }

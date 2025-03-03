@@ -1,6 +1,8 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
+import { encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
+import * as messageEncryption from "../utils/message-encryption.mjs"
 
 describe("askNotificationPermission", () => {
   it("asks for permission, browser does not support notifications, reports the right result", async () => {
@@ -106,17 +108,27 @@ describe("pushBackEndNotification", () => {
     // @ts-ignore
     global.Notification = NotificationMock
 
-    const notificationText = "Hello, world!"
+    // Mocking getting the private key
+    const { privateKey, publicKey } = await generateNewKeyPair()
+
+    const getPrivateKeyMock = vi
+      .spyOn(messageEncryption, "getPrivateKey")
+      .mockImplementation(async (_) => privateKey)
+
+    const notificationText = "notification text"
+
+    const encryptedNotificationText = encryptMessage(notificationText, publicKey)
 
     const notification = await pushBackEndNotification({
       detail: {
         check_focus: true,
-        text: notificationText,
+        text: encryptedNotificationText,
       },
     })
 
     expect(notification).toBeTruthy()
     expect(notification.title).toBe("Privee - Text received")
+    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
     expect(notification.body).toBe(notificationText)
     expect(notification.icon).toBe("/favicon.ico")
   })
