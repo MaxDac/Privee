@@ -8,21 +8,21 @@
     "test:watch": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest --silent=false"
   },
   "dependencies": {
-    "flowbite": "~2.5.2"
+    "flowbite": "~3.1.2"
   },
   "devDependencies": {
     "@types/jsdom": "~21.1.7",
-    "@types/node": "~22.9.0",
-    "@typescript-eslint/parser": "~8.14.0",
-    "eslint": "~9.15.0",
-    "eslint-config-prettier": "~9.1.0",
-    "eslint-plugin-jsdoc": "~50.5.0",
-    "eslint-plugin-prettier": "~5.2.1",
+    "@types/node": "~22.13.8",
+    "@typescript-eslint/parser": "~8.25.0",
+    "eslint": "~9.21.0",
+    "eslint-config-prettier": "~10.0.2",
+    "eslint-plugin-jsdoc": "~50.6.3",
+    "eslint-plugin-prettier": "~5.2.3",
     "fake-indexeddb": "~6.0.0",
-    "flowbite-typography": "~1.0.4",
-    "jsdom": "~25.0.1",
-    "prettier": "~3.3.3",
-    "typescript": "~5.6.3",
-    "vitest": "~2.1.5"
+    "flowbite-typography": "~1.0.5",
+    "jsdom": "~26.0.0",
+    "prettier": "~3.5.3",
+    "typescript": "~5.7.3",
+    "vitest": "~3.0.7"
   }
 }
