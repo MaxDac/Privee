@@ -4,12 +4,17 @@ import { askNotificationPermission, pushBackEndNotification } from "../utils/pus
 import { encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
 import * as messageEncryption from "../utils/message-encryption.mjs"
 
+const addRequiredMockedMethod = (window) => ({
+  ...window,
+  open: (_url, _target, _features) => window
+})
+
 describe("askNotificationPermission", () => {
   it("asks for permission, browser does not support notifications, reports the right result", async () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = dom.window
+    global.window = addRequiredMockedMethod(dom.window)
     // @ts-ignore
     global.Notification = dom.window.Notification
 
@@ -25,13 +30,13 @@ describe("askNotificationPermission", () => {
 
   it("asks for permission, user accepts, reports the right result", async () => {
     const dom = getDom()
-    const window = {
+    const window = addRequiredMockedMethod({
       ...dom.window,
       Notification: {
         requestPermission: () => Promise.resolve(),
         permission: "granted",
       },
-    }
+    })
 
     // @ts-ignore
     global.window = window
@@ -45,13 +50,13 @@ describe("askNotificationPermission", () => {
 
   it("asks for permission, user denies, reports the right result", async () => {
     const dom = getDom()
-    const window = {
+    const window = addRequiredMockedMethod({
       ...dom.window,
       Notification: {
         requestPermission: () => Promise.resolve(),
         permission: "denied",
       },
-    }
+    })
 
     // @ts-ignore
     global.window = window
@@ -69,10 +74,7 @@ describe("pushBackEndNotification", () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = {
-      ...window,
-      open: (_url, _target, _features) => window,
-    }
+    global.window = addRequiredMockedMethod(dom.window)
 
     global.document = {
       ...dom.window.document,
@@ -92,7 +94,7 @@ describe("pushBackEndNotification", () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = dom.window
+    global.window = addRequiredMockedMethod(dom.window)
 
     global.document = {
       ...dom.window.document,
@@ -145,7 +147,7 @@ describe("pushBackEndNotification", () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = dom.window
+    global.window = addRequiredMockedMethod(dom.window)
 
     global.document = {
       ...dom.window.document,
@@ -194,11 +196,11 @@ describe("pushBackEndNotification", () => {
     expect(notification.icon).toBe("/favicon.ico")
   })
 
-  it("The browser did not store the private key, notification is not fired", async () => {
+  it("The browser did not store the private key, text is empty", async () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = dom.window
+    global.window = addRequiredMockedMethod(dom.window)
 
     global.document = {
       ...dom.window.document,
@@ -242,7 +244,7 @@ describe("pushBackEndNotification", () => {
     const dom = getDom()
 
     // @ts-ignore
-    global.window = dom.window
+    global.window = addRequiredMockedMethod(dom.window)
 
     global.document = {
       ...dom.window.document,

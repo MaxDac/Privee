@@ -39,24 +39,10 @@ export const pushBackEndNotification = async (event) => {
   if (!mustCheckWindowFocus || browserWindowNotInFocus) {
     const title = "Privee - Text received"
     const url = `/chat/${event.detail.session_name}`
-
-    // Getting the private key to decrypt the message in the user notification.
-    const receiverSessionName = event.detail.receiver_session_name
-
-    let decryptedMessage = ""
-
-    if (receiverSessionName != null && receiverSessionName != "") {
-      const privateKey = await getPrivateKey(receiverSessionName)
-
-      if (privateKey) {
-        decryptedMessage = await decryptMessage(event.detail.text, privateKey)
-      }
-    }
-
-    console.log("session name", receiverSessionName)
+    const message = await getNotificationMessage(event)
 
     const notification = new Notification(title, {
-      body: decryptedMessage ?? event.detail.text,
+      body: message,
       icon: "/favicon.ico",
     })
 
@@ -76,4 +62,27 @@ export const pushBackEndNotification = async (event) => {
   } else {
     return undefined
   }
+}
+
+/**
+ * Handles the decryption of the notification message.
+ * @param {PhoenixEvent} event The event triggered from the back-end.
+ * @returns {Promise<string>} The decrypted message.
+ */
+const getNotificationMessage = async (event) => {
+  const encryptedMessage = event.detail.text
+  const receiverSessionName = event.detail.receiver_session_name
+
+  let decryptedMessage = ""
+
+  if (receiverSessionName != null && receiverSessionName != "") {
+    // Getting the private key to decrypt the message in the user notification.
+    const privateKey = await getPrivateKey(receiverSessionName)
+
+    if (privateKey) {
+      decryptedMessage = await decryptMessage(encryptedMessage, privateKey)
+    }
+  }
+
+  return decryptedMessage
 }
