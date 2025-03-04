@@ -37,8 +37,8 @@ jobs:
         run: |
           echo "The current user is $(whoami)"
           cd /home/azureuser/actions-runner/_work/Privee/Privee
-          docker build -t privee.azurecr.io/privee:${{ github.sha }} .
-          docker push privee.azurecr.io.azurecr.io/privee:${{ github.sha }}
+          sudo docker build -t privee.azurecr.io/privee:${{ github.sha }} .
+          sudo docker push privee.azurecr.io.azurecr.io/privee:${{ github.sha }}
 
       - name: Logout from Azure CLI
         run: az logout
