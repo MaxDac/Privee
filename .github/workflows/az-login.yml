@@ -15,11 +15,6 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
 
-    defaults:
-      run:
-        shell: bash
-        run-as: azureuser
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
