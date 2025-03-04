@@ -35,6 +35,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
+          echo whoami
           docker build -t privee.azurecr.io/privee:${{ github.sha }} .
           docker push privee.azurecr.io.azurecr.io/privee:${{ github.sha }}
 
