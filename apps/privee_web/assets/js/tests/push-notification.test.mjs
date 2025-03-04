@@ -6,7 +6,7 @@ import * as messageEncryption from "../utils/message-encryption.mjs"
 
 const addRequiredMockedMethod = (window) => ({
   ...window,
-  open: (_url, _target, _features) => window
+  open: (_url, _target, _features) => window,
 })
 
 describe("askNotificationPermission", () => {
