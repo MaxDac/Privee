@@ -47,7 +47,10 @@ export const pushBackEndNotification = async (event) => {
 
     if (receiverSessionName != null && receiverSessionName != "") {
       const privateKey = await getPrivateKey(receiverSessionName)
-      decryptedMessage = await decryptMessage(event.detail.text, privateKey)
+
+      if (privateKey) {
+        decryptedMessage = await decryptMessage(event.detail.text, privateKey)
+      }
     }
 
     console.log("session name", receiverSessionName)

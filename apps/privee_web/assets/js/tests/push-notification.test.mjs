@@ -194,7 +194,7 @@ describe("pushBackEndNotification", () => {
     expect(notification.icon).toBe("/favicon.ico")
   })
 
-  it("The browser did not store the private key, text is empty", async () => {
+  it("The browser did not store the private key, notification is not fired", async () => {
     const dom = getDom()
 
     // @ts-ignore
@@ -226,23 +226,16 @@ describe("pushBackEndNotification", () => {
 
     const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
 
-    try {
-      await pushBackEndNotification({
-        detail: {
-          check_focus: false,
-          receiver_session_name: receiverSessionName,
-          text: encryptedNotificationText,
-        },
-      })
-    } catch (error) {
-      expect(error).toContain("Failed to execute 'decrypt'")
-    }
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: false,
+        receiver_session_name: receiverSessionName,
+        text: encryptedNotificationText,
+      },
+    })
 
     expect(notification).toBeTruthy()
-    expect(notification.title).toBe("Privee - Text received")
-    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
-    expect(notification.body).toBeFalsy()
-    expect(notification.icon).toBe("/favicon.ico")
+    expect(notification.text).toBeFalsy()
   })
 
   it("The browser does not receive the receiver session id, text is empty", async () => {
@@ -266,7 +259,7 @@ describe("pushBackEndNotification", () => {
     global.Notification = NotificationMock
 
     // Mocking getting the private key
-    const { privateKey, publicKey } = await generateNewKeyPair()
+    const { _, publicKey } = await generateNewKeyPair()
 
     const getPrivateKeyMock = vi
       .spyOn(messageEncryption, "getPrivateKey")
@@ -276,21 +269,16 @@ describe("pushBackEndNotification", () => {
 
     const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
 
-    try {
-      await pushBackEndNotification({
-        detail: {
-          check_focus: false,
-          receiver_session_name: receiverSessionName,
-          text: encryptedNotificationText,
-        },
-      })
-    } catch (error) {
-      expect(error).toContain("Failed to execute 'decrypt'")
-    }
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: false,
+        text: encryptedNotificationText,
+      },
+    })
 
     expect(notification).toBeTruthy()
     expect(notification.title).toBe("Privee - Text received")
-    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
+    expect(getPrivateKeyMock).toHaveBeenCalledTimes(0)
     expect(notification.body).toBeFalsy()
     expect(notification.icon).toBe("/favicon.ico")
   })
