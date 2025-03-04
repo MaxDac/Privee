@@ -1,3 +1,6 @@
+import { getPrivateKey } from "./message-encryption.mjs"
+import { decryptMessage } from "./security.mjs"
+
 /**
  * Determines whether the browser supports notifications, if not it logs it,
  * if it supports it asks for permission to the user and logs the result.
@@ -27,32 +30,59 @@ export const askNotificationPermission = async () => {
 /**
  * Handles the Phoenix back end event that requires triggering a notification.
  * @param {PhoenixEvent} event The event triggered from the back-end.
- * @returns {?Promise<Notification>} The notification that was triggered, undefined if no notification was triggered.
+ * @returns {Promise<?Notification>} The notification that was triggered, undefined if no notification was triggered.
  */
-export const pushBackEndNotification = (event) => {
+export const pushBackEndNotification = async (event) => {
   const mustCheckWindowFocus = event.detail.check_focus
   const browserWindowNotInFocus = document.hidden
 
   if (!mustCheckWindowFocus || browserWindowNotInFocus) {
     const title = "Privee - Text received"
     const url = `/chat/${event.detail.session_name}`
+    const message = await getNotificationMessage(event)
 
     const notification = new Notification(title, {
-      body: event.detail.text,
+      body: message,
       icon: "/favicon.ico",
     })
 
     // Open the chat when the notification is clicked.
     notification.addEventListener("click", () => window.open(url, "_blank"))
 
-    return new Promise((resolve, _reject) => {
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-          resolve(notification)
-        }
-      })
-    })
+    const sendNotification = () =>
+      new Promise((resolve, _reject) =>
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            resolve(notification)
+          }
+        }),
+      )
+
+    return await sendNotification()
   } else {
-    return Promise.resolve(undefined)
+    return undefined
   }
+}
+
+/**
+ * Handles the decryption of the notification message.
+ * @param {PhoenixEvent} event The event triggered from the back-end.
+ * @returns {Promise<string>} The decrypted message.
+ */
+const getNotificationMessage = async (event) => {
+  const encryptedMessage = event.detail.text
+  const receiverSessionName = event.detail.receiver_session_name
+
+  let decryptedMessage = ""
+
+  if (receiverSessionName != null && receiverSessionName != "") {
+    // Getting the private key to decrypt the message in the user notification.
+    const privateKey = await getPrivateKey(receiverSessionName)
+
+    if (privateKey) {
+      decryptedMessage = await decryptMessage(encryptedMessage, privateKey)
+    }
+  }
+
+  return decryptedMessage
 }
