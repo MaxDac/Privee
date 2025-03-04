@@ -15,8 +15,6 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     steps:
-      - name: Print Environment Variables
-        run: env
       - name: Azure login
         uses: azure/login@v2.1.1
         with:
@@ -25,6 +23,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
+          
+      - name: Print current user
+        run: whoami
 
       # Azure CLI Action only supports linux self-hosted runners for now.
       # If you want to execute the Azure CLI script on a windows self-hosted runner, you can execute it directly in `run`.
