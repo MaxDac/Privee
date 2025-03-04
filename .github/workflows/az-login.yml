@@ -28,10 +28,10 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
-      - name: Log in to Azure CLI using Managed Identity
-        run: |
-          az login --identity
-          az acr login --name ${{ secrets.ACR_NAME }} --identity
+      # - name: Log in to Azure CLI using Managed Identity
+      #   run: |
+      #     az login --identity
+      #     az acr login --name ${{ secrets.ACR_NAME }} --identity
 
       - name: Build and push Docker image
         run: |
