@@ -116,12 +116,12 @@ describe("pushBackEndNotification", () => {
 
     const getPrivateKeyMock = vi
       .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation(async (sn) => {
+      .mockImplementation((sn) => {
         if (sn === receiverSessionName) {
-          return privateKey
+          return Promise.resolve(privateKey)
         }
 
-        throw `Not the right session name. Session name passed '${sn}'.`
+        return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
       })
 
     const notificationText = "notification text"
@@ -169,12 +169,12 @@ describe("pushBackEndNotification", () => {
 
     const getPrivateKeyMock = vi
       .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation(async (sn) => {
+      .mockImplementation((sn) => {
         if (sn === receiverSessionName) {
-          return privateKey
+          return Promise.resolve(privateKey)
         }
 
-        throw `Not the right session name. Session name passed '${sn}'.`
+        return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
       })
 
     const notificationText = "notification text"
@@ -217,12 +217,12 @@ describe("pushBackEndNotification", () => {
     global.Notification = NotificationMock
 
     // Mocking getting the private key
-    const { privateKey, publicKey } = await generateNewKeyPair()
+    const { publicKey } = await generateNewKeyPair()
     const receiverSessionName = "sesssion-name"
 
     const getPrivateKeyMock = vi
       .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation(async (_) => undefined)
+      .mockImplementation(() => Promise.resolve(undefined))
 
     const notificationText = "notification text"
 
@@ -238,6 +238,7 @@ describe("pushBackEndNotification", () => {
 
     expect(notification).toBeTruthy()
     expect(notification.text).toBeFalsy()
+    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
   })
 
   it("The browser does not receive the receiver session id, text is empty", async () => {
@@ -261,11 +262,11 @@ describe("pushBackEndNotification", () => {
     global.Notification = NotificationMock
 
     // Mocking getting the private key
-    const { _, publicKey } = await generateNewKeyPair()
+    const { publicKey } = await generateNewKeyPair()
 
     const getPrivateKeyMock = vi
       .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation(async (_) => undefined)
+      .mockImplementation(() => Promise.resolve(undefined))
 
     const notificationText = "notification text"
 
