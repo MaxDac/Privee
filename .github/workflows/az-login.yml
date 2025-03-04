@@ -15,6 +15,13 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     steps:
+      - name: Update required dependencies
+        uses: Azure/powershell@v2
+        with:
+          azPSVersion: latest
+          inlineScript: |
+            Install-Module -Name Az -Repository PSGallery -Force
+
       - name: Print Environment Variables
         run: env
       - name: Azure login
