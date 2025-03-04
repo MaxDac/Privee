@@ -1,14 +1,14 @@
 name: Elixir PR CI - Compilation
 
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - synchronize
+#       - reopened
 
-    branches:
-      - main
+#     branches:
+#       - main
 
 permissions:
   contents: read
