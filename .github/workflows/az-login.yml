@@ -38,7 +38,7 @@ jobs:
           enable-AzPSSession: true
 
       - name: Build image on ACR
-        uses: azure/CLI@2
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
