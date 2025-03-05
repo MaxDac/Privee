@@ -7,14 +7,8 @@ import {
   handleChatInput,
   decryptChatEntriesText,
 } from "../utils/chat.mjs"
-import {
-  convertPublicKeyToString,
-  generateNewKeyPair,
-} from "../utils/security.mjs"
-import {
-  decryptMessage,
-  encryptMessage,
-} from "../utils/message-encryption.mjs"
+import { convertPublicKeyToString, generateNewKeyPair } from "../utils/security.mjs"
+import { decryptMessage, encryptMessage } from "../utils/message-encryption.mjs"
 import { storeObject } from "../utils/front-end-database.mjs"
 import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
 import { Constants } from "../utils/constants.mjs"
