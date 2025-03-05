@@ -1,6 +1,11 @@
 name: Fly.io - Deployment
 description: "Deploy Fly.io application."
 
+inputs:
+  fly_api_token:
+    description: "Fly API token for deployment"
+    required: true
+
 runs:
   using: "composite"
 
@@ -12,4 +17,4 @@ runs:
     - run: flyctl deploy --remote-only
       name: "Deploy Fly.io application"
       env:
-        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        FLY_API_TOKEN: ${{ inputs.fly_api_token }}

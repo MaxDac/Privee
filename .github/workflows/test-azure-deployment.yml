@@ -15,6 +15,9 @@ permissions:
   contents: read
   actions: read
 
+env:
+  MIX_ENV: test
+
 jobs:
   azure-deploy:
     name: Deploy application on Azure AKS cluster
@@ -25,3 +28,9 @@ jobs:
 
       - name: Image build and Azure AKS cluster deployment
         uses: ./.github/actions/azure-deploy
+        with:
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          acr-username: ${{ secrets.ACR_USER }}
+          acr-password: ${{ secrets.ACR_SECRET }}
