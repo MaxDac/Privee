@@ -1,5 +1,5 @@
 import { handleSessionNameCopyToClipboardRegistrationEvent } from "./clipboard.mjs"
-import { handleSessionNamePrivateKeyRegistrationEvent } from "./message-encryption.mjs"
+import { handleSessionNamePrivateKeyRegistrationEvent } from "./security.mjs"
 
 /**
  * @typedef {object} PhoenixSessionNameEventDetail This type represents a custom Phoenix event.

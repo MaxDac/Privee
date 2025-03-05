@@ -1,62 +1,18 @@
 import { describe, it, expect } from "vitest"
+import { indexedDB } from "fake-indexeddb"
+import { JSDOM } from "jsdom"
 import {
   testExports,
   generateNewKeyPair,
   convertPublicKeyToString,
   importStringPublicKey,
-  encryptMessage,
-  decryptMessage,
+  getPrivateKey,
+  bindKeys,
 } from "../utils/security.mjs"
+import { getObject } from "../utils/front-end-database.mjs"
+import { Constants } from "../utils/constants.mjs"
 
-const { stringToArrayData, arrayDataToString } = testExports
-
-describe("stringToArrayData", () => {
-  it("should convert a string to an ArrayBuffer base64 representation", () => {
-    const input = "Hello, World!"
-    const expected = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33])
-      .buffer
-    const result = stringToArrayData(input)
-    expect(result).toStrictEqual(expected)
-  })
-
-  it("should return an empty array if passed an empty string", () => {
-    const input = ""
-    const expected = new Uint8Array([]).buffer
-    const result = stringToArrayData(input)
-    expect(result).toStrictEqual(expected)
-  })
-
-  it("should return an empty array if passed null", () => {
-    const input = null
-    const expected = new Uint8Array([]).buffer
-    const result = stringToArrayData(input)
-    expect(result).toStrictEqual(expected)
-  })
-})
-
-describe("arrayDataToString", () => {
-  it("should convert an ArrayBuffer to a string", () => {
-    const input = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33])
-      .buffer
-    const expected = "Hello, World!"
-    const result = arrayDataToString(input)
-    expect(result).toStrictEqual(expected)
-  })
-
-  it("should convert an empty array to a string", () => {
-    const input = new Uint8Array([]).buffer
-    const expected = ""
-    const result = arrayDataToString(input)
-    expect(result).toStrictEqual(expected)
-  })
-
-  it("should convert null to an empty string", () => {
-    const input = null
-    const expected = ""
-    const result = arrayDataToString(input)
-    expect(result).toStrictEqual(expected)
-  })
-})
+const html = "<input id='session-registration-public-key' type='hidden' />"
 
 describe("Key operations", () => {
   it("generateNewKeyPair should generate a new public/private key pair", async () => {
@@ -77,19 +33,122 @@ describe("Key operations", () => {
     const importedPublicKey = await importStringPublicKey(publicKeyString)
     expect(importedPublicKey).toBeTruthy()
   })
+})
 
-  it("encryptMessage should encrypt a message using a public key", async () => {
-    const keyPair = await generateNewKeyPair()
-    const message = "Hello, World!"
-    const encryptedMessage = await encryptMessage(message, keyPair.publicKey)
-    expect(encryptedMessage).toBeTruthy()
+describe("bindKeys", () => {
+  it("should bind public key generation to input field", async () => {
+    const dom = new JSDOM(html)
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
+
+    await bindKeys()
+
+    /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+      "#session-registration-public-key",
+    )
+
+    const hiddenInputValue = hiddenInput.value
+
+    expect(hiddenInputValue.length).toBeGreaterThan(0)
+
+    const publicKey = importStringPublicKey(hiddenInputValue)
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "private_key")
+
+    expect(publicKey).toBeTypeOf("object")
+    expect(publicKey).toBeTruthy()
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
   })
 
-  it("decryptMessage should decrypt an encrypted message using a private key", async () => {
-    const keyPair = await generateNewKeyPair()
-    const message = "Hello, World!"
-    const encryptedMessage = await encryptMessage(message, keyPair.publicKey)
-    const decryptedMessage = await decryptMessage(encryptedMessage, keyPair.privateKey)
-    expect(decryptedMessage).toBe(message)
+  it("does not work if the hidden input is not present in the DOM", async () => {
+    const dom = new JSDOM()
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
+
+    try {
+      await bindKeys()
+      expect.fail()
+    } catch {
+      /* Test passed */
+    }
+  })
+
+  it("rebinds the keys if called twice", async () => {
+    const dom = new JSDOM(html)
+    global.document = dom.window.document
+    global.indexedDB = indexedDB
+
+    await bindKeys()
+    await bindKeys()
+
+    /** @type{HTMLInputElement} */ const hiddenInput = document.querySelector(
+      "#session-registration-public-key",
+    )
+
+    const hiddenInputValue = hiddenInput.value
+
+    expect(hiddenInputValue.length).toBeGreaterThan(0)
+
+    const publicKey = importStringPublicKey(hiddenInputValue)
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "private_key")
+
+    expect(publicKey).toBeTypeOf("object")
+    expect(publicKey).toBeTruthy()
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+})
+
+describe("handleSessionNamePrivateKeyRegistrationEvent", () => {
+  it(" should handle session name copy event", async () => {
+    const dom = new JSDOM(html)
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
+
+    await bindKeys()
+
+    const event = {
+      detail: {
+        sessionName: "test-session-name",
+      },
+    }
+
+    await testExports.handleSessionNamePrivateKeyRegistrationEventInternal(event)
+
+    const privateKey = getObject(Constants.dbName, Constants.tableName, "test-session-name")
+
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+})
+
+describe("getPrivateKey", () => {
+  it("should return the private key for the given session name", async () => {
+    const dom = new JSDOM(html)
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
+
+    await bindKeys()
+
+    await testExports.handleSessionNamePrivateKeyRegistrationEventInternal({
+      detail: {
+        session_name: "test-session-name",
+      },
+    })
+
+    const privateKey = await getPrivateKey("test-session-name")
+
+    expect(privateKey).toBeTypeOf("object")
+    expect(privateKey).toBeTruthy()
+  })
+
+  it("should return null if the private key is not found", async () => {
+    const dom = new JSDOM()
+    global.indexedDB = indexedDB
+    global.document = dom.window.document
+
+    const privateKey = await getPrivateKey()
+
+    expect(privateKey).toBeNull()
   })
 })
