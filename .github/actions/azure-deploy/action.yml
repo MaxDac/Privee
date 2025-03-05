@@ -38,7 +38,7 @@ inputs:
     required: true
     default: "privee"
   cluster-name:
-    description: "AKS clutser name"
+    description: "AKS cluster name"
     required: true
     default: Privee
   deployment-manifest-path:
