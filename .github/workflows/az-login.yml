@@ -41,9 +41,9 @@ jobs:
         uses: azure/CLI@v2
         with:
           inlineScript: |
+            cd ${{ github.workspace }}
             az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
             az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
-        working-directory: ${{ github.workspace }}
 
       - name: Gets K8s context
         uses: azure/aks-set-context@v4
