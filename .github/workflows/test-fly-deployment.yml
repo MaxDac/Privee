@@ -10,11 +10,6 @@ on:
     branches:
       - main
 
-permissions:
-  id-token: write
-  contents: read
-  actions: read
-
 jobs:
   fly-deploy:
     name: Deploy Fly.io app
@@ -27,4 +22,4 @@ jobs:
       - name: Fly.io deployment
         uses: ./.github/actions/fly-deploy
         with:
-          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
+          fly-api-token: ${{ secrets.FLY_API_TOKEN }}
