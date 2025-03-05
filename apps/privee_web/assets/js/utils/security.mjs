@@ -1,34 +1,14 @@
-const algorithm = "RSA-OAEP"
+import { Constants } from "./constants.mjs"
+import { deleteObject, getObject, storeObject } from "./front-end-database.mjs"
+import { arrayDataToString, stringToArrayData } from "./encryption-utils.mjs"
+
+export const algorithm = "RSA-OAEP"
+
 const modulusLength = 2048
 const publicExponent = new Uint8Array([0x01, 0x00, 0x01])
 const hash = "SHA-256"
 const publicKeyFormat = "spki"
-
-/**
- * Converts a string in base64 to an `ArrayBuffer.
- * @param {string} s The string to convert.
- * @returns {ArrayBuffer} The converted string.
- */
-const stringToArrayData = (s) => {
-  if (!s) {
-    return new ArrayBuffer(0)
-  }
-
-  const bufferView = new Uint8Array(s.length)
-
-  for (let i = 0; i < s.length; i++) {
-    bufferView[i] = s.charCodeAt(i)
-  }
-
-  return bufferView.buffer
-}
-
-/**
- * Converts an array buffer into a base64 string.
- * @param {ArrayBuffer} a The array buffer.
- * @returns {string} The converted string.
- */
-const arrayDataToString = (a) => String.fromCharCode.apply(null, new Uint8Array(a))
+const privateKeyCacheInvalidationTime = 1_000 * 60 * 5
 
 /**
  * Generates a public/private key pair.
@@ -81,40 +61,95 @@ export const importStringPublicKey = (publicKey) => {
 }
 
 /**
- * Encrypts the message using the public key.
- * @param {string} message The message to encrypt.
- * @param {CryptoKey} publicKey The public key.
- * @returns {Promise<string>} The encrypted message.
+ * Binds the public key generation to the input field, and save the correspondent
+ * private key in the IndexedDB.
  */
-export const encryptMessage = async (message, publicKey) => {
-  const encoder = new TextEncoder()
-  const encodedMessage = encoder.encode(message)
+export const bindKeys = async () => {
+  const inputSelector = "#session-registration-public-key"
+  /** @type {HTMLInputElement} */ const hiddenInput = document.querySelector(inputSelector)
 
-  const encryptedBuffer = await crypto.subtle.encrypt(
-    { name: algorithm },
-    publicKey,
-    encodedMessage,
-  )
-  const encryptedString = arrayDataToString(encryptedBuffer)
-  return btoa(encryptedString)
+  if (!hiddenInput) {
+    throw new Error("The input field is not available.")
+  }
+
+  try {
+    const { publicKey, privateKey } = await generateNewKeyPair()
+    await storeObject(
+      Constants.dbName,
+      Constants.tableName,
+      Constants.privateKeyTempKey,
+      privateKey,
+    )
+    const publicKeyAsString = await convertPublicKeyToString(publicKey)
+
+    hiddenInput.value = publicKeyAsString
+
+    console.debug("The public key has been populated.")
+  } catch (e) {
+    console.error("An error occourerd while generating the key pair.", e)
+  }
 }
 
 /**
- * Decrypts the message using the private key.
- * @param {string} encryptedMessage The encrypted message.
- * @param {CryptoKey} privateKey The private key.
- * @returns {Promise<string>} The decrypted message.
+ * The event listener for the session name copy event triggered from the back end.
+ * It has been moved in this file to keep the `app.js` file clean.
+ * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
+ * @returns {void}
  */
-export const decryptMessage = async (encryptedMessage, privateKey) => {
-  const encryptedMessageBuffer = stringToArrayData(atob(encryptedMessage))
-  const algorithmIdentifier = { name: algorithm }
-  const decryptedMessageBuffer = await crypto.subtle.decrypt(
-    algorithmIdentifier,
-    privateKey,
-    encryptedMessageBuffer,
-  )
+export const handleSessionNamePrivateKeyRegistrationEvent = (event) => {
+  // Adding a timeout to execute the function outside of the event loop, so that
+  // it would not depend on the page refresh after the form submission.
+  setTimeout(async () => await handleSessionNamePrivateKeyRegistrationEventInternal(event), 1)
+}
 
-  return arrayDataToString(decryptedMessageBuffer)
+/**
+ * The event listener for the session name copy event triggered from the back end.
+ * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
+ * @returns {Promise<void>}
+ */
+const handleSessionNamePrivateKeyRegistrationEventInternal = async (event) => {
+  const sessionName = event.detail.session_name
+
+  try {
+    const privateKey = await getObject(
+      Constants.dbName,
+      Constants.tableName,
+      Constants.privateKeyTempKey,
+    )
+    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
+    await deleteObject(Constants.dbName, Constants.tableName, Constants.privateKeyTempKey)
+    return console.debug("The private key has been stored with the right key.")
+  } catch {
+    return console.error("An error occurred while storing the private key.")
+  }
+}
+
+var keyDictionary = new Map()
+
+/**
+ * Gets the private key for the session whose name is passed in input.
+ * @param {string} sessionName The session name, that would be the key to retrieve the private key.
+ * @returns {Promise<?CryptoKey>} The session private key.
+ */
+export const getPrivateKey = async (sessionName) => {
+  const cache = keyDictionary[sessionName]
+
+  if (cache && cache.lastUpdated > Date.now() - privateKeyCacheInvalidationTime) {
+    return cache.key
+  }
+
+  const key = await getObject(Constants.dbName, Constants.tableName, sessionName)
+
+  if (!key) {
+    return null
+  }
+
+  keyDictionary[sessionName] = {
+    lastUpdated: Date.now(),
+    key,
+  }
+
+  return getPrivateKey(sessionName)
 }
 
 /**
@@ -123,4 +158,5 @@ export const decryptMessage = async (encryptedMessage, privateKey) => {
 export const testExports = {
   arrayDataToString,
   stringToArrayData,
+  handleSessionNamePrivateKeyRegistrationEventInternal,
 }

@@ -6,8 +6,8 @@
  */
 
 import { querySelectorArrayOf } from "./dom-utils.mjs"
-import { getPrivateKey } from "./message-encryption.mjs"
-import { decryptMessage, encryptMessage, importStringPublicKey } from "./security.mjs"
+import { getPrivateKey, importStringPublicKey } from "./security.mjs"
+import { decryptMessage, encryptMessage } from "./message-encryption.mjs"
 
 const chatFormSelector = "#chat-form"
 const chatTextInputSelector = "#chat-text"

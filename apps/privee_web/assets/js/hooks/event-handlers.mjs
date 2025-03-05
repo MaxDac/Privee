@@ -5,7 +5,7 @@ import {
   handleSessionNameCopyToClipboardRegistrationEvent,
 } from "../utils/clipboard.mjs"
 import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
-import { handleSessionNamePrivateKeyRegistrationEvent } from "../utils/message-encryption.mjs"
+import { handleSessionNamePrivateKeyRegistrationEvent } from "../utils/security.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 
 /**
