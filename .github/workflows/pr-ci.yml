@@ -1,17 +1,17 @@
 name: Privee PR CI
 
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - synchronize
+#       - reopened
 
-    branches:
-      - main
+#     branches:
+#       - main
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
 jobs:
   build:
