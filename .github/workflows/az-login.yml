@@ -9,8 +9,7 @@ on: [push]
 
 env:
   ACR_RESOURCE_GROUP: Privee
-  AZURE_CONTAINER_REGISTRY: Privee
-  REGISTRY_NAME: Privee
+  AZURE_CONTAINER_REGISTRY: privee
   REGISTRY_URL: privee.azurecr.io
   PROJECT_NAME: privee
   CLUSTER_NAME: Privee
@@ -44,6 +43,7 @@ jobs:
           inlineScript: |
             az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
             az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
       - name: Gets K8s context
         uses: azure/aks-set-context@v4
         with:
