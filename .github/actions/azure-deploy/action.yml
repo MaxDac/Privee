@@ -89,8 +89,7 @@ runs:
       uses: azure/aks-set-context@v4
       with:
         resource-group: ${{ inputs.azure-resource-group }}
-        cluster-name: ${{ inputs.clutser-name }}
-
+        cluster-name: ${{ inputs.cluster-name }}
     - name: Deploys application
       uses: Azure/k8s-deploy@v5
       with:
