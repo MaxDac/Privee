@@ -107,5 +107,5 @@ please refer to the [article of the `azure/login` GitHub Action](https://github.
 #### SECRET_KEY_BASE
 
 The SECRET_KEY_BASE environment variable required by the Phoenix application is currently being stored as a
-Kubernetes secret, and inject as an anvironment variables directly in the Kubernetes deployment file.
+Kubernetes secret, and inject as an environment variables directly in the Kubernetes deployment file.
 This is not optimal, but there is issue #109 addressing this.
