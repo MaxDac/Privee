@@ -1,0 +1,15 @@
+name: Fly.io - Deployment
+description: "Deploy Fly.io application."
+
+runs:
+  using: "composite"
+
+  steps:
+    # Step: Compile the project treating any warnings as errors.
+    # Customize this step if a different behavior is desired.
+    - uses: superfly/flyctl-actions/setup-flyctl@master
+
+    - run: flyctl deploy --remote-only
+      name: "Deploy Fly.io application"
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

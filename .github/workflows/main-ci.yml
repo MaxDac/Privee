@@ -5,7 +5,9 @@ on:
     branches: [main]
 
 permissions:
+  id-token: write
   contents: read
+  actions: read
 
 jobs:
   build:
@@ -15,7 +17,27 @@ jobs:
     name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
 
     env:
-      MIX_ENV: dev
+      MIX_ENV: test
+      RESOURCE_GROUP: Privee
+      AZURE_CONTAINER_REGISTRY: Privee
+      REGISTRY_URL: privee.azurecr.io
+      PROJECT_NAME: privee
+      CLUSTER_NAME: Privee
+      CONTAINER_NAME: privee
+      DEPLOYMENT_MANIFEST_PATH: |
+        ./k8s-deployment.yml
+
+    services:
+      db:
+        image: "postgres:11"
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_PASSWORD: "postgres"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       # Specify the OTP and Elixir versions to use when building
@@ -60,80 +82,31 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
-  test:
-    runs-on: ubuntu-24.04
-
-    env:
-      MIX_ENV: test
-
-    services:
-      db:
-        image: "postgres:11"
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_PASSWORD: "postgres"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        otp: ["27.2.4"]
-        elixir: ["1.18.2"]
-        zig: ["0.13.0"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Loading tooling
-        uses: ./.github/actions/load-tooling
-        with:
-          otp: ${{ matrix.otp }}
-          elixir: ${{ matrix.elixir }}
-          zig: ${{ matrix.zig }}
-          node: ${{ matrix.node }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
-
-      - name: Build PR
-        uses: ./.github/actions/compile-pr
-
       - name: Test PR
         uses: ./.github/actions/test-pr
 
-  client:
+      - name: Test Client
+        uses: ./.github/actions/check-client
+
+  fly-deploy:
+    name: Deploy Fly.io app
     runs-on: ubuntu-24.04
-
-    name: Pull Request CI check and test Node ${{ matrix.node }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        node: ["22"]
-
+    concurrency: deploy-group # optional: ensure only one action runs at a time
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "${{ matrix.node }}"
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
 
-      - name: Install dependencies
-        run: npm install --prefix apps/privee_web/assets
+  azure-deploy:
+    name: Deploy application on Azure AKS cluster
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Check npm dependencies
-        run: npm run check --prefix apps/privee_web/assets
+      - name: Image build and Azure AKS cluster deployment
+        uses: ./.github/actions/azure-deploy

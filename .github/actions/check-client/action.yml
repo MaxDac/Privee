@@ -1,0 +1,22 @@
+name: Check Client
+description: "Check client code formatting, compilation and test"
+
+inputs:
+  node:
+    description: "Node version"
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: "${{ inputs.node }}"
+
+    - name: Install dependencies
+      run: npm install --prefix apps/privee_web/assets
+
+    - name: Check npm dependencies
+      run: npm run check --prefix apps/privee_web/assets

@@ -1,14 +1,14 @@
 name: Elixir PR CI - Compilation
 
-# on:
-#   pull_request:
-#     types:
-#       - opened
-#       - synchronize
-#       - reopened
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
-#     branches:
-#       - main
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -66,80 +66,8 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
-  test:
-    runs-on: ubuntu-24.04
-
-    env:
-      MIX_ENV: test
-
-    services:
-      db:
-        image: "postgres:11"
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_PASSWORD: "postgres"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        otp: ["27.2.4"]
-        elixir: ["1.18.2"]
-        zig: ["0.13.0"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Loading tooling
-        uses: ./.github/actions/load-tooling
-        with:
-          otp: ${{ matrix.otp }}
-          elixir: ${{ matrix.elixir }}
-          zig: ${{ matrix.zig }}
-          node: ${{ matrix.node }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
-
-      - name: Build PR
-        uses: ./.github/actions/compile-pr
-
       - name: Test PR
         uses: ./.github/actions/test-pr
 
-  client:
-    runs-on: ubuntu-24.04
-
-    name: Pull Request CI check and test Node ${{ matrix.node }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        node: ["22"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "${{ matrix.node }}"
-
-      - name: Install dependencies
-        run: npm install --prefix apps/privee_web/assets
-
-      - name: Check npm dependencies
-        run: npm run check --prefix apps/privee_web/assets
+      - name: Test Client
+        uses: ./.github/actions/check-client
