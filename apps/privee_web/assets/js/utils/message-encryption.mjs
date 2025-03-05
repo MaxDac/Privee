@@ -27,6 +27,7 @@ export const encryptMessage = async (message, publicKey) => {
  * @returns {Promise<string>} The decrypted message.
  */
 export const decryptMessage = async (encryptedMessage, privateKey) => {
+  const decoder = new TextDecoder()
   const encryptedMessageBuffer = stringToArrayData(atob(encryptedMessage))
   const algorithmIdentifier = { name: algorithm }
   const decryptedMessageBuffer = await crypto.subtle.decrypt(
@@ -35,5 +36,5 @@ export const decryptMessage = async (encryptedMessage, privateKey) => {
     encryptedMessageBuffer,
   )
 
-  return arrayDataToString(decryptedMessageBuffer)
+  return decoder.decode(decryptedMessageBuffer)
 }

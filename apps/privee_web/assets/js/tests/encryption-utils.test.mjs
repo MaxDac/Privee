@@ -48,3 +48,21 @@ describe("arrayDataToString", () => {
     expect(result).toStrictEqual(expected)
   })
 })
+
+describe("text encryption", () => {
+  it("should convert back a simple text", () => {
+    const string = "Hello, World!"
+    const encrypted = stringToArrayData(string)
+    const decrypted = arrayDataToString(encrypted)
+
+    expect(decrypted).toStrictEqual(string)
+  })
+
+  it("should convert back a text with accented letters", () => {
+    const string = "Test with accented letters: áéíóú"
+    const encrypted = stringToArrayData(string)
+    const decrypted = arrayDataToString(encrypted)
+
+    expect(decrypted).toStrictEqual(string)
+  })
+})

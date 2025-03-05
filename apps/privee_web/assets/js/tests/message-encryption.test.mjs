@@ -17,4 +17,12 @@ describe("Message encryption", () => {
     const decryptedMessage = await decryptMessage(encryptedMessage, keyPair.privateKey)
     expect(decryptedMessage).toBe(message)
   })
+
+  it("encryptMessage and dercryptMessage should return an accented string", async () => {
+    const keyPair = await generateNewKeyPair()
+    const message = "Héllô, Wörld!"
+    const encryptedMessage = await encryptMessage(message, keyPair.publicKey)
+    const decryptedMessage = await decryptMessage(encryptedMessage, keyPair.privateKey)
+    expect(decryptedMessage).toStrictEqual(message)
+  })
 })
