@@ -37,13 +37,32 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build image on ACR
-        uses: azure/CLI@v2
+      # - name: Build image on ACR
+      #   uses: azure/CLI@v2
+      #   with:
+      #     inlineScript: |
+      #       cd ${{ github.workspace }}
+      #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+      #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
+
+      - name: Log in to ACR for Docker
+        uses: azure/docker-login@v2
         with:
-          inlineScript: |
-            cd ${{ github.workspace }}
-            az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
-            az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+          login-server: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${GITHUB_SHA}
 
       - name: Gets K8s context
         uses: azure/aks-set-context@v4
