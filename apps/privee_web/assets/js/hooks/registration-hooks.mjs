@@ -1,4 +1,4 @@
-import { bindKeys } from "../utils/message-encryption.mjs"
+import { bindKeys } from "../utils/security.mjs"
 
 /**
  * Adds the hooks to the registration screen.

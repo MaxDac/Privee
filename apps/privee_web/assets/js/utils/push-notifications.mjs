@@ -1,5 +1,5 @@
-import { getPrivateKey } from "./message-encryption.mjs"
-import { decryptMessage } from "./security.mjs"
+import { getPrivateKey } from "./security.mjs"
+import { decryptMessage } from "./message-encryption.mjs"
 
 /**
  * Determines whether the browser supports notifications, if not it logs it,

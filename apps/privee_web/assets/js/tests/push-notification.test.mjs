@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from "vitest"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
-import { encryptMessage, generateNewKeyPair } from "../utils/security.mjs"
-import * as messageEncryption from "../utils/message-encryption.mjs"
+import { generateNewKeyPair } from "../utils/security.mjs"
+import { encryptMessage } from "../utils/message-encryption.mjs"
+import * as security from "../utils/security.mjs"
 
 const addRequiredMockedMethod = (window) => ({
   ...window,
@@ -114,15 +115,13 @@ describe("pushBackEndNotification", () => {
     const { privateKey, publicKey } = await generateNewKeyPair()
     const receiverSessionName = "sesssion-name"
 
-    const getPrivateKeyMock = vi
-      .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation((sn) => {
-        if (sn === receiverSessionName) {
-          return Promise.resolve(privateKey)
-        }
+    const getPrivateKeyMock = vi.spyOn(security, "getPrivateKey").mockImplementation((sn) => {
+      if (sn === receiverSessionName) {
+        return Promise.resolve(privateKey)
+      }
 
-        return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
-      })
+      return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
+    })
 
     const notificationText = "notification text"
 
@@ -167,15 +166,13 @@ describe("pushBackEndNotification", () => {
     const { privateKey, publicKey } = await generateNewKeyPair()
     const receiverSessionName = "sesssion-name"
 
-    const getPrivateKeyMock = vi
-      .spyOn(messageEncryption, "getPrivateKey")
-      .mockImplementation((sn) => {
-        if (sn === receiverSessionName) {
-          return Promise.resolve(privateKey)
-        }
+    const getPrivateKeyMock = vi.spyOn(security, "getPrivateKey").mockImplementation((sn) => {
+      if (sn === receiverSessionName) {
+        return Promise.resolve(privateKey)
+      }
 
-        return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
-      })
+      return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
+    })
 
     const notificationText = "notification text"
 
@@ -221,7 +218,7 @@ describe("pushBackEndNotification", () => {
     const receiverSessionName = "sesssion-name"
 
     const getPrivateKeyMock = vi
-      .spyOn(messageEncryption, "getPrivateKey")
+      .spyOn(security, "getPrivateKey")
       .mockImplementation(() => Promise.resolve(undefined))
 
     const notificationText = "notification text"
@@ -265,7 +262,7 @@ describe("pushBackEndNotification", () => {
     const { publicKey } = await generateNewKeyPair()
 
     const getPrivateKeyMock = vi
-      .spyOn(messageEncryption, "getPrivateKey")
+      .spyOn(security, "getPrivateKey")
       .mockImplementation(() => Promise.resolve(undefined))
 
     const notificationText = "notification text"
