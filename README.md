@@ -101,3 +101,11 @@ is that it required a **self-hosted** environment, i.e. a VM on Azure.
 
 For more information on how to setup the GitHub Action to work with Azure resources using User-defined Managed Identities,
 please refer to the [article of the `azure/login` GitHub Action](https://github.com/marketplace/actions/azure-login#login-with-openid-connect-oidc-recommended).
+
+### AKS configuration
+
+#### SECRET_KEY_BASE
+
+The SECRET_KEY_BASE environment variable required by the Phoenix application is currently being stored as a
+Kubernetes secret, and inject as an anvironment variables directly in the Kubernetes deployment file.
+This is not optimal, but there is issue #109 addressing this.

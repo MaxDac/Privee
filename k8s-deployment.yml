@@ -58,6 +58,11 @@ spec:
           value: privee-db.postgres.database.azure.com
         - name: DATABASE_URL
           value: ecto://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/$(POSTGRES_DB)
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: privee-app-secret
+              key: SECRET_KEY_BASE
 ---
 apiVersion: v1
 kind: Service
