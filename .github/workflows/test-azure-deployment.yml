@@ -1,0 +1,28 @@
+name: Test Azure deployment
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  azure-deploy:
+    name: Deploy application on Azure AKS cluster
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Image build and Azure AKS cluster deployment
+        uses: ./.github/actions/azure-deploy
