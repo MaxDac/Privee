@@ -27,9 +27,6 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Azure login
         uses: azure/login@v2.1.1
         with:
@@ -37,12 +34,16 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Build image on ACR
         uses: azure/CLI@v2
         with:
           inlineScript: |
             az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
             az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+        working-directory: ${{ github.workspace }}
 
       - name: Gets K8s context
         uses: azure/aks-set-context@v4
