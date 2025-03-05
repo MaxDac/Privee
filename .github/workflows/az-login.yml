@@ -45,7 +45,7 @@ jobs:
             az acr build -t -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
 
       - name: Gets K8s context
-        uses: azure/aks-set-context@4
+        uses: azure/aks-set-context@v4
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
