@@ -55,7 +55,7 @@ spec:
               name: postgres-secret
               key: POSTGRES_DB
         - name: POSTGRES_HOST
-          value: privee-db.postgres.database.azure.com
+          value: privee-db.privatelink.postgres.database.azure.com
         - name: DATABASE_URL
           value: ecto://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/$(POSTGRES_DB)
         - name: SECRET_KEY_BASE
