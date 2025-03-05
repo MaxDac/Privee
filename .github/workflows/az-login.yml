@@ -9,7 +9,7 @@ on: [push]
 
 env:
   ACR_RESOURCE_GROUP: Privee
-  AZURE_CONTAINER_REGISTRY: privee
+  AZURE_CONTAINER_REGISTRY: Privee
   REGISTRY_URL: privee.azurecr.io
   PROJECT_NAME: privee
   CLUSTER_NAME: Privee
