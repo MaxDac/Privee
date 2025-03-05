@@ -7,17 +7,26 @@ name: Run Azure Login with Managed Identity
 #       - completed
 on: [push]
 
+env:
+  ACR_RESOURCE_GROUP: Privee
+  AZURE_CONTAINER_REGISTRY: Privee
+  CLUSTER_NAME: Privee
+  CLUSTER_RESOURCE_GROUP: Privee
+  CONTAINER_NAME: privee
+  DEPLOYMENT_MANIFEST_PATH: |
+    ./k8s-deployment.yml
+
 permissions:
   id-token: write
   contents: read
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Azure login
         uses: azure/login@v2.1.1
@@ -28,17 +37,23 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
-      # - name: Log in to Azure CLI using Managed Identity
-      #   run: |
-      #     az login --identity
-      #     az acr login --name ${{ secrets.ACR_NAME }} --identity
+      - name: Build image on ACR
+        uses: azure/CLI@2
+        with:
+          inlineScript: |
+            az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+            az acr build -t -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
 
-      - name: Build and push Docker image
-        run: |
-          echo "The current user is $(whoami)"
-          cd /home/azureuser/actions-runner/_work/Privee/Privee
-          sudo docker build -t privee.azurecr.io/privee:${{ github.sha }} .
-          sudo docker push privee.azurecr.io/privee:${{ github.sha }}
+      - name: Gets K8s context
+        uses: azure/aks-set-context@4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
 
-      - name: Logout from Azure CLI
-        run: az logout
+      - name: Deploys application
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          images: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+          manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+          namespace: default
