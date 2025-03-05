@@ -84,8 +84,7 @@ runs:
           ${{ inputs.registry-url }}/${{ inputs.project-name }}:latest
         build-args: |
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          VCS_REF=${github_sha}
-
+          VCS_REF=${{ github.sha }}
     - name: Gets K8s context
       uses: azure/aks-set-context@v4
       with:
