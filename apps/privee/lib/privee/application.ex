@@ -9,7 +9,8 @@ defmodule Privee.Application do
   def start(_type, _args) do
     children = [
       Privee.Repo,
-      {DNSCluster, query: Application.get_env(:privee, :dns_cluster_query) || :ignore},
+      # Removing as it's causing errors in the pod
+      # {DNSCluster, query: Application.get_env(:privee, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Privee.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Privee.Finch}
