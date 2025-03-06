@@ -20,6 +20,10 @@ spec:
       containers:
       - name: privee
         image: privee.azurecr.io/privee
+        # `shell -c` evaluates a string as shell input
+        command: [ "sh", "-c"]
+        # loop forever, outputting "yo" every 5 seconds
+        args: ["while true; do echo 'yo' && sleep 5; done;"]
         resources:
           limits:
             memory: "520Mi"
@@ -72,7 +76,6 @@ metadata:
   labels:
     app: dns-test
 spec:
-  dnsPolicy: ClusterFirstWithHostNet
   containers:
   - name: dns-test-container
     image: busybox
