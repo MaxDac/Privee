@@ -45,7 +45,6 @@ jobs:
       #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
       #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
 
-
       - name: Log in to ACR for Docker
         uses: azure/docker-login@v2
         with:
@@ -78,6 +77,6 @@ jobs:
           namespace: default
           action: deploy
           images: |
-            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}
           manifests: |
             ${{ env.DEPLOYMENT_MANIFEST_PATH }}
