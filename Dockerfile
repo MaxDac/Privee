@@ -99,7 +99,7 @@ FROM ${RUNNER_IMAGE}
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
     # Debug utils, comment when done
-    iputils-ping netcat-traditional sudo dnsutils telnet \
+    iputils-ping netcat-traditional sudo dnsutils telnet postgresql-client \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Set the locale
