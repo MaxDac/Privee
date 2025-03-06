@@ -16,6 +16,7 @@ spec:
         app.kubernetes.io/name: privee-app
         app.kubernetes.io/instance: privee-node
     spec:
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: privee
         image: privee.azurecr.io/privee
@@ -71,6 +72,7 @@ metadata:
   labels:
     app: dns-test
 spec:
+  dnsPolicy: ClusterFirstWithHostNet
   containers:
   - name: dns-test-container
     image: busybox
