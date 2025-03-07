@@ -108,5 +108,5 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  # config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 end
