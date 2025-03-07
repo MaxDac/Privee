@@ -11,8 +11,8 @@ if config_env() == :prod do
   maybe_ssl = if System.get_env("ECTO_SSL") in ~w(true, 1), do: true, else: false
 
   case {
-    System.get_env("DATABASE_URL"), 
-    System.get_env("POSTGRES_USER"), 
+    System.get_env("DATABASE_URL"),
+    System.get_env("POSTGRES_USER"),
     System.get_env("POSTGRES_PASSWORD"),
     System.get_env("POSTGRES_HOST"),
     System.get_env("POSTGRES_DB")
@@ -29,7 +29,7 @@ if config_env() == :prod do
         queue_target: 5_000,
         queue_interval: 1_000
 
-    {url, _, _, _, _} when not is_nil(user) and user != "" ->
+    {url, _, _, _, _} ->
       config :privee, Privee.Repo,
         ssl: maybe_ssl,
         url: database_url,
