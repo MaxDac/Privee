@@ -32,7 +32,7 @@ if config_env() == :prod do
     {url, _, _, _, _} ->
       config :privee, Privee.Repo,
         ssl: maybe_ssl,
-        url: database_url,
+        url: url,
         pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
         socket_options: maybe_ipv6,
         queue_target: 5_000,
