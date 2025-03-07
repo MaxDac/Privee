@@ -19,7 +19,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: privee
-        image: privee.azurecr.io/privee:989af3000b4efd35fb2693092e462bc97d146d93
+        image: privee.azurecr.io/privee
         # `shell -c` evaluates a string as shell input
         command: [ "sh", "-c"]
         # loop forever, outputting "yo" every 5 seconds

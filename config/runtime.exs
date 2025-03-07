@@ -38,7 +38,6 @@ if config_env() == :prod do
         queue_target: 5_000,
         queue_interval: 1_000
 
-    end
   end
 
   import Config
