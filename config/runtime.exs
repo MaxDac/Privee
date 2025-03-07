@@ -28,7 +28,6 @@ if config_env() == :prod do
         socket_options: maybe_ipv6,
         queue_target: 5_000,
         queue_interval: 1_000
-      end
 
     {url, _, _, _, _} when not is_nil(user) and user != "" ->
       config :privee, Privee.Repo,
@@ -38,6 +37,8 @@ if config_env() == :prod do
         socket_options: maybe_ipv6,
         queue_target: 5_000,
         queue_interval: 1_000
+
+    end
   end
 
   import Config
