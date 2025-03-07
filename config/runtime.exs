@@ -38,6 +38,8 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
+  maybe_check_origin = if System.get_env("DISABLE_CHECK_ORIGIN") in ~w(true 1), do: false, else: true
+
   config :privee_web, PriveeWeb.Endpoint,
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -45,6 +47,7 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: String.to_integer(System.get_env("PORT") || "4000")
     ],
+    check_origin: maybe_check_origin,
     secret_key_base: secret_key_base,
     server: true
 
