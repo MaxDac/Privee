@@ -7,22 +7,38 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+  maybe_ssl = if System.get_env("ECTO_SSL") in ~w(true, 1), do: true, else: false
 
-  config :privee, Privee.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    socket_options: maybe_ipv6,
-    queue_target: 5_000,
-    queue_interval: 1_000
+  case {
+    System.get_env("DATABASE_URL"), 
+    System.get_env("POSTGRES_USER"), 
+    System.get_env("POSTGRES_PASSWORD"),
+    System.get_env("POSTGRES_HOST"),
+    System.get_env("POSTGRES_DB")
+  } do
+    {_, user, password, host, db} when not is_nil(user) and user != "" ->
+      config :privee, Privee.Repo,
+        ssl: maybe_ssl,
+        username: user,
+        password: password,
+        hostname: host,
+        database: db,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+        socket_options: maybe_ipv6,
+        queue_target: 5_000,
+        queue_interval: 1_000
+      end
+
+    {url, _, _, _, _} when not is_nil(user) and user != "" ->
+      config :privee, Privee.Repo,
+        ssl: maybe_ssl,
+        url: database_url,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+        socket_options: maybe_ipv6,
+        queue_target: 5_000,
+        queue_interval: 1_000
+  end
 
   import Config
 
