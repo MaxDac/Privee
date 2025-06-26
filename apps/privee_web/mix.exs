@@ -9,7 +9,7 @@ defmodule PriveeWeb.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -36,14 +36,14 @@ defmodule PriveeWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.7.20"},
+      {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.6"},
       {:phoenix_html, "~> 4.2"},
-      {:phoenix_live_reload, "~> 1.5", only: :dev},
-      {:phoenix_live_view, "~> 1.0.5"},
-      {:floki, ">= 0.37.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.6"},
-      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
+      {:phoenix_live_reload, "~> 1.6", only: :dev},
+      {:phoenix_live_view, "~> 1.0"},
+      {:floki, ">= 0.38.0", only: :test},
+      {:phoenix_live_dashboard, "~> 0.8.7"},
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3.1", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
@@ -53,12 +53,12 @@ defmodule PriveeWeb.MixProject do
        compile: false,
        depth: 1},
       {:telemetry_metrics, "~> 1.1"},
-      {:telemetry_poller, "~> 1.1"},
+      {:telemetry_poller, "~> 1.2"},
       {:gettext, "~> 0.26"},
       {:privee, in_umbrella: true},
       {:jason, "~> 1.4.4"},
-      {:bandit, "~> 1.5"},
-      {:libcluster, "~> 3.4"}
+      {:bandit, "~> 1.7"},
+      {:libcluster, "~> 3.5"}
     ]
   end
 
