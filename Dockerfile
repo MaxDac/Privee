@@ -12,6 +12,7 @@
 #   - Ex: hexpm/elixir:1.18.4-erlang-28.0.1-debian-bullseye-20240130-slim
 #
 ARG ELIXIR_VERSION=1.18.4
+ARG ERLANG_ERTS=16.0.1
 ARG OTP_VERSION=28.0.1
 ARG DEBIAN_VERSION=bookworm-20250610-slim
 
@@ -46,7 +47,7 @@ WORKDIR /app
 COPY nifs nifs
 
 # Building Zig dependencies
-RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-16.0.1/include
+RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include
 
 # install hex + rebar
 RUN mix local.hex --force && \
