@@ -23,7 +23,7 @@ jobs:
       matrix:
         otp: ["28.0.1"]
         elixir: ["1.18.4"]
-        zig: ["0.13.0"]
+        zig: ["0.14.0"]
         node: ["22"]
 
     steps:
@@ -86,7 +86,7 @@ jobs:
       matrix:
         otp: ["28.0.1"]
         elixir: ["1.18.4"]
-        zig: ["0.13.0"]
+        zig: ["0.14.0"]
 
     steps:
       - name: Checkout code
