@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const default_erlang_home: []const u8 = "/usr/local/lib/erlang/erts-15.2.2/include";
+const default_erlang_home: []const u8 = "/usr/local/lib/erlang/erts-16.0.1/include";
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
