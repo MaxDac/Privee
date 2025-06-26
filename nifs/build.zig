@@ -64,7 +64,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_main_tests.step);
 }
 
-fn getErlangHomeFromArguments(args: ?[][]const u8) []const u8 {
+fn getErlangHomeFromArguments(args: ?[]const []const u8) []const u8 {
     if (args) |as| {
         return as[0];
     }
