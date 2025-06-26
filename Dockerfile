@@ -9,18 +9,19 @@
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
 #   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20240130-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.18.2-erlang-27.2.4-debian-bullseye-20240130-slim
+#   - Ex: hexpm/elixir:1.18.4-erlang-28.0.1-debian-bullseye-20240130-slim
 #
-ARG ELIXIR_VERSION=1.18.2
-ARG OTP_VERSION=27.2.4
-ARG DEBIAN_VERSION=bookworm-20250224-slim
+ARG ELIXIR_VERSION=1.18.4
+ARG ERLANG_ERTS=16.0.1
+ARG OTP_VERSION=28.0.1
+ARG DEBIAN_VERSION=bookworm-20250610-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
-FROM ${BUILDER_IMAGE} as builder
+FROM ${BUILDER_IMAGE} AS builder
 
-ARG ZIG_VERSION="0.13.0"
+ARG ZIG_VERSION="0.14.0"
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
@@ -46,7 +47,7 @@ WORKDIR /app
 COPY nifs nifs
 
 # Building Zig dependencies
-RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-15.2.2/include
+RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include
 
 # install hex + rebar
 RUN mix local.hex --force && \
@@ -105,9 +106,9 @@ RUN apt-get update -y && \
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
+ENV LANG="en_US.UTF-8"
+ENV LANGUAGE="en_US:en"
+ENV LC_ALL="en_US.UTF-8"
 
 WORKDIR "/app"
 RUN chown nobody /app

@@ -36,14 +36,14 @@ defmodule Privee.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:bcrypt_elixir, "~> 3.0"},
+      {:bcrypt_elixir, "~> 3.3"},
       # Removed as its causing errors in the pod
-      # {:dns_cluster, "~> 0.1.3"},
+      {:dns_cluster, "~> 0.2.0"},
       {:phoenix_pubsub, "~> 2.1"},
-      {:ecto_sql, "~> 3.12"},
+      {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
       {:jason, "~> 1.4.4"},
-      {:swoosh, "~> 1.5"},
+      {:swoosh, "~> 1.19"},
       {:finch, "~> 0.19"}
     ]
   end
