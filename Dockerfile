@@ -11,6 +11,8 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.18.4-erlang-28.0.1-debian-bullseye-20240130-slim
 #
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
 ARG ELIXIR_VERSION=1.18.4
 ARG ERLANG_ERTS=16.0.1
 ARG OTP_VERSION=28.0.1
@@ -21,7 +23,9 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
-ARG ZIG_VERSION="0.14.0"
+ARG ZIG_VERSION="0.14.1"
+ARG ERLANG_ERTS
+ARG TARGETPLATFORM
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
@@ -29,32 +33,41 @@ RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget cu
 
 WORKDIR /tmp
 
-# Installing Zig to compile NIFs
-RUN wget https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
-    tar -xf zig-linux-x86_64-${ZIG_VERSION}.tar.xz && \
-    mv zig-linux-x86_64-${ZIG_VERSION} /usr/local/lib/ && \
-    ln -s /usr/local/lib/zig-linux-x86_64-${ZIG_VERSION}/zig /usr/local/bin/zig && \
-    rm -rf zig-linux-x86_64-${ZIG_VERSION}.tar.xz
+# Installing Zig with multi-architecture support
+RUN case "${TARGETPLATFORM}" in \
+        "linux/amd64") ZIG_ARCH="x86_64" ;; \
+        "linux/arm64") ZIG_ARCH="aarch64" ;; \
+        *) echo "Unsupported platform: ${TARGETPLATFORM}" && exit 1 ;; \
+    esac && \
+    wget https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
+    tar -xf zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
+    mv zig-${ZIG_ARCH}-linux-${ZIG_VERSION} /usr/local/lib/zig && \
+    ln -s /usr/local/lib/zig/zig /usr/local/bin/zig && \
+    rm -rf zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
+    zig version
 
-# Installing Node
+# Install Node.js early for better caching
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs
 
 # prepare build dir
 WORKDIR /app
 
-# Copying NIFs files over
-COPY nifs nifs
-
-# Building Zig dependencies
-RUN cd nifs && zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include
-
-# install hex + rebar
+# install hex + rebar early for better caching
 RUN mix local.hex --force && \
     mix local.rebar --force
 
 # set build ENV
 ENV MIX_ENV="prod"
+
+# Copying NIFs files over first
+COPY nifs nifs
+
+# Building Zig dependencies with proper ERTS path
+RUN cd nifs && \
+    zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include && \
+    ls -la zig-out/lib/ && \
+    echo "NIFs compiled successfully"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
@@ -70,17 +83,21 @@ RUN mkdir config
 COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
+# Copy application code
 COPY apps/privee/priv apps/privee/priv
 COPY apps/privee_web/priv apps/privee_web/priv
 
 COPY apps/privee/lib apps/privee/lib
 COPY apps/privee_web/lib apps/privee_web/lib
 
+# Copy assets and compile them
 COPY apps/privee_web/assets apps/privee_web/assets
 
 # compile assets
-RUN npm i --prefix apps/privee_web/assets && \
-    npm run check --prefix apps/privee_web/assets && \
+RUN cd apps/privee_web/assets && \
+    npm ci && \
+    npm run check && \
+    cd /app && \
     cd apps/privee_web && \
     mix assets.deploy
 
@@ -93,13 +110,19 @@ COPY config/runtime.exs config/
 COPY rel rel
 RUN mix release
 
+# Verify the release was built successfully
+RUN ls -la _build/${MIX_ENV}/rel/privee_umbrella/ && \
+    echo "Release built successfully"
+
 # start a new build stage so that the final image will only contain
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
+# Install runtime dependencies including those needed for NIFs
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
-    && apt-get clean && rm -f /var/lib/apt/lists/*_*
+    libc6 libgcc-s1 && \
+    apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -117,7 +140,11 @@ ENV MIX_ENV="prod"
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./
 
+# Copy the compiled NIFs to the correct location
 COPY --from=builder --chown=nobody:root /app/nifs/zig-out/lib ./nifs
+
+# Verify NIFs are present
+RUN ls -la ./nifs/ && echo "NIFs copied successfully"
 
 USER nobody
 
