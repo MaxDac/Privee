@@ -139,8 +139,6 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrel
 # Copy the compiled NIFs to the correct location
 COPY --from=builder --chown=nobody:root /app/nifs/zig-out/lib ./nifs
 
-# Verify NIFs are present
-
 USER nobody
 
 # If using an environment that doesn't automatically reap zombie processes, it is
