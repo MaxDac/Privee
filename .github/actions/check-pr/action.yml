@@ -58,4 +58,4 @@ runs:
     # Step: Run Dialyzer
     - name: Run dialyzer
       shell: bash
-      run: mix dialyzer --format github
+      run: MIX_ENV=dev mix dialyzer --format github
