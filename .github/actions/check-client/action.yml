@@ -17,6 +17,8 @@ runs:
 
     - name: Install dependencies
       run: npm install --prefix apps/privee_web/assets
+      shell: bash
 
     - name: Check npm dependencies
       run: npm run check --prefix apps/privee_web/assets
+      shell: bash
