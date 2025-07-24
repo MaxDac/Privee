@@ -98,4 +98,4 @@ runs:
         images: |
           ${{ inputs.acr-name }}.azurecr.io/${{ inputs.container-name }}:${{ github.sha }}
         manifests: |
-          ${{ inputs.deploy-manifest-path }}
+          ${{ inputs.deployment-manifest-path }}
