@@ -83,3 +83,5 @@ jobs:
 
       - name: Test Client
         uses: ./.github/actions/check-client
+        with:
+          node: ${{ matrix.node }}
