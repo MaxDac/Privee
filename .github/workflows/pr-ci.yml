@@ -21,7 +21,7 @@ jobs:
     name: Pull Request CI Build and test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} / Node ${{ matrix.node }} / Zig ${{ matrix.zig }}
 
     env:
-      MIX_ENV: dev
+      MIX_ENV: test
 
     services:
       db:
