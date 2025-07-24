@@ -1,4 +1,4 @@
-name: Elixir PR CI - Compilation
+name: Privee PR CI
 
 on:
   pull_request:
@@ -18,10 +18,22 @@ jobs:
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
-    name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    name: Pull Request CI Build and test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} / Node ${{ matrix.node }} / Zig ${{ matrix.zig }}
 
     env:
-      MIX_ENV: dev
+      MIX_ENV: test
+
+    services:
+      db:
+        image: "postgres:11"
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_PASSWORD: "postgres"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       # Specify the OTP and Elixir versions to use when building
@@ -29,7 +41,7 @@ jobs:
       matrix:
         otp: ["28.0.1"]
         elixir: ["1.18.4"]
-        zig: ["0.14.0"]
+        zig: ["0.14.1"]
         node: ["22"]
 
     steps:
@@ -66,80 +78,10 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
-  test:
-    runs-on: ubuntu-24.04
-
-    env:
-      MIX_ENV: test
-
-    services:
-      db:
-        image: "postgres:11"
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_PASSWORD: "postgres"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        otp: ["28.0.1"]
-        elixir: ["1.18.4"]
-        zig: ["0.14.0"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Loading tooling
-        uses: ./.github/actions/load-tooling
-        with:
-          otp: ${{ matrix.otp }}
-          elixir: ${{ matrix.elixir }}
-          zig: ${{ matrix.zig }}
-          node: ${{ matrix.node }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
-
-      - name: Build PR
-        uses: ./.github/actions/compile-pr
-
       - name: Test PR
         uses: ./.github/actions/test-pr
 
-  client:
-    runs-on: ubuntu-24.04
-
-    name: Pull Request CI check and test Node ${{ matrix.node }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        node: ["22"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Test Client
+        uses: ./.github/actions/check-client
         with:
-          node-version: "${{ matrix.node }}"
-
-      - name: Install dependencies
-        run: npm install --prefix apps/privee_web/assets
-
-      - name: Check npm dependencies
-        run: npm run check --prefix apps/privee_web/assets
+          node: ${{ matrix.node }}
