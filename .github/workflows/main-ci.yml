@@ -87,6 +87,8 @@ jobs:
 
       - name: Test Client
         uses: ./.github/actions/check-client
+        with:
+          node: ${{ matrix.node }}
 
   fly-deploy:
     name: Deploy Fly.io app
