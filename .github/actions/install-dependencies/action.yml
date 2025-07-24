@@ -49,4 +49,4 @@ runs:
     # the cached version.
     - name: Install dependencies
       shell: sh
-      run: mix deps.get && mix deps.compile
+      run: mix deps.get
