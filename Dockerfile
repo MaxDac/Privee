@@ -140,7 +140,6 @@ COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrel
 COPY --from=builder --chown=nobody:root /app/nifs/zig-out/lib ./nifs
 
 # Verify NIFs are present
-RUN ls -la ./nifs/ && echo "NIFs copied successfully"
 
 USER nobody
 
