@@ -45,7 +45,7 @@ jobs:
       matrix:
         otp: ["28.0.1"]
         elixir: ["1.18.4"]
-        zig: ["0.14.0"]
+        zig: ["0.14.1"]
         node: ["22"]
 
     steps:

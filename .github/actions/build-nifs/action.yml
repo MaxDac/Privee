@@ -5,7 +5,7 @@ inputs:
   zig:
     description: "Zig compiler version"
     required: true
-    default: "0.14.0"
+    default: "0.14.1"
 
 runs:
   using: "composite"
