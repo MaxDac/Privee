@@ -1,21 +1,43 @@
-name: Elixir CI - Compilation
+name: Privee Main CI/CD pipeline
 
 on:
   push:
     branches: [main]
 
 permissions:
+  id-token: write
   contents: read
+  actions: read
 
 jobs:
   build:
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
-    name: Pull Request CI Build Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
+    name: CI Build and test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} / Node ${{ matrix.node }} / Zig ${{ matrix.zig }}
 
     env:
-      MIX_ENV: dev
+      MIX_ENV: test
+      RESOURCE_GROUP: Privee
+      AZURE_CONTAINER_REGISTRY: Privee
+      REGISTRY_URL: privee.azurecr.io
+      PROJECT_NAME: privee
+      CLUSTER_NAME: Privee
+      CONTAINER_NAME: privee
+      DEPLOYMENT_MANIFEST_PATH: |
+        ./k8s-deployment.yml
+
+    services:
+      db:
+        image: "postgres:11"
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_PASSWORD: "postgres"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       # Specify the OTP and Elixir versions to use when building
@@ -60,80 +82,79 @@ jobs:
           otp: ${{ matrix.otp }}
           elixir: ${{ matrix.elixir }}
 
-  test:
-    runs-on: ubuntu-24.04
-
-    env:
-      MIX_ENV: test
-
-    services:
-      db:
-        image: "postgres:11"
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_PASSWORD: "postgres"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    name: Pull Request CI Test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        otp: ["28.0.1"]
-        elixir: ["1.18.4"]
-        zig: ["0.14.0"]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Loading tooling
-        uses: ./.github/actions/load-tooling
-        with:
-          otp: ${{ matrix.otp }}
-          elixir: ${{ matrix.elixir }}
-          zig: ${{ matrix.zig }}
-          node: ${{ matrix.node }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-
-      - name: Build NIfs
-        uses: ./.github/actions/build-nifs
-
-      - name: Build PR
-        uses: ./.github/actions/compile-pr
-
       - name: Test PR
         uses: ./.github/actions/test-pr
 
-  client:
+      - name: Test Client
+        uses: ./.github/actions/check-client
+
+  fly-deploy:
+    name: Deploy Fly.io app
     runs-on: ubuntu-24.04
-
-    name: Pull Request CI check and test Node ${{ matrix.node }}
-
-    strategy:
-      # Specify the OTP and Elixir versions to use when building
-      # and running the workflow steps.
-      matrix:
-        node: ["22"]
-
+    concurrency: deploy-group # optional: ensure only one action runs at a time
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
         with:
-          node-version: "${{ matrix.node }}"
+          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Install dependencies
-        run: npm install --prefix apps/privee_web/assets
+  azure-deployment:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Azure login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Check npm dependencies
-        run: npm run check --prefix apps/privee_web/assets
+      # - name: Build image on ACR
+      #   uses: azure/CLI@v2
+      #   with:
+      #     inlineScript: |
+      #       cd ${{ github.workspace }}
+      #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+      #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
+      - name: Log in to ACR for Docker
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.ACR_USER }}
+          password: ${{ secrets.ACR_SECRET }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${GITHUB_SHA}
+
+      - name: Gets K8s context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      # - name: Deploys application
+      #   uses: Azure/k8s-deploy@v5
+      #   with:
+      #     namespace: default
+      #     action: deploy
+      #     images: |
+      #       ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+      #     manifests: |

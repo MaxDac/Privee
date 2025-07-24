@@ -1,0 +1,101 @@
+name: Azure - Deployment
+description: "Deploy the application to the Azure AKS cluster."
+
+inputs:
+  azure-subscription-id:
+    description: "Azure Subscription ID"
+    required: true
+  azure-resource-group:
+    description: "Azure Resource Group"
+    required: true
+    default: Privee
+  azure-client-id:
+    description: "Azure Managed Identity Client ID"
+    required: true
+  azure-tenant-id:
+    description: "Azure Managed Identity Tenant ID"
+    required: true
+  acr-name:
+    description: "Azure Container Registry Name"
+    required: true
+    default: Privee
+  registry-url:
+    description: "Azure ACR URL"
+    required: true
+    default: privee.azurecr.io
+  acr-username:
+    description: "ACR username"
+    required: true
+  acr-password:
+    description: "ACR password"
+    required: true
+  project-name:
+    description: "The project name"
+    required: true
+    default: "privee"
+  container-name:
+    description: "The container name"
+    required: true
+    default: "privee"
+  cluster-name:
+    description: "AKS cluster name"
+    required: true
+    default: Privee
+  deployment-manifest-path:
+    description: "AKS Deployment manifest path"
+    required: true
+    default: ./k8s-deployment.yml
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Azure login
+      uses: azure/login@v2.1.1
+      with:
+        client-id: ${{ inputs.azure-client-id }}
+        tenant-id: ${{ inputs.azure-tenant-id }}
+        subscription-id: ${{ inputs.azure-subscription-id }}
+
+    # - name: Build image on ACR
+    #   uses: azure/CLI@v2
+    #   with:
+    #     inlineScript: |
+    #       cd ${{ github.workspace }}
+    #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+    #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
+
+    - name: Log in to ACR for Docker
+      uses: azure/docker-login@v2
+      with:
+        login-server: ${{ inputs.registry-url }}
+        username: ${{ inputs.acr-username }}
+        password: ${{ inputs.acr-password }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ inputs.registry-url }}/${{ inputs.project-name }}:${{ github.sha }}
+          ${{ inputs.registry-url }}/${{ inputs.project-name }}:latest
+        build-args: |
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          VCS_REF=${{ github.sha }}
+    - name: Gets K8s context
+      uses: azure/aks-set-context@v4
+      with:
+        resource-group: ${{ inputs.azure-resource-group }}
+        cluster-name: ${{ inputs.cluster-name }}
+    - name: Deploys application
+      uses: Azure/k8s-deploy@v5
+      with:
+        namespace: default
+        action: deploy
+        images: |
+          ${{ inputs.acr-name }}.azurecr.io/${{ inputs.container-name }}:${{ github.sha }}
+        manifests: |
+          ${{ inputs.deploy-manifest-path }}
