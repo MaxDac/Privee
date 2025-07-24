@@ -66,7 +66,6 @@ COPY nifs nifs
 # Building Zig dependencies with proper ERTS path
 RUN cd nifs && \
     zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include && \
-    ls -la zig-out/lib/ && \
     echo "NIFs compiled successfully"
 
 # install mix dependencies
