@@ -18,7 +18,7 @@ jobs:
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
-    name: Pull Request CI Build and test Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} / Node ${{ matrix.node }} / Zig ${{ matrix.zig }}
+    name: Pull Request CI Build and test app with Erlang ${{ matrix.otp }} / Elixir ${{ matrix.elixir }} / Zig ${{ matrix.zig }}
 
     env:
       MIX_ENV: test
@@ -93,7 +93,55 @@ jobs:
       - name: Test PR
         uses: ./.github/actions/test-pr
 
+  check-client:
+    # The `runs-on` configuration must be set only at the top level workflow execution.
+    runs-on: ubuntu-24.04
+
+    name: Pull Request CI Build and test client with Node ${{ matrix.node }}
+
+    env:
+      MIX_ENV: test
+
+    strategy:
+      # Specify the OTP and Elixir versions to use when building
+      # and running the workflow steps.
+      matrix:
+        otp: ["28.0.1"]
+        elixir: ["1.18.4"]
+        zig: ["0.14.1"]
+        node: ["22"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Loading tooling
+        uses: ./.github/actions/load-tooling
+        with:
+          otp: ${{ matrix.otp }}
+          elixir: ${{ matrix.elixir }}
+          zig: ${{ matrix.zig }}
+          node: ${{ matrix.node }}
+
       - name: Test Client
         uses: ./.github/actions/check-client
         with:
           node: ${{ matrix.node }}
+
+  check-image-build:
+    # The `runs-on` configuration must be set only at the top level workflow execution.
+    runs-on: ubuntu-24.04
+
+    name: Pull Request CI check image build against Fly
+
+    concurrency: deploy-group # optional: ensure only one action runs at a time
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
+        with:
+          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
+          build_only: "true"

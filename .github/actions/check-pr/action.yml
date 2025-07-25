@@ -1,5 +1,5 @@
-name: cache-plts
-description: "Cache PLTs for Dialyzer"
+name: check-pr
+description: "Run all PR checks: formatting, Credo, and Dialyzer"
 
 inputs:
   otp:
@@ -15,47 +15,23 @@ runs:
   using: "composite"
 
   steps:
-    # Don't cache PLTs based on mix.lock hash, as Dialyzer can incrementally update even old ones
-    # Cache key based on Elixir & Erlang version (also useful when running in matrix)
-    - name: Restore PLT cache
-      uses: actions/cache/restore@v4
-      id: plt_cache
-      with:
-        key: |
-          ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
-        path: |
-          priv/plts
-
-    # Create PLTs if no cache was found
-    - name: Create PLTs
-      if: steps.plt_cache.outputs.cache-hit != 'true'
-      shell: bash
-      run: mix dialyzer --plt
-
-    # Step: Save PLT cache if it was updated
-    - name: Save PLT cache
-      uses: actions/cache/save@v4
-      if: steps.plt_cache.outputs.cache-hit != 'true'
-      id: plt_cache_save
-      with:
-        key: |
-          ${{ runner.os }}-${{ inputs.elixir }}-${{ inputs.otp }}-plt
-        path: |
-          priv/plts
-
-    # Step: Check that the checked in code has already been formatted.
-    # This step fails if something was found unformatted.
-    # Customize this step as desired.
+    # Step 1: Check formatting
     - name: Check Formatting
-      shell: bash
-      run: mix format --check-formatted
+      uses: ./.github/actions/format-pr
+      with:
+        otp: ${{ inputs.otp }}
+        elixir: ${{ inputs.elixir }}
 
-    # Step: Checks Credo rules.
+    # Step 2: Check Credo rules
     - name: Check Credo
-      shell: bash
-      run: mix credo --strict
+      uses: ./.github/actions/credo-pr
+      with:
+        otp: ${{ inputs.otp }}
+        elixir: ${{ inputs.elixir }}
 
-    # Step: Run Dialyzer
-    - name: Run dialyzer
-      shell: bash
-      run: MIX_ENV=dev mix dialyzer --format github
+    # Step 3: Run Dialyzer
+    - name: Run Dialyzer
+      uses: ./.github/actions/dialyxir-pr
+      with:
+        otp: ${{ inputs.otp }}
+        elixir: ${{ inputs.elixir }}
