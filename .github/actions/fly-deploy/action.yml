@@ -2,7 +2,7 @@ name: Fly.io - Deployment
 description: "Deploy Fly.io application."
 
 inputs:
-  fly-api-token:
+  fly_api_token:
     description: "Fly API token for deployment"
     required: true
 
@@ -17,4 +17,4 @@ runs:
       shell: bash
       name: "Deploy Fly.io application"
       env:
-        FLY_API_TOKEN: ${{ inputs.fly-api-token }}
+        FLY_API_TOKEN: ${{ inputs.fly_api_token }}
