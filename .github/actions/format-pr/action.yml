@@ -1,0 +1,23 @@
+name: cache-plts
+description: "Check Elixir formatting"
+
+inputs:
+  otp:
+    description: "OTP version"
+    required: true
+    default: "28.0.1"
+  elixir:
+    description: "Elixir version"
+    required: true
+    default: "1.18.4"
+
+runs:
+  using: "composite"
+
+  steps:
+    # Step: Check that the checked in code has already been formatted.
+    # This step fails if something was found unformatted.
+    # Customize this step as desired.
+    - name: Check Formatting
+      shell: bash
+      run: mix format --check-formatted
