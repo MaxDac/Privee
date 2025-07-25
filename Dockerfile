@@ -11,8 +11,7 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.18.4-erlang-28.0.1-debian-bullseye-20240130-slim
 #
-ARG BUILDPLATFORM
-ARG TARGETPLATFORM
+ARG TARGETPLATFORM="linux/amd64"
 ARG ELIXIR_VERSION=1.18.4
 ARG ERLANG_ERTS=16.0.1
 ARG OTP_VERSION=28.0.1

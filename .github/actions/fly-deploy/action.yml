@@ -5,15 +5,27 @@ inputs:
   fly_api_token:
     description: "Fly API token for deployment"
     required: true
+    type: string
+  build_only:
+    description: "Whether to only build the application without deploying"
+    required: false
+    default: "false"
+    type: string
 
 runs:
   using: "composite"
 
   steps:
-    # Step: Compile the project treating any warnings as errors.
-    # Customize this step if a different behavior is desired.
+    # Step: Setup Fly.io CLI and deploy application
     - uses: superfly/flyctl-actions/setup-flyctl@master
-    - run: flyctl deploy --remote-only
+    - run: |
+        if [[ "${{ inputs.build_only }}" == "true" ]]; then
+          echo "Building application only..."
+          flyctl deploy --build-only
+        else
+          echo "Deploying application..."
+          flyctl deploy --remote-only
+        fi
       shell: bash
       name: "Deploy Fly.io application"
       env:

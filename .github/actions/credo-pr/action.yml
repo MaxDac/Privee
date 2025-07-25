@@ -1,0 +1,21 @@
+name: cache-plts
+description: "Check Credo rules for Elixir"
+
+inputs:
+  otp:
+    description: "OTP version"
+    required: true
+    default: "28.0.1"
+  elixir:
+    description: "Elixir version"
+    required: true
+    default: "1.18.4"
+
+runs:
+  using: "composite"
+
+  steps:
+    # Step: Checks Credo rules.
+    - name: Check Credo
+      shell: bash
+      run: mix credo --strict
