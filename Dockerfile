@@ -149,3 +149,4 @@ USER nobody
 # ENTRYPOINT ["/tini", "--"]
 
 CMD ["/app/bin/server"]
+
