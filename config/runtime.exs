@@ -37,7 +37,6 @@ if config_env() == :prod do
         socket_options: maybe_ipv6,
         queue_target: 5_000,
         queue_interval: 1_000
-
   end
 
   import Config
@@ -54,7 +53,8 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  maybe_check_origin = if System.get_env("DISABLE_CHECK_ORIGIN") in ~w(true 1), do: false, else: true
+  maybe_check_origin =
+    if System.get_env("DISABLE_CHECK_ORIGIN") in ~w(true 1), do: false, else: true
 
   config :privee_web, PriveeWeb.Endpoint,
     http: [
