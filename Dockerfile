@@ -116,6 +116,8 @@ FROM ${RUNNER_IMAGE}
 # Install runtime dependencies including those needed for NIFs
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
+    # Debug utils, comment when done
+    iputils-ping netcat-traditional sudo dnsutils telnet postgresql-client \
     libc6 libgcc-s1 && \
     apt-get clean && rm -f /var/lib/apt/lists/*_*
 

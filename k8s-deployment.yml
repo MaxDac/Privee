@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: privee
+spec:
+  selector:
+    matchLabels:
+      app: privee
+      app.kubernetes.io/name: privee-app
+      app.kubernetes.io/instance: privee-node
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: privee
+        app.kubernetes.io/name: privee-app
+        app.kubernetes.io/instance: privee-node
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: privee
+        image: privee.azurecr.io/privee
+        # `shell -c` evaluates a string as shell input
+        command: [ "sh", "-c"]
+        # loop forever, outputting "yo" every 5 seconds
+        args: ["while true; do echo 'yo' && sleep 5; done;"]
+        resources:
+          limits:
+            memory: "520Mi"
+            cpu: "500m"
+        ports:
+        - name: epmd
+          containerPort: 4369
+          protocol: TCP
+        - name: app-port
+          containerPort: 4000
+          protocol: TCP
+        env:
+        - name: RELEASE_NAME
+          value: privee
+        - name: RELEASE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: RELEASE_NODE
+          value: $(RELEASE_NAME)@$(RELEASE_IP)
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: POSTGRES_HOST
+          value: ed6c59338ca8.privee-db.private.postgres.database.azure.com
+        - name: DATABASE_URL
+          value: ecto://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/$(POSTGRES_DB)
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: privee-app-secret
+              key: SECRET_KEY_BASE
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dns-test-pod
+  labels:
+    app: dns-test
+spec:
+  containers:
+  - name: dns-test-container
+    image: busybox
+    command: ["sleep", "3600"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: main-application-service
+  annotations:
+    service.beta.kubernetes.io/azure-dns-label-name: privee
+spec: 
+  loadBalancerIP: 20.103.238.163
+  type: LoadBalancer
+  selector:
+    app: privee
+  ports:
+  - port: 80
+    targetPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: privee-app-svc-headless
+  namespace: default
+  labels:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance: privee-svc-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 4369
+      targetPort: epmd
+      protocol: TCP
+      name: epmd
+  selector:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance:  privee-node

@@ -88,3 +88,24 @@ For more information refer the [package information](https://hex.pm/packages/lib
 
 There is also an interesting guide in parts on [how to configure Elixir nodes on Kubernetes](https://david-delassus.medium.com/elixir-and-kubernetes-a-love-story-721cc6a5c7d5),
 always with **libcluster**.
+
+## Azure configuration
+
+### GitHub Actions CI/CD
+
+#### Login to Azure
+
+To login to Azure, a User-defined Managed Identity has been created with a federated identity, and OpenID Connect
+authentication type has been selected; the reason Managed Identity has not been used as an authentication type 
+is that it required a **self-hosted** environment, i.e. a VM on Azure.
+
+For more information on how to setup the GitHub Action to work with Azure resources using User-defined Managed Identities,
+please refer to the [article of the `azure/login` GitHub Action](https://github.com/marketplace/actions/azure-login#login-with-openid-connect-oidc-recommended).
+
+### AKS configuration
+
+#### SECRET_KEY_BASE
+
+The SECRET_KEY_BASE environment variable required by the Phoenix application is currently being stored as a
+Kubernetes secret, and inject as an environment variables directly in the Kubernetes deployment file.
+This is not optimal, but there is issue #109 addressing this.

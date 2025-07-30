@@ -1,0 +1,82 @@
+name: Run Azure Login with Managed Identity
+
+# on:
+#   workflow_run:
+#     workflows: ["Elixir CI - Compilation"]
+#     types:
+#       - completed
+on: [push]
+
+env:
+  RESOURCE_GROUP: Privee
+  AZURE_CONTAINER_REGISTRY: Privee
+  REGISTRY_URL: privee.azurecr.io
+  PROJECT_NAME: privee
+  CLUSTER_NAME: Privee
+  CONTAINER_NAME: privee
+  DEPLOYMENT_MANIFEST_PATH: |
+    ./k8s-deployment.yml
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Azure login
+        uses: azure/login@v2.1.1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # - name: Build image on ACR
+      #   uses: azure/CLI@v2
+      #   with:
+      #     inlineScript: |
+      #       cd ${{ github.workspace }}
+      #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+      #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
+      - name: Log in to ACR for Docker
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.ACR_USER }}
+          password: ${{ secrets.ACR_SECRET }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${GITHUB_SHA}
+
+      - name: Gets K8s context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      - name: Deploys application
+        uses: Azure/k8s-deploy@v5
+        with:
+          namespace: default
+          action: deploy
+          images: |
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}
+          manifests: |
+            ${{ env.DEPLOYMENT_MANIFEST_PATH }}

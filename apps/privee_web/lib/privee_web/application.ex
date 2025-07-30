@@ -16,7 +16,7 @@ defmodule PriveeWeb.Application do
       # Start to serve requests, typically the last entry
       # ,
       PriveeWeb.Endpoint,
-      # {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]},
+      {Cluster.Supervisor, [get_topologies(), [name: PriveeWeb.ClusterSupervisor]]},
       Chats
     ]
 
@@ -54,5 +54,26 @@ defmodule PriveeWeb.Application do
   def config_change(changed, _new, removed) do
     PriveeWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp get_topologies do
+    is_prod? = System.get_env("MIX_ENV") == "prod"
+
+    strategy =
+      if is_prod? do
+        Cluster.Strategy.Kubernetes.DNS
+      else
+        Cluster.Strategy.Gossip
+      end
+
+    [
+      privee: [
+        strategy: strategy,
+        config: [
+          service: "privee-app-svc-headless",
+          application_name: "privee"
+        ]
+      ]
+    ]
   end
 end

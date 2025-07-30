@@ -7,20 +7,38 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
-
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
+  maybe_ssl = if System.get_env("ECTO_SSL") in ~w(true, 1), do: true, else: false
 
-  config :privee, Privee.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    socket_options: maybe_ipv6
+  case {
+    System.get_env("DATABASE_URL"),
+    System.get_env("POSTGRES_USER"),
+    System.get_env("POSTGRES_PASSWORD"),
+    System.get_env("POSTGRES_HOST"),
+    System.get_env("POSTGRES_DB")
+  } do
+    {_, user, password, host, db} when not is_nil(user) and user != "" ->
+      config :privee, Privee.Repo,
+        ssl: maybe_ssl,
+        username: user,
+        password: password,
+        hostname: host,
+        database: db,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+        socket_options: maybe_ipv6,
+        queue_target: 5_000,
+        queue_interval: 1_000
+
+    {url, _, _, _, _} ->
+      config :privee, Privee.Repo,
+        ssl: maybe_ssl,
+        url: url,
+        pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+        socket_options: maybe_ipv6,
+        queue_target: 5_000,
+        queue_interval: 1_000
+
+  end
 
   import Config
 
@@ -36,6 +54,8 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
+  maybe_check_origin = if System.get_env("DISABLE_CHECK_ORIGIN") in ~w(true 1), do: false, else: true
+
   config :privee_web, PriveeWeb.Endpoint,
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -43,6 +63,7 @@ if config_env() == :prod do
       ip: {0, 0, 0, 0, 0, 0, 0, 0},
       port: String.to_integer(System.get_env("PORT") || "4000")
     ],
+    check_origin: maybe_check_origin,
     secret_key_base: secret_key_base,
     server: true
 
@@ -106,5 +127,5 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  # config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 end
