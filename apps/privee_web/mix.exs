@@ -58,7 +58,8 @@ defmodule PriveeWeb.MixProject do
       {:privee, in_umbrella: true},
       {:jason, "~> 1.4"},
       {:bandit, "~> 1.8"},
-      {:libcluster, "~> 3.5"}
+      {:libcluster, "~> 3.5"},
+      {:lazy_html, ">= 0.1.0", only: :test}
     ]
   end
 
