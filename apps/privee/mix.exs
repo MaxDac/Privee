@@ -43,7 +43,7 @@ defmodule Privee.MixProject do
       {:postgrex, "~> 0.21"},
       {:jason, "~> 1.4"},
       {:swoosh, "~> 1.19"},
-      {:finch, "~> 0.20"}
+      {:req, "~> 0.5"}
     ]
   end
 
