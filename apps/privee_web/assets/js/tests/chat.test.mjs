@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
 import { indexedDB } from "fake-indexeddb"
 import {
@@ -65,6 +65,10 @@ describe("handleSendingPublicKey", () => {
 })
 
 describe("handleChatInput", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it(" should encrypt and set the values of hidden inputs", async () => {
     const { publicKey: currentPublicKey, privateKey: currentPrivateKey } =
       await generateNewKeyPair()
@@ -76,9 +80,9 @@ describe("handleChatInput", () => {
     const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
 
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.Event = dom.window.Event
-    global.KeyboardEvent = dom.window.KeyboardEvent
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("Event", dom.window.Event)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
     // Simulating the event from the back end which sends the public keys
     const publicKeysSendingEvent = {
@@ -142,9 +146,9 @@ describe("handleChatInput", () => {
     const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
 
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.Event = dom.window.Event
-    global.KeyboardEvent = dom.window.KeyboardEvent
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("Event", dom.window.Event)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
     // Simulating the event from the back end which sends the public keys
     const publicKeysSendingEvent = {
@@ -171,6 +175,10 @@ describe("handleChatInput", () => {
 })
 
 describe("Chat entries decryption", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   const messageHtml = (encryptedText, dataConverted) => `
     <div>
       <p
@@ -192,7 +200,7 @@ describe("Chat entries decryption", () => {
     const html = messageHtml(encryptedMessage, "false")
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     // prettier-ignore
     const element = document.querySelector("[data-converted=\"false\"]")
@@ -223,7 +231,7 @@ describe("Chat entries decryption", () => {
     const sessionName = "some-other-session-name"
     const { privateKey, publicKey } = await generateNewKeyPair()
 
-    global.indexedDB = indexedDB
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
@@ -239,7 +247,7 @@ describe("Chat entries decryption", () => {
 
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     await decryptChatEntriesText(sessionName)
 
@@ -262,7 +270,7 @@ describe("Chat entries decryption", () => {
     const sessionName = "some-session-name"
     const { privateKey, publicKey } = await generateNewKeyPair()
 
-    global.indexedDB = indexedDB
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
@@ -278,7 +286,7 @@ describe("Chat entries decryption", () => {
 
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     await decryptChatEntriesText(sessionName)
 

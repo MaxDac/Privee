@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, beforeEach } from "vitest"
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest"
 import { addDarkModeToggleHandlers, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { getDom } from "./mock-utils.mjs"
 
@@ -25,23 +25,38 @@ beforeAll(() => {
   const dom = getDom(html)
   const { window } = dom
 
-  global.dom = dom
-  // @ts-ignore
-  global.window = {
+  vi.stubGlobal("dom", dom)
+  vi.stubGlobal("window", {
     ...window,
     // @ts-ignore
     matchMedia: (query) => ({
       matches: query === "(prefers-color-scheme: light)",
     }),
-  }
+  })
+  vi.stubGlobal("document", dom.window.document)
+  vi.stubGlobal("localStorage", dom.window.localStorage)
+})
 
-  global.document = dom.window.document
-
-  // global.localStorage = getLocalStorageMock()
-  global.localStorage = dom.window.localStorage
+afterEach(() => {
+  vi.unstubAllGlobals()
 })
 
 beforeEach(() => {
+  // Re-setup globals for each test since afterEach clears them
+  const dom = getDom(html)
+  const { window } = dom
+
+  vi.stubGlobal("dom", dom)
+  vi.stubGlobal("window", {
+    ...window,
+    // @ts-ignore
+    matchMedia: (query) => ({
+      matches: query === "(prefers-color-scheme: light)",
+    }),
+  })
+  vi.stubGlobal("document", dom.window.document)
+  vi.stubGlobal("localStorage", dom.window.localStorage)
+
   // Clearing local storage before each test
   localStorage.clear()
 })
@@ -56,14 +71,14 @@ describe("setStartupTheme", () => {
     const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
     const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(localStorage.getItem("color-theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("light"))
   })
 
   it("automatically select light theme when it's configured in local storage", () => {
-    global.localStorage.setItem("color-theme", "dark")
+    localStorage.setItem("color-theme", "dark")
     setStartupTheme()
 
     // prettier-ignore
@@ -72,7 +87,7 @@ describe("setStartupTheme", () => {
     const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
     const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-    expect(global.localStorage.getItem("color-theme")).toBe("dark")
+    expect(localStorage.getItem("color-theme")).toBe("dark")
     expect(!lightElementClassList.contains("hidden"))
     expect(darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("dark"))
@@ -89,7 +104,7 @@ describe("setStartupTheme", () => {
     let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
     let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(localStorage.getItem("color-theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("light"))
@@ -103,7 +118,7 @@ describe("setStartupTheme", () => {
     darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
     htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-    expect(global.localStorage.getItem("color-theme")).toBe("dark")
+    expect(localStorage.getItem("color-theme")).toBe("dark")
     expect(!lightElementClassList.contains("hidden"))
     expect(darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("dark"))
@@ -117,7 +132,7 @@ describe("setStartupTheme", () => {
     darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
     htmlElementClassList = document.getElementsByTagName("html").item(0).classList
 
-    expect(global.localStorage.getItem("color-theme")).toBe("light")
+    expect(localStorage.getItem("color-theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
     expect(htmlElementClassList.contains("light"))

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
 import {
   addSessionNameCopyListener,
@@ -6,14 +6,18 @@ import {
 } from "../utils/clipboard.mjs"
 
 describe("copySessionNameToClipboardBackEndEventHandler", () => {
-  it(" copy session name to clipboard following back end event", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("copy session name to clipboard following back end event", () => {
     const sessionName = "session name"
 
     const dom = new JSDOM()
-    global.navigator = {
+
+    const mockNavigator = {
       ...dom.window.navigator,
       clipboard: {
-        ...dom.window.navigator.clipboard,
         writeText: (text) => {
           if (text === sessionName) {
             return Promise.resolve()
@@ -24,24 +28,28 @@ describe("copySessionNameToClipboardBackEndEventHandler", () => {
       },
     }
 
+    vi.stubGlobal("navigator", mockNavigator)
+
     const event = { detail: { session_name: sessionName } }
 
     return copySessionNameToClipboardBackEndEventHandler(event).catch((e) => expect.fail(e))
   })
 
-  it("ccopy session name to clipboard correctly report the error", async () => {
+  it("copy session name to clipboard correctly report the error", async () => {
     const sessionName = "session name"
     const errorMessage = "some error"
     const copyError = new Error(errorMessage)
 
     const dom = new JSDOM()
-    global.navigator = {
+
+    const mockNavigator = {
       ...dom.window.navigator,
       clipboard: {
-        ...dom.window.navigator.clipboard,
         writeText: (_text) => Promise.reject(copyError),
       },
     }
+
+    vi.stubGlobal("navigator", mockNavigator)
 
     const event = { detail: { session_name: sessionName } }
 
@@ -55,6 +63,10 @@ describe("copySessionNameToClipboardBackEndEventHandler", () => {
 })
 
 describe("addSessionNameCopyListener", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("the button click results in the session name copy to the clipboard invocation", () => {
     const sessionName = "some-session-name"
 
@@ -75,17 +87,14 @@ describe("addSessionNameCopyListener", () => {
 
     const dom = new JSDOM(buttonHtml)
 
-    global.dom = dom
-
-    global.document = dom.window.document
-
-    global.navigator = {
+    vi.stubGlobal("dom", dom)
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("navigator", {
       ...dom.window.navigator,
       clipboard: {
-        ...dom.window.navigator.clipboard,
         writeText: copyHandler,
       },
-    }
+    })
 
     addSessionNameCopyListener()
 

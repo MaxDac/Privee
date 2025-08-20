@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { indexedDB } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
 import {
@@ -36,10 +36,14 @@ describe("Key operations", () => {
 })
 
 describe("bindKeys", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("should bind public key generation to input field", async () => {
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.indexedDB = indexedDB
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await bindKeys()
 
@@ -62,8 +66,8 @@ describe("bindKeys", () => {
 
   it("does not work if the hidden input is not present in the DOM", async () => {
     const dom = new JSDOM()
-    global.document = dom.window.document
-    global.indexedDB = indexedDB
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("indexedDB", indexedDB)
 
     try {
       await bindKeys()
@@ -75,8 +79,8 @@ describe("bindKeys", () => {
 
   it("rebinds the keys if called twice", async () => {
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.indexedDB = indexedDB
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await bindKeys()
     await bindKeys()
@@ -100,10 +104,14 @@ describe("bindKeys", () => {
 })
 
 describe("handleSessionNamePrivateKeyRegistrationEvent", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it(" should handle session name copy event", async () => {
     const dom = new JSDOM(html)
-    global.indexedDB = indexedDB
-    global.document = dom.window.document
+    vi.stubGlobal("indexedDB", indexedDB)
+    vi.stubGlobal("document", dom.window.document)
 
     await bindKeys()
 
@@ -123,10 +131,14 @@ describe("handleSessionNamePrivateKeyRegistrationEvent", () => {
 })
 
 describe("getPrivateKey", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("should return the private key for the given session name", async () => {
     const dom = new JSDOM(html)
-    global.indexedDB = indexedDB
-    global.document = dom.window.document
+    vi.stubGlobal("indexedDB", indexedDB)
+    vi.stubGlobal("document", dom.window.document)
 
     await bindKeys()
 
@@ -144,8 +156,8 @@ describe("getPrivateKey", () => {
 
   it("should return null if the private key is not found", async () => {
     const dom = new JSDOM()
-    global.indexedDB = indexedDB
-    global.document = dom.window.document
+    vi.stubGlobal("indexedDB", indexedDB)
+    vi.stubGlobal("document", dom.window.document)
 
     const privateKey = await getPrivateKey()
 

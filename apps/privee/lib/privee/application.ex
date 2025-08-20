@@ -10,9 +10,7 @@ defmodule Privee.Application do
     children = [
       Privee.Repo,
       {DNSCluster, query: Application.get_env(:privee, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Privee.PubSub},
-      # Start the Finch HTTP client for sending emails
-      {Finch, name: Privee.Finch}
+      {Phoenix.PubSub, name: Privee.PubSub}
       # Start a worker by calling: Privee.Worker.start_link(arg)
       # {Privee.Worker, arg}
     ]
