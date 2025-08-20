@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
 import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
 
@@ -10,10 +10,14 @@ const html = `
 `
 
 describe("querySelectorArrayOf", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("Should return zero elements when the selector does not identify any element", () => {
     const selector = "#some-nonexistent-id"
     const dom = new JSDOM(html)
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     const elements = querySelectorArrayOf(selector)
 
@@ -23,7 +27,7 @@ describe("querySelectorArrayOf", () => {
   it("Should return four elements when the selector identifies all elements", () => {
     const selector = "[data-selector]"
     const dom = new JSDOM(html)
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     const elements = querySelectorArrayOf(selector)
 
@@ -39,7 +43,7 @@ describe("querySelectorArrayOf", () => {
     // prettier-ignore
     const selector = "[data-selector=\"1\"]"
     const dom = new JSDOM(html)
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     const elements = querySelectorArrayOf(selector)
 

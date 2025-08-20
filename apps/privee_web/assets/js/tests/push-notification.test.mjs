@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 import { generateNewKeyPair } from "../utils/security.mjs"
@@ -11,13 +11,15 @@ const addRequiredMockedMethod = (window) => ({
 })
 
 describe("askNotificationPermission", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("asks for permission, browser does not support notifications, reports the right result", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-    // @ts-ignore
-    global.Notification = dom.window.Notification
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("Notification", dom.window.Notification)
 
     const expected = "This browser does not support notifications."
 
@@ -39,10 +41,8 @@ describe("askNotificationPermission", () => {
       },
     })
 
-    // @ts-ignore
-    global.window = window
-    // @ts-ignore
-    global.Notification = window.Notification
+    vi.stubGlobal("window", window)
+    vi.stubGlobal("Notification", window.Notification)
 
     const expected = "Permission: granted"
     const result = await askNotificationPermission()
@@ -59,10 +59,8 @@ describe("askNotificationPermission", () => {
       },
     })
 
-    // @ts-ignore
-    global.window = window
-    // @ts-ignore
-    global.Notification = window.Notification
+    vi.stubGlobal("window", window)
+    vi.stubGlobal("Notification", window.Notification)
 
     const expected = "Permission: denied"
     const result = await askNotificationPermission()
@@ -71,16 +69,18 @@ describe("askNotificationPermission", () => {
 })
 
 describe("pushBackEndNotification", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("checking focus, does not trigger notification if the document is visible", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-
-    global.document = {
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
       ...dom.window.document,
       hidden: false,
-    }
+    })
 
     const notification = await pushBackEndNotification({
       detail: {
@@ -94,10 +94,8 @@ describe("pushBackEndNotification", () => {
   it("checking focus, does trigger notification if the document is not visible", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-
-    global.document = {
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
       ...dom.window.document,
       hidden: true,
       visibilityState: "visible",
@@ -106,10 +104,8 @@ describe("pushBackEndNotification", () => {
           callback()
         }
       },
-    }
-
-    // @ts-ignore
-    global.Notification = NotificationMock
+    })
+    vi.stubGlobal("Notification", NotificationMock)
 
     // Mocking getting the private key
     const { privateKey, publicKey } = await generateNewKeyPair()
@@ -145,10 +141,8 @@ describe("pushBackEndNotification", () => {
   it("not checking focus, does trigger notification independent of the document visibility", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-
-    global.document = {
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
       ...dom.window.document,
       hidden: false,
       visibilityState: "visible",
@@ -157,10 +151,8 @@ describe("pushBackEndNotification", () => {
           callback()
         }
       },
-    }
-
-    // @ts-ignore
-    global.Notification = NotificationMock
+    })
+    vi.stubGlobal("Notification", NotificationMock)
 
     // Mocking getting the private key
     const { privateKey, publicKey } = await generateNewKeyPair()
@@ -196,10 +188,8 @@ describe("pushBackEndNotification", () => {
   it("The browser did not store the private key, text is empty", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-
-    global.document = {
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
       ...dom.window.document,
       hidden: false,
       visibilityState: "visible",
@@ -208,10 +198,8 @@ describe("pushBackEndNotification", () => {
           callback()
         }
       },
-    }
-
-    // @ts-ignore
-    global.Notification = NotificationMock
+    })
+    vi.stubGlobal("Notification", NotificationMock)
 
     // Mocking getting the private key
     const { publicKey } = await generateNewKeyPair()
@@ -241,10 +229,8 @@ describe("pushBackEndNotification", () => {
   it("The browser does not receive the receiver session id, text is empty", async () => {
     const dom = getDom()
 
-    // @ts-ignore
-    global.window = addRequiredMockedMethod(dom.window)
-
-    global.document = {
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
       ...dom.window.document,
       hidden: false,
       visibilityState: "visible",
@@ -253,10 +239,8 @@ describe("pushBackEndNotification", () => {
           callback()
         }
       },
-    }
-
-    // @ts-ignore
-    global.Notification = NotificationMock
+    })
+    vi.stubGlobal("Notification", NotificationMock)
 
     // Mocking getting the private key
     const { publicKey } = await generateNewKeyPair()
