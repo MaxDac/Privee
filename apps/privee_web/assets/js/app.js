@@ -55,9 +55,8 @@ liveSocket.connect()
 addBackEndEventHandlers()
 
 // Only activate this in debug mode
-/* eslint-disable */
+
 exportDebugFunctions()
-/* eslint-enable */
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
