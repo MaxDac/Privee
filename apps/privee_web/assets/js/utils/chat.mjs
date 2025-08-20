@@ -124,8 +124,7 @@ const cleanEncryptedString = (chatEntry) => {
  * @param {string} decryptedMessage - The decrypted message text.
  * @returns {string} The decrypted message with the trailing invisible character appended.
  */
-const reAddTrailingChar = (decryptedMessage) =>
-  `${decryptedMessage}\u200E`
+const reAddTrailingChar = (decryptedMessage) => `${decryptedMessage}\u200E`
 
 /**
  * Converts a single chat entry element text by decrypting it.
@@ -158,5 +157,5 @@ export const testExports = {
 
   cleanEncryptedString,
 
-  reAddTrailingChar
+  reAddTrailingChar,
 }
