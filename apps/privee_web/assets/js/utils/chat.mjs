@@ -104,15 +104,39 @@ export const decryptChatEntriesText = async (sessionName) => {
 }
 
 /**
+ * Removes trailing invisible characters from encrypted chat entry text.
+ * @param {HTMLElement} chatEntry - The chat entry HTML element containing encrypted text.
+ * @returns {string} The cleaned encrypted text string with trailing invisible characters removed.
+ */
+const cleanEncryptedString = (chatEntry) => {
+  const initialTrimmed = chatEntry.innerHTML.trim()
+
+  const withoutInvisibleChar = initialTrimmed.endsWith("\u200E")
+    ? initialTrimmed.slice(0, -1)
+    : initialTrimmed
+
+  return withoutInvisibleChar.trim()
+}
+
+/**
+ * Re-adds the trailing invisible character (U+200E) to a decrypted message.
+ * This character is used as a marker to indicate processed chat entries.
+ * @param {string} decryptedMessage - The decrypted message text.
+ * @returns {string} The decrypted message with the trailing invisible character appended.
+ */
+const reAddTrailingChar = (decryptedMessage) =>
+  `${decryptedMessage}\u200E`
+
+/**
  * Converts a single chat entry element text by decrypting it.
  * @param {HTMLElement} chatEntry The chat entry HTML element.
  * @param {CryptoKey} privateKey The private key with which the chat text can be decrypted.
  * @returns {Promise<string | void>} The execution result.
  */
 const decryptChatEntryText = async (chatEntry, privateKey) => {
-  const encryptedText = chatEntry.innerHTML.trim().slice(0, -1)
+  const encryptedText = cleanEncryptedString(chatEntry)
   const decryptedMessage = await decryptMessage(encryptedText, privateKey)
-  chatEntry.innerHTML = decryptedMessage
+  chatEntry.innerHTML = reAddTrailingChar(decryptedMessage)
   chatEntry.setAttribute("data-converted", "true")
   chatEntry.classList.remove("hidden")
 }
@@ -131,4 +155,8 @@ export const testExports = {
   getSelectedPublicKey: () => selectedPublicKey,
 
   decryptChatEntryText,
+
+  cleanEncryptedString,
+
+  reAddTrailingChar
 }

@@ -213,7 +213,7 @@ describe("Chat entries decryption", () => {
     const convertedElement = document.querySelector("[data-converted=\"true\"]")
 
     expect(unconvertedElement).toBeNull()
-    expect(convertedElement.innerHTML).toEqual(message)
+    expect(convertedElement.innerHTML).toEqual(testExports.reAddTrailingChar(message))
     expect(convertedElement.dataset.converted).toEqual("true")
   })
 
@@ -261,7 +261,7 @@ describe("Chat entries decryption", () => {
 
     convertedElements.forEach((element, i) => {
       const expectedMessage = `Some message ${String(i)}`
-      expect(element.innerHTML).toEqual(expectedMessage)
+      expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
       expect(element.dataset.converted).toEqual("true")
     })
   })
@@ -302,12 +302,84 @@ describe("Chat entries decryption", () => {
       const expectedMessage = `Some message ${String(i)}`
 
       if (i < 2) {
-        expect(element.innerHTML).toEqual(expectedMessage)
+        expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
       } else {
-        expect(element.innerHTML).not.toEqual(expectedMessage)
+        expect(element.innerHTML).not.toEqual(testExports.reAddTrailingChar(expectedMessage))
       }
 
       expect(element.dataset.converted).toEqual("true")
     })
+  })
+})
+
+describe("cleanEncryptedString", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("should remove trailing left-to-right mark character", () => {
+    const html = "<div>encrypted-text\u200E</div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should return text as-is when no trailing left-to-right mark", () => {
+    const html = "<div>encrypted-text</div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should trim whitespace and remove trailing left-to-right mark", () => {
+    const html = "<div>  encrypted-text  \u200E  </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should only trim whitespace when no left-to-right mark present", () => {
+    const html = "<div>  encrypted-text  </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should handle empty text", () => {
+    const html = "<div></div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("")
+  })
+
+  it("should handle text with only whitespace and left-to-right mark", () => {
+    const html = "<div>   \u200E   </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("")
   })
 })
