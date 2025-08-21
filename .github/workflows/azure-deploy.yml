@@ -1,66 +1,26 @@
 name: Deploy to Azure
 
 on:
-  workflow_call:
-    inputs:
-      resource_group:
-        description: "Azure resource group name"
-        required: true
-        type: string
-      azure_container_registry:
-        description: "Azure Container Registry name"
-        required: true
-        type: string
-      registry_url:
-        description: "Container registry URL"
-        required: true
-        type: string
-      project_name:
-        description: "Project name for container image"
-        required: true
-        type: string
-      cluster_name:
-        description: "Azure Kubernetes Service cluster name"
-        required: true
-        type: string
-      container_name:
-        description: "Container name for deployment"
-        required: true
-        type: string
-      deployment_manifest_path:
-        description: "Path to Kubernetes deployment manifests"
-        required: false
-        type: string
-        default: "./k8s-deployment.yml"
-    secrets:
-      azure_client_id:
-        description: "Azure Client ID for authentication"
-        required: true
-      azure_tenant_id:
-        description: "Azure Tenant ID for authentication"
-        required: true
-      azure_subscription_id:
-        description: "Azure Subscription ID for authentication"
-        required: true
-      acr_user:
-        description: "Azure Container Registry username"
-        required: true
-      acr_secret:
-        description: "Azure Container Registry password"
-        required: true
+  workflow_run:
+    workflows: ["Privee Main CI/CD pipeline"]
+    types:
+      - completed
+    branches: [main]
 
 jobs:
   azure-deployment:
     name: Deploy to Azure
     runs-on: ubuntu-24.04
+    # Only run if the main CI workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
-      RESOURCE_GROUP: ${{ inputs.resource_group }}
-      AZURE_CONTAINER_REGISTRY: ${{ inputs.azure_container_registry }}
-      REGISTRY_URL: ${{ inputs.registry_url }}
-      PROJECT_NAME: ${{ inputs.project_name }}
-      CLUSTER_NAME: ${{ inputs.cluster_name }}
-      CONTAINER_NAME: ${{ inputs.container_name }}
-      DEPLOYMENT_MANIFEST_PATH: ${{ inputs.deployment_manifest_path }}
+      RESOURCE_GROUP: Privee
+      AZURE_CONTAINER_REGISTRY: Privee
+      REGISTRY_URL: privee.azurecr.io
+      PROJECT_NAME: privee
+      CLUSTER_NAME: Privee
+      CONTAINER_NAME: privee
+      DEPLOYMENT_MANIFEST_PATH: ./k8s-deployment.yml
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,9 +28,9 @@ jobs:
       - name: Azure login
         uses: azure/login@v2.1.1
         with:
-          client-id: ${{ secrets.azure_client_id }}
-          tenant-id: ${{ secrets.azure_tenant_id }}
-          subscription-id: ${{ secrets.azure_subscription_id }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # - name: Build image on ACR
       #   uses: azure/CLI@v2
@@ -84,8 +44,8 @@ jobs:
         uses: azure/docker-login@v2
         with:
           login-server: ${{ env.REGISTRY_URL }}
-          username: ${{ secrets.acr_user }}
-          password: ${{ secrets.acr_secret }}
+          username: ${{ secrets.ACR_USER }}
+          password: ${{ secrets.ACR_SECRET }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
