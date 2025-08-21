@@ -1,0 +1,34 @@
+name: Deploy to Fly.io
+
+on:
+  workflow_call:
+    inputs:
+      build_only:
+        description: "Whether to only build the application without deploying"
+        required: false
+        default: false
+        type: boolean
+      concurrency_group:
+        description: "Concurrency group for deployment"
+        required: false
+        default: "deploy-group"
+        type: string
+    secrets:
+      fly_api_token:
+        description: "Fly API token for deployment"
+        required: true
+
+jobs:
+  fly-deploy:
+    name: Deploy Fly.io app
+    runs-on: ubuntu-24.04
+    concurrency: ${{ inputs.concurrency_group }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
+        with:
+          fly_api_token: ${{ secrets.fly_api_token }}
+          build_only: ${{ inputs.build_only }}

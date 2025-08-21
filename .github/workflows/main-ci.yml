@@ -92,71 +92,26 @@ jobs:
 
   fly-deploy:
     name: Deploy Fly.io app
-    runs-on: ubuntu-24.04
-    concurrency: deploy-group # optional: ensure only one action runs at a time
     needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Fly.io deployment
-        uses: ./.github/actions/fly-deploy
-        with:
-          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
+    uses: ./.github/workflows/fly-deploy.yml
+    secrets:
+      fly_api_token: ${{ secrets.FLY_API_TOKEN }}
 
   azure-deployment:
-    runs-on: ubuntu-24.04
+    name: Deploy to Azure
     needs: build
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Azure login
-        uses: azure/login@v2.1.1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # - name: Build image on ACR
-      #   uses: azure/CLI@v2
-      #   with:
-      #     inlineScript: |
-      #       cd ${{ github.workspace }}
-      #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
-      #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
-
-      - name: Log in to ACR for Docker
-        uses: azure/docker-login@v2
-        with:
-          login-server: ${{ env.REGISTRY_URL }}
-          username: ${{ secrets.ACR_USER }}
-          password: ${{ secrets.ACR_SECRET }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
-            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
-          build-args: |
-            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-            VCS_REF=${GITHUB_SHA}
-
-      - name: Gets K8s context
-        uses: azure/aks-set-context@v4
-        with:
-          resource-group: ${{ env.RESOURCE_GROUP }}
-          cluster-name: ${{ env.CLUSTER_NAME }}
-
-      # - name: Deploys application
-      #   uses: Azure/k8s-deploy@v5
-      #   with:
-      #     namespace: default
-      #     action: deploy
-      #     images: |
-      #       ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
-      #     manifests: |
+    uses: ./.github/workflows/azure-deploy.yml
+    with:
+      resource_group: "Privee"
+      azure_container_registry: "Privee"
+      registry_url: "privee.azurecr.io"
+      project_name: "privee"
+      cluster_name: "Privee"
+      container_name: "privee"
+      deployment_manifest_path: "./k8s-deployment.yml"
+    secrets:
+      azure_client_id: ${{ secrets.AZURE_CLIENT_ID }}
+      azure_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      azure_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      acr_user: ${{ secrets.ACR_USER }}
+      acr_secret: ${{ secrets.ACR_SECRET }}
