@@ -1,4 +1,6 @@
-[![Elixir CI - Compilation](https://github.com/MaxDac/Privee/actions/workflows/pr-ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/pr-ci.yml) [![Fly Deploy](https://github.com/MaxDac/Privee/actions/workflows/fly.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/fly.yml)
+[![Privee Main CI/CD pipeline](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml)
+[![Deploy to Fly.io](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml)
+[![Deploy to Azure](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml)
 
 # Privee
 Privee FHL project for Microsoft.
