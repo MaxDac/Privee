@@ -1,10 +1,29 @@
 name: dependencies
 description: "Install required dependencies and compiles them"
 
+inputs:
+  elixir-version:
+    description: 'Elixir version'
+    required: true
+  otp-version:
+    description: 'OTP version'
+    required: true
+  mix-env:
+    description: 'Mix environment'
+    required: false
+    default: 'test'
+
 runs:
   using: "composite"
 
   steps:
+    # Step: Verify Mix installation and environment
+    - name: Verify Mix installation
+      shell: bash
+      run: |
+        mix --version
+        mix hex.info
+
     # Step: Define how to cache deps. Restores existing cache if present.
     - name: Cache deps
       id: cache-deps
@@ -13,9 +32,9 @@ runs:
         cache-name: cache-elixir-deps
       with:
         path: deps
-        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-${{ hashFiles('**/mix.lock') }}
         restore-keys: |
-          ${{ runner.os }}-mix-${{ env.cache-name }}-
+          ${{ runner.os }}-mix-${{ env.cache-name }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-
 
     # Step: Define how to cache the `_build` directory. After the first run,
     # this speeds up tests runs a lot. This includes not re-compiling our
@@ -27,10 +46,28 @@ runs:
         cache-name: cache-compiled-build
       with:
         path: _build
-        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+        key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-${{ hashFiles('**/mix.lock') }}
         restore-keys: |
-          ${{ runner.os }}-mix-${{ env.cache-name }}-
+          ${{ runner.os }}-mix-${{ env.cache-name }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-
           ${{ runner.os }}-mix-
+
+    # Step: Cache PLTs for Dialyzer to speed up static analysis
+    - name: Cache PLTs
+      uses: actions/cache@v4
+      with:
+        path: priv/plts
+        key: ${{ runner.os }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-plt-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ inputs.elixir-version }}-${{ inputs.otp-version }}-plt-
+
+    # Step: Cache assets (esbuild and tailwind binaries)
+    - name: Cache assets
+      uses: actions/cache@v4
+      with:
+        path: |
+          _build/esbuild-linux-x64
+          _build/tailwind-linux-x64
+        key: ${{ runner.os }}-assets-${{ hashFiles('apps/*/assets/**') }}
 
     # Step: Conditionally bust the cache when job is re-run.
     # Sometimes, we may have issues with incremental builds that are fixed by
@@ -48,5 +85,22 @@ runs:
     # Step: Download project dependencies. If unchanged, uses
     # the cached version.
     - name: Install dependencies
-      shell: sh
+      shell: bash
       run: mix deps.get
+      env:
+        MIX_ENV: ${{ inputs.mix-env }}
+
+    # Step: Compile dependencies (skip if cache hit)
+    - name: Compile dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      shell: bash
+      run: mix deps.compile
+      env:
+        MIX_ENV: ${{ inputs.mix-env }}
+
+    # Step: Compile umbrella project
+    - name: Compile umbrella project
+      shell: bash
+      run: mix compile
+      env:
+        MIX_ENV: ${{ inputs.mix-env }}
