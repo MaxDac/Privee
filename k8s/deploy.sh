@@ -45,7 +45,7 @@ fi
 
 # Step 3: Apply services (networking)
 echo "🌐 3/4 Applying services..."
-if kubectl apply -f "$SCRIPT_DIR/services.yml"; then
+if kubectl apply -f "$SCRIPT_DIR/services-best-practice.yml"; then
     echo "✅ Services applied successfully"
 else
     echo "❌ Failed to apply services"
@@ -82,7 +82,7 @@ echo ""
 
 # Show how to access the application
 echo "🌍 Application access:"
-echo "- LoadBalancer service: kubectl get service main-application-service"
+echo "- LoadBalancer service: kubectl get service privee-loadbalancer"
 echo "- Port forward for local access: kubectl port-forward deployment/privee 4000:4000"
 echo "- View logs: kubectl logs -l app=privee --tail=50"
 

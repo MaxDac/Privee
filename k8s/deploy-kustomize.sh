@@ -53,4 +53,10 @@ echo ""
 kubectl get services
 echo ""
 
+echo "🌍 Application access:"
+echo "- LoadBalancer service: kubectl get service privee-loadbalancer"
+echo "- Port forward for local access: kubectl port-forward deployment/privee 4000:4000"
+echo "- View logs: kubectl logs -l app=privee --tail=50"
+
+echo ""
 echo "✨ Privee deployment complete!"

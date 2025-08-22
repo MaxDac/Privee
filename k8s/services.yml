@@ -7,11 +7,11 @@ metadata:
     service.beta.kubernetes.io/azure-dns-label-name: privee
     # Deprecated approach - using static IP
     # Better practice is to use azure-pip-name annotation, but keeping for compatibility
-    service.beta.kubernetes.io/azure-load-balancer-resource-group: MC_Privee_Privee_westeurope  # Update this with your actual node resource group
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: Privee 
 spec:
   type: LoadBalancer
   # Static IP assignment (deprecated approach)
-  loadBalancerIP: 20.103.238.163
+  loadBalancerIP: 134.149.58.107
   selector:
     app: privee
   ports:

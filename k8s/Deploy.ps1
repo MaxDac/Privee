@@ -55,7 +55,7 @@ try {
 
     # Step 3: Apply services (networking)
     Write-Host "🌐 3/4 Applying services..." -ForegroundColor Yellow
-    kubectl apply -f "$ScriptDir/services.yml"
+    kubectl apply -f "$ScriptDir/services-best-practice.yml"
     Write-Host "✅ Services applied successfully" -ForegroundColor Green
 
     # Step 4: Apply debug pod (optional)
@@ -86,7 +86,7 @@ try {
 
     # Show how to access the application
     Write-Host "🌍 Application access:" -ForegroundColor Cyan
-    Write-Host "- LoadBalancer service: kubectl get service main-application-service" -ForegroundColor White
+    Write-Host "- LoadBalancer service: kubectl get service privee-loadbalancer" -ForegroundColor White
     Write-Host "- Port forward for local access: kubectl port-forward deployment/privee 4000:4000" -ForegroundColor White
     Write-Host "- View logs: kubectl logs -l app=privee --tail=50" -ForegroundColor White
 

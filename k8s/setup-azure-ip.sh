@@ -8,10 +8,10 @@ set -e
 echo "🌐 Setting up Azure static IP for AKS LoadBalancer..."
 
 # Configuration variables - UPDATE THESE FOR YOUR ENVIRONMENT
-AKS_CLUSTER_NAME="Privee"           # Your AKS cluster name
-AKS_RESOURCE_GROUP="Privee"         # Your main resource group
-LOCATION="westeurope"               # Your Azure region
-PUBLIC_IP_NAME="privee-public-ip"   # Name for the public IP resource
+AKS_CLUSTER_NAME="Privee"
+AKS_RESOURCE_GROUP="Privee"
+LOCATION="northeurope"
+PUBLIC_IP_NAME="privee-public-ip"
 
 # Check if Azure CLI is available
 if ! command -v az &> /dev/null; then

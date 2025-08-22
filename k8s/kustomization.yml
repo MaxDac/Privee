@@ -3,7 +3,7 @@ kind: Kustomization
 
 resources:
 - deployment.yml
-- services.yml
+- services-best-practice.yml
 - secrets.yml
 - debug-pod.yml
 
