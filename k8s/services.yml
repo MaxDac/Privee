@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: privee-loadbalancer
+  annotations:
+    # Azure-specific annotations for better LoadBalancer management
+    service.beta.kubernetes.io/azure-dns-label-name: privee
+    # Deprecated approach - using static IP
+    # Better practice is to use azure-pip-name annotation, but keeping for compatibility
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: MC_Privee_Privee_westeurope  # Update this with your actual node resource group
+spec:
+  type: LoadBalancer
+  # Static IP assignment (deprecated approach)
+  loadBalancerIP: 20.103.238.163
+  selector:
+    app: privee
+  ports:
+  - name: http
+    port: 80
+    targetPort: 4000
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 4000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: privee-app-svc-headless
+  namespace: default
+  labels:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance: privee-svc-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 4369
+      targetPort: epmd
+      protocol: TCP
+      name: epmd
+  selector:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance: privee-node

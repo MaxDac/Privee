@@ -1,0 +1,46 @@
+# Best Practice LoadBalancer Service Configuration for AKS
+apiVersion: v1
+kind: Service
+metadata:
+  name: privee-loadbalancer
+  annotations:
+    # Recommended approach: Use azure-pip-name instead of loadBalancerIP
+    service.beta.kubernetes.io/azure-pip-name: privee-public-ip
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: MC_Privee_Privee_westeurope  # Update with actual node resource group
+    service.beta.kubernetes.io/azure-dns-label-name: privee
+    # Optional: TCP idle timeout (4-30 minutes)
+    service.beta.kubernetes.io/azure-load-balancer-tcp-idle-timeout: "4"
+spec:
+  type: LoadBalancer
+  selector:
+    app: privee
+  ports:
+  - name: http
+    port: 80
+    targetPort: 4000
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 4000
+    protocol: TCP
+---
+# Headless Service for Erlang clustering
+apiVersion: v1
+kind: Service
+metadata:
+  name: privee-app-svc-headless
+  namespace: default
+  labels:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance: privee-svc-headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 4369
+      targetPort: epmd
+      protocol: TCP
+      name: epmd
+  selector:
+    app.kubernetes.io/name: privee-app
+    app.kubernetes.io/instance: privee-node

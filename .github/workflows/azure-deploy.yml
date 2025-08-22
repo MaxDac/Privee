@@ -20,7 +20,12 @@ jobs:
       PROJECT_NAME: privee
       CLUSTER_NAME: Privee
       CONTAINER_NAME: privee
-      DEPLOYMENT_MANIFEST_PATH: ./k8s-deployment.yml
+      DEPLOYMENT_MANIFEST_PATH: |
+        ./k8s/deployment.yml
+        ./k8s/services.yml
+        ./k8s/secrets.yml
+        ./k8s/debug-pod.yml
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
