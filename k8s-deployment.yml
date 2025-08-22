@@ -19,9 +19,11 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: privee
-        image: privee.azurecr.io/privee:latest
+        image: privee.azurecr.io/privee
         # Start the Phoenix server
         command: ["./bin/server"]
+        # command: [ "sh", "-c"]
+        # args: ["while true; do echo 'yo' && sleep 5; done;"]
         resources:
           limits:
             memory: "520Mi"
