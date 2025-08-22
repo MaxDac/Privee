@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { indexedDB } from "fake-indexeddb"
 import {
   storeObject,
@@ -10,20 +10,21 @@ import { generateRandomString } from "./mock-utils.mjs"
 
 describe("DB Operations", () => {
   beforeEach(() => {
-    global.indexedDB = indexedDB
+    vi.stubGlobal("indexedDB", indexedDB)
     indexedDB.deleteDatabase("test")
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   describe("getObject", () => {
     it("returns undefined if the database does not exist", async () => {
-      global.indexedDB = indexedDB
       const result = await getObject(generateRandomString(), generateRandomString(), "test")
       expect(result).toBeUndefined()
     })
 
     it("retrieves the object given the proper key", async () => {
-      global.indexedDB = indexedDB
-
       const dbName = generateRandomString()
       const tableName = generateRandomString()
 
@@ -36,8 +37,6 @@ describe("DB Operations", () => {
     })
 
     it("getObject returns null if key does not exist", async () => {
-      global.indexedDB = indexedDB
-
       const retrievedObject = await getObject(
         generateRandomString(),
         generateRandomString(),
@@ -49,8 +48,6 @@ describe("DB Operations", () => {
 
   describe("storeObject", () => {
     it("stores the object", async () => {
-      global.indexedDB = indexedDB
-
       const object = { a: 1, b: "2" }
 
       try {
@@ -61,8 +58,6 @@ describe("DB Operations", () => {
     })
 
     it("stores the object, substituting the second object", async () => {
-      global.indexedDB = indexedDB
-
       const dbName = generateRandomString()
       const tableName = generateRandomString()
 
@@ -81,8 +76,6 @@ describe("DB Operations", () => {
     })
 
     it("stores the first object, throwing an constraint exception when inserting the second", async () => {
-      global.indexedDB = indexedDB
-
       const dbName = generateRandomString()
       const tableName = generateRandomString()
 
@@ -103,7 +96,6 @@ describe("DB Operations", () => {
   })
 
   it("deleteObject removes the object with the given key", async () => {
-    global.indexedDB = indexedDB
     const dbName = generateRandomString()
     const tableName = generateRandomString()
 
@@ -120,8 +112,6 @@ describe("DB Operations", () => {
   })
 
   it("purgeDatabase removes all data from the IndexedDB", async () => {
-    global.indexedDB = indexedDB
-
     const dbName = generateRandomString()
     const tableName = generateRandomString()
 

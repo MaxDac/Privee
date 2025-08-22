@@ -112,7 +112,7 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
 
       {:ok, _login_live, login_html} =
         lv
-        |> element(~s|main a:fl-contains("Sign in")|)
+        |> element("main a", "Sign in")
         |> render_click()
         |> follow_redirect(conn, ~p"/")
 

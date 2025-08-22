@@ -1,0 +1,25 @@
+name: Deploy to Fly.io
+
+on:
+  workflow_run:
+    workflows: ["Privee Main CI/CD pipeline"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  fly-deploy:
+    name: Deploy Fly.io app
+    runs-on: ubuntu-24.04
+    # Only run if the main CI workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    concurrency: deploy-group
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
+        with:
+          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
+          build_only: false

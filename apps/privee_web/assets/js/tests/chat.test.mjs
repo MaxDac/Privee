@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
 import { indexedDB } from "fake-indexeddb"
 import {
@@ -65,6 +65,10 @@ describe("handleSendingPublicKey", () => {
 })
 
 describe("handleChatInput", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it(" should encrypt and set the values of hidden inputs", async () => {
     const { publicKey: currentPublicKey, privateKey: currentPrivateKey } =
       await generateNewKeyPair()
@@ -76,9 +80,9 @@ describe("handleChatInput", () => {
     const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
 
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.Event = dom.window.Event
-    global.KeyboardEvent = dom.window.KeyboardEvent
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("Event", dom.window.Event)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
     // Simulating the event from the back end which sends the public keys
     const publicKeysSendingEvent = {
@@ -142,9 +146,9 @@ describe("handleChatInput", () => {
     const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
 
     const dom = new JSDOM(html)
-    global.document = dom.window.document
-    global.Event = dom.window.Event
-    global.KeyboardEvent = dom.window.KeyboardEvent
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("Event", dom.window.Event)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
     // Simulating the event from the back end which sends the public keys
     const publicKeysSendingEvent = {
@@ -171,6 +175,10 @@ describe("handleChatInput", () => {
 })
 
 describe("Chat entries decryption", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   const messageHtml = (encryptedText, dataConverted) => `
     <div>
       <p
@@ -192,7 +200,7 @@ describe("Chat entries decryption", () => {
     const html = messageHtml(encryptedMessage, "false")
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     // prettier-ignore
     const element = document.querySelector("[data-converted=\"false\"]")
@@ -205,7 +213,7 @@ describe("Chat entries decryption", () => {
     const convertedElement = document.querySelector("[data-converted=\"true\"]")
 
     expect(unconvertedElement).toBeNull()
-    expect(convertedElement.innerHTML).toEqual(message)
+    expect(convertedElement.innerHTML).toEqual(testExports.reAddTrailingChar(message))
     expect(convertedElement.dataset.converted).toEqual("true")
   })
 
@@ -223,7 +231,7 @@ describe("Chat entries decryption", () => {
     const sessionName = "some-other-session-name"
     const { privateKey, publicKey } = await generateNewKeyPair()
 
-    global.indexedDB = indexedDB
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
@@ -239,7 +247,7 @@ describe("Chat entries decryption", () => {
 
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     await decryptChatEntriesText(sessionName)
 
@@ -253,7 +261,7 @@ describe("Chat entries decryption", () => {
 
     convertedElements.forEach((element, i) => {
       const expectedMessage = `Some message ${String(i)}`
-      expect(element.innerHTML).toEqual(expectedMessage)
+      expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
       expect(element.dataset.converted).toEqual("true")
     })
   })
@@ -262,7 +270,7 @@ describe("Chat entries decryption", () => {
     const sessionName = "some-session-name"
     const { privateKey, publicKey } = await generateNewKeyPair()
 
-    global.indexedDB = indexedDB
+    vi.stubGlobal("indexedDB", indexedDB)
 
     await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
 
@@ -278,7 +286,7 @@ describe("Chat entries decryption", () => {
 
     const dom = new JSDOM(html)
 
-    global.document = dom.window.document
+    vi.stubGlobal("document", dom.window.document)
 
     await decryptChatEntriesText(sessionName)
 
@@ -294,12 +302,84 @@ describe("Chat entries decryption", () => {
       const expectedMessage = `Some message ${String(i)}`
 
       if (i < 2) {
-        expect(element.innerHTML).toEqual(expectedMessage)
+        expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
       } else {
-        expect(element.innerHTML).not.toEqual(expectedMessage)
+        expect(element.innerHTML).not.toEqual(testExports.reAddTrailingChar(expectedMessage))
       }
 
       expect(element.dataset.converted).toEqual("true")
     })
+  })
+})
+
+describe("cleanEncryptedString", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("should remove trailing left-to-right mark character", () => {
+    const html = "<div>encrypted-text\u200E</div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should return text as-is when no trailing left-to-right mark", () => {
+    const html = "<div>encrypted-text</div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should trim whitespace and remove trailing left-to-right mark", () => {
+    const html = "<div>  encrypted-text  \u200E  </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should only trim whitespace when no left-to-right mark present", () => {
+    const html = "<div>  encrypted-text  </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("encrypted-text")
+  })
+
+  it("should handle empty text", () => {
+    const html = "<div></div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("")
+  })
+
+  it("should handle text with only whitespace and left-to-right mark", () => {
+    const html = "<div>   \u200E   </div>"
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+
+    const element = document.querySelector("div")
+    const result = testExports.cleanEncryptedString(element)
+
+    expect(result).toBe("")
   })
 })
