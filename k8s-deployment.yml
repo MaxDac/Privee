@@ -19,11 +19,9 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: privee
-        image: privee.azurecr.io/privee
-        # `shell -c` evaluates a string as shell input
-        command: [ "sh", "-c"]
-        # loop forever, outputting "yo" every 5 seconds
-        args: ["while true; do echo 'yo' && sleep 5; done;"]
+        image: privee.azurecr.io/privee:latest
+        # Start the Phoenix server
+        command: ["./bin/server"]
         resources:
           limits:
             memory: "520Mi"
@@ -36,6 +34,7 @@ spec:
           containerPort: 4000
           protocol: TCP
         env:
+        # Release configuration
         - name: RELEASE_NAME
           value: privee
         - name: RELEASE_IP
@@ -44,6 +43,14 @@ spec:
               fieldPath: status.podIP
         - name: RELEASE_NODE
           value: $(RELEASE_NAME)@$(RELEASE_IP)
+        # Phoenix configuration
+        - name: PHX_HOST
+          value: "privee.westeurope.cloudapp.azure.com"  # Update with your Azure DNS name
+        - name: PHX_PORT
+          value: "80"
+        - name: PORT
+          value: "4000"
+        # Database configuration
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
@@ -63,11 +70,36 @@ spec:
           value: ed6c59338ca8.privee-db.private.postgres.database.azure.com
         - name: DATABASE_URL
           value: ecto://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST)/$(POSTGRES_DB)
+        # Security
         - name: SECRET_KEY_BASE
           valueFrom:
             secretKeyRef:
               name: privee-app-secret
               key: SECRET_KEY_BASE
+        # Clustering configuration
+        - name: DNS_CLUSTER_QUERY
+          value: "privee-app-svc-headless.default.svc.cluster.local"
+        # Environment marker for Kubernetes
+        - name: DEPLOYMENT_PLATFORM
+          value: "azure-aks"
+        # Resource limits for OTP
+        - name: ERL_MAX_PORTS
+          value: "8192"
+        - name: ERL_CRASH_DUMP
+          value: "/tmp/erl_crash.dump"
+        # Health check configuration
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 5
+          periodSeconds: 5
 ---
 apiVersion: v1
 kind: Pod

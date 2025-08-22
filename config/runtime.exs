@@ -106,5 +106,21 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  # Configure DNS cluster query based on deployment environment
+  dns_cluster_query =
+    cond do
+      System.get_env("KUBERNETES_SERVICE_HOST") ->
+        # Azure AKS: Use headless service for DNS-based clustering
+        System.get_env("DNS_CLUSTER_QUERY") || "privee-app-svc-headless.default.svc.cluster.local"
+
+      System.get_env("FLY_APP_NAME") ->
+        # Fly.io: Use internal domain for clustering
+        System.get_env("DNS_CLUSTER_QUERY") || "#{System.get_env("FLY_APP_NAME")}.internal"
+
+      true ->
+        # Default/local development
+        System.get_env("DNS_CLUSTER_QUERY")
+    end
+
+  config :privee, :dns_cluster_query, dns_cluster_query
 end
