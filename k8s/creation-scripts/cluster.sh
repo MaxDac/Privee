@@ -1,0 +1,14 @@
+az aks create \
+  --resource-group Privee \
+  --name Privee \
+  --location northeurope \
+  --node-vm-size Standard_DS2_v2 \
+  --node-count 1 \
+  --enable-managed-identity \
+  --network-plugin azure \
+  --vnet-subnet-id /subscriptions/8d00305a-0cc3-4bc8-a8fc-320806a17895/resourceGroups/Privee/providers/Microsoft.Network/virtualNetworks/Privee-VNet/subnets/aks-subnet \
+  --service-cidr 10.1.0.0/16 \
+  --dns-service-ip 10.1.0.10 \
+  --dns-name-prefix privee \
+  --attach-acr Privee \
+  --generate-ssh-keys

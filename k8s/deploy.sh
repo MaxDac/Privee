@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Privee Kubernetes Deployment Script
-# This script deploys the Privee application to Kubernetes in the recommended order
+# This script deploys the Privee application to Kubernetes using Kustomize
 
 set -e  # Exit on any error
 
@@ -25,39 +25,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "📁 Deploying from: $SCRIPT_DIR"
 
-# Step 1: Apply secrets first (dependencies)
-echo "🔐 1/4 Applying secrets..."
-if kubectl apply -f "$SCRIPT_DIR/secrets.yml"; then
-    echo "✅ Secrets applied successfully"
+# Apply all resources using Kustomize
+echo "🏗️  Applying all resources with Kustomize..."
+if kubectl apply -k "$SCRIPT_DIR"; then
+    echo "✅ All resources applied successfully"
 else
-    echo "❌ Failed to apply secrets"
-    exit 1
-fi
-
-# Step 2: Apply deployment (main application)
-echo "🏗️  2/4 Applying deployment..."
-if kubectl apply -f "$SCRIPT_DIR/deployment.yml"; then
-    echo "✅ Deployment applied successfully"
-else
-    echo "❌ Failed to apply deployment"
-    exit 1
-fi
-
-# Step 3: Apply services (networking)
-echo "🌐 3/4 Applying services..."
-if kubectl apply -f "$SCRIPT_DIR/services-best-practice.yml"; then
-    echo "✅ Services applied successfully"
-else
-    echo "❌ Failed to apply services"
-    exit 1
-fi
-
-# Step 4: Apply debug pod (optional)
-echo "🔍 4/4 Applying debug pod..."
-if kubectl apply -f "$SCRIPT_DIR/debug-pod.yml"; then
-    echo "✅ Debug pod applied successfully"
-else
-    echo "❌ Failed to apply debug pod"
+    echo "❌ Failed to apply resources with Kustomize"
     exit 1
 fi
 
@@ -79,10 +52,12 @@ kubectl get pods -l app=privee
 echo ""
 kubectl get services
 echo ""
+kubectl get ingress
+echo ""
 
 # Show how to access the application
 echo "🌍 Application access:"
-echo "- LoadBalancer service: kubectl get service privee-loadbalancer"
+echo "- Ingress IP: kubectl get ingress privee-ingress"
 echo "- Port forward for local access: kubectl port-forward deployment/privee 4000:4000"
 echo "- View logs: kubectl logs -l app=privee --tail=50"
 

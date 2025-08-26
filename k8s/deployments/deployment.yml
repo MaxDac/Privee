@@ -6,16 +6,19 @@ spec:
   selector:
     matchLabels:
       app: privee
-      app.kubernetes.io/name: privee-app
-      app.kubernetes.io/instance: privee-node
   replicas: 3
   template:
     metadata:
       labels:
         app: privee
-        app.kubernetes.io/name: privee-app
-        app.kubernetes.io/instance: privee-node
     spec:
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-privee"
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: privee
@@ -24,6 +27,10 @@ spec:
         command: ["./bin/server"]
         # command: [ "sh", "-c"]
         # args: ["while true; do echo 'yo' && sleep 5; done;"]
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
         resources:
           limits:
             memory: "520Mi"

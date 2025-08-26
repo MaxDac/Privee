@@ -1,0 +1,31 @@
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: privee-ingress
+  namespace: default
+  annotations:
+    # Use Azure Application Routing (managed NGINX)
+    kubernetes.io/ingress.class: webapprouting.kubernetes.azure.com
+    # Enable SSL redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # Use Key Vault certificate
+    kubernetes.azure.com/tls-cert-keyvault-uri: "https://privee-kv.vault.azure.net/certificates/privee-tls"
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  tls:
+  - hosts:
+    - privee.northeurope.cloudapp.azure.com
+    secretName: ingress-tls
+  rules:
+  - host: privee.northeurope.cloudapp.azure.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: privee
+            port:
+              number: 80
