@@ -4,7 +4,13 @@ param namePrefix string
 @description('Location for all resources.')
 param location string
 
-var keyVaultName = '${namePrefix}-${uniqueString(resourceGroup().id)}-kv'
+@description('Resource group name where Key Vault should be deployed.')
+param resourceGroupName string
+
+var keyVaultName = '${namePrefix}-kv'
+
+// Target scope will be set when calling this module
+targetScope = 'resourceGroup'
 
 // ----------------- Key Vault (for TLS certs) -----------------
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -12,7 +18,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   properties: {
     enableSoftDelete: true
-    enablePurgeProtection: false // Only for Dev
+    enablePurgeProtection: true // Required by Azure - cannot be set to false
     enableRbacAuthorization: true // AKS add-on uses RBAC role assignment when attached
     tenantId: subscription().tenantId
     sku: { name: 'standard', family: 'A' }
@@ -26,3 +32,4 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 // ----------------- Outputs -----------------
 output keyVaultId string = keyVault.id
 output keyVaultName string = keyVault.name
+output keyVaultResourceGroup string = resourceGroupName

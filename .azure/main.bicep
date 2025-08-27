@@ -61,14 +61,6 @@ module acr 'modules/acr.bicep' = {
   }
 }
 
-// ----------------- Deploy Key Vault Module -----------------
-module keyVault 'modules/keyvault.bicep' = {
-  params: {
-    namePrefix: namePrefix
-    location: location
-  }
-}
-
 // ----------------- Deploy PostgreSQL Module -----------------
 module postgresql 'modules/postgresql.bicep' = {
   params: {
@@ -97,5 +89,4 @@ module aks 'modules/aks.bicep' = {
 // ----------------- Outputs -----------------
 output aksName string = aks.outputs.aksName
 output acrLoginServer string = acr.outputs.acrLoginServer
-output keyVaultName string = keyVault.outputs.keyVaultName
 output dnsZoneId string = networking.outputs.publicDnsZoneId

@@ -10,15 +10,16 @@ param environment string = 'dev'
 @description('Additional tags to apply to the resource group')
 param tags object = {}
 
-var resourceGroupName = '${namePrefix}-${environment}-rg'
+var mainResourceGroupName = '${namePrefix}-${environment}-rg'
+var keyVaultResourceGroupName = '${namePrefix}-${environment}-kv-rg'
 
 // Note: This template should be deployed at subscription scope
-// to create the resource group
+// to create the resource groups
 targetScope = 'subscription'
 
-// Create the resource group with standard tags
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
-  name: resourceGroupName
+// Create the main resource group with standard tags
+resource mainResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: mainResourceGroupName
   location: location
   tags: union({
     Environment: environment
@@ -27,7 +28,25 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   }, tags)
 }
 
+// Create the Key Vault resource group with standard tags
+resource keyVaultResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: keyVaultResourceGroupName
+  location: location
+  tags: union({
+    Environment: environment
+    Application: 'Privee'
+    Component: 'KeyVault'
+    ManagedBy: 'Bicep'
+  }, tags)
+}
+
 // ----------------- Outputs -----------------
-output resourceGroupName string = resourceGroup.name
-output resourceGroupId string = resourceGroup.id
-output location string = resourceGroup.location
+output mainResourceGroupName string = mainResourceGroup.name
+output mainResourceGroupId string = mainResourceGroup.id
+output keyVaultResourceGroupName string = keyVaultResourceGroup.name
+output keyVaultResourceGroupId string = keyVaultResourceGroup.id
+output location string = mainResourceGroup.location
+
+// Keep backward compatibility
+output resourceGroupName string = mainResourceGroup.name
+output resourceGroupId string = mainResourceGroup.id

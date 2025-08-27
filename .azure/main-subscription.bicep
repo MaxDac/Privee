@@ -51,8 +51,8 @@ param pgSubnetCidr string = '10.0.2.0/24'
 param tags object = {}
 
 // ----------------- Deploy Resource Groups Modules -----------------
-module resourceGroup 'modules/resourcegroups.bicep' = {
-  name: 'resourceGroup-deployment'
+module resourceGroups 'modules/resourcegroups.bicep' = {
+  name: 'resourceGroups-deployment'
   params: {
     namePrefix: namePrefix
     location: location
@@ -61,12 +61,26 @@ module resourceGroup 'modules/resourcegroups.bicep' = {
   }
 }
 
-// ----------------- Deploy Infrastructure within Resource Group -----------------
+// ----------------- Deploy Key Vault in separate Resource Group -----------------
+module keyVault 'modules/keyvault.bicep' = {
+  name: 'keyVault-deployment'
+  scope: az.resourceGroup(subscription().subscriptionId, '${namePrefix}-${environment}-kv-rg')
+  dependsOn: [
+    resourceGroups
+  ]
+  params: {
+    namePrefix: namePrefix
+    location: location
+    resourceGroupName: '${namePrefix}-${environment}-kv-rg'
+  }
+}
+
+// ----------------- Deploy Infrastructure within Main Resource Group -----------------
 module infrastructure 'main.bicep' = {
   name: 'infrastructure-deployment'
   scope: az.resourceGroup(subscription().subscriptionId, '${namePrefix}-${environment}-rg')
   dependsOn: [
-    resourceGroup
+    resourceGroups
   ]
   params: {
     namePrefix: namePrefix
@@ -86,7 +100,12 @@ module infrastructure 'main.bicep' = {
 }
 
 // ----------------- Outputs -----------------
-output resourceGroupName string = resourceGroup.outputs.resourceGroupName
+output mainResourceGroupName string = resourceGroups.outputs.mainResourceGroupName
+output keyVaultResourceGroupName string = resourceGroups.outputs.keyVaultResourceGroupName
 output aksName string = infrastructure.outputs.aksName
-output keyVaultName string = infrastructure.outputs.keyVaultName
+output keyVaultName string = keyVault.outputs.keyVaultName
+output keyVaultId string = keyVault.outputs.keyVaultId
 output dnsZoneId string = infrastructure.outputs.dnsZoneId
+
+// Keep backward compatibility
+output resourceGroupName string = resourceGroups.outputs.mainResourceGroupName
