@@ -200,21 +200,14 @@ PARAMS=(
 if [[ -n "$AKS_KUBELET_OBJECT_ID" ]]; then
   PARAMS+=( aksKubeletIdentityObjectId="$AKS_KUBELET_OBJECT_ID" )
 fi
-if [[ "$GRANT_AKS_ACCESS" == "true" && -n "$AKS_ROLE_ID" ]]; then
-  PARAMS+=( aksRoleDefinitionId="$AKS_ROLE_ID" )
-fi
-if [[ -n "$AKS_GETCREDS_ROLE_ID" ]]; then
-  PARAMS+=( aksGetCredentialsRoleDefinitionId="$AKS_GETCREDS_ROLE_ID" )
-fi
 
 echo "Summary of resolved targets:"
 echo "  Deployment RG:         $DEPLOY_RG"
 echo "  ACR:                   $ACR_NAME (rg: $ACR_RG)"
-if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" ]]; then
+if [[ "$GRANT_AKS_ACCESS" == "true" ]]; then
   echo "  AKS:                   $AKS_NAME (rg: $AKS_RG)"
   echo "  Kubelet Object ID:     ${AKS_KUBELET_OBJECT_ID:-<not provided/detected>}"
-  echo "  AKS Role Definition:   ${AKS_ROLE_ID:-<default in module>}"
-  echo "  AKS GetCreds Role:     ${AKS_GETCREDS_ROLE_ID:-<skipped>}"
+  echo "  AKS Roles:             Cluster Admin + Cluster User (hardcoded in module)"
 else
   echo "  AKS RBAC assignment:   skipped (grantAksAccess=false)"
 fi

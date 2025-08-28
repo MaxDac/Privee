@@ -98,8 +98,6 @@ PARAMS=(
     aksResourceGroup="$AKS_RESOURCE_GROUP"
     aksName="$AKS_NAME"
     aksKubeletIdentityObjectId="$AKS_KUBELET_IDENTITY_OBJECT_ID"
-    aksRoleDefinitionId="$(basename "$AKS_ROLE_ID")"
-    aksGetCredentialsRoleDefinitionId="$(basename "$AKS_GETCREDS_ROLE_ID")"
 )
 
 az deployment group create \

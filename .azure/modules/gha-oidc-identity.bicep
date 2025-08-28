@@ -25,17 +25,15 @@ param aksResourceGroup string
 @description('AKS cluster name')
 param aksName string
 
-@description('Grant AKS access to the identity using this built-in role; default is AKS RBAC Cluster Admin.')
-param aksRoleDefinitionId string = '0ab0a1a7-8d01-4a35-8b0a-8ec5f50dfca1' // Azure Kubernetes Service RBAC Cluster Admin
-
-@description('Whether to grant AKS RBAC role to the identity.')
+@description('Whether to grant AKS access to the identity.')
 param grantAksAccess bool = true
 
 @description('Optionally, provide the AKS kubelet managed identity objectId to attach ACR pull to the cluster (emulates az aks update --attach-acr). Leave empty to skip.')
 param aksKubeletIdentityObjectId string = ''
 
-@description('Optional: Role definition ID to grant on the AKS control plane to allow fetching cluster credentials (e.g., Azure Kubernetes Service Cluster User Role). Leave empty to skip.')
-param aksGetCredentialsRoleDefinitionId string = '4f8d06c2-cde2-4668-8864-4e9b0b23434e' // Azure Kubernetes Service Cluster User Role
+// Azure built-in role definition IDs
+var aksClusterUserRoleId = '4abbcc35-e782-43d8-92c5-2d3f1bd2253f' // Azure Kubernetes Service Cluster User Role
+var aksRbacClusterAdminRoleId = '3498e952-d568-435e-9b2c-8d77e338d7f7' // Azure Kubernetes Service RBAC Cluster Admin
 
 var uaiName = toLower('${namePrefix}-gha-oidc')
 var issuer = 'https://token.actions.githubusercontent.com'
@@ -98,18 +96,18 @@ module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
     aksName: aksName
     principalObjectId: uai.properties.principalId
     principalStableId: uai.id
-    roleDefinitionId: aksRoleDefinitionId
+    roleDefinitionId: aksRbacClusterAdminRoleId
   }
 }
 
-module assignAksGetCreds './aks-rbac-assignment.bicep' = if (!empty(aksGetCredentialsRoleDefinitionId)) {
+module assignAksGetCreds './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   name: '${uai.name}-aks-getcreds'
   scope: resourceGroup(aksResourceGroup)
   params: {
     aksName: aksName
     principalObjectId: uai.properties.principalId
     principalStableId: uai.id
-    roleDefinitionId: aksGetCredentialsRoleDefinitionId
+    roleDefinitionId: aksClusterUserRoleId
   }
 }
 

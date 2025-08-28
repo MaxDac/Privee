@@ -1,13 +1,13 @@
 @description('AKS cluster name')
 param aksName string
 
-@description('Object ID of the principal to assign RBAC to (e.g., UAMI principalId)')
+@description('Object ID of the principal to assign RBAC to (e.g., UAMI principalId or federated OIDC MI)')
 param principalObjectId string
 
-@description('Stable, compile-time ID to build name deterministically (e.g., UAMI resourceId)')
+@description('Stable, compile-time ID to build name deterministically (e.g., UAMI resourceId or federated MI clientId)')
 param principalStableId string
 
-@description('Role definition ID for AKS (e.g., Azure Kubernetes Service RBAC Cluster Admin)')
+@description('Role definition ID for AKS (e.g., Azure Kubernetes Service RBAC Cluster Admin or Cluster User Role)')
 param roleDefinitionId string
 
 // Existing AKS in this module's RG scope
@@ -15,8 +15,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' existing = 
   name: aksName
 }
 
-resource aksRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  // Include roleDefinitionId to ensure uniqueness when assigning multiple roles to the same principal at the same scope
+// Role assignment based on the provided role definition ID
+resource aksRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(aks.id, 'aks-rbac', principalStableId, roleDefinitionId)
   scope: aks
   properties: {
