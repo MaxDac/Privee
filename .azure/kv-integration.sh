@@ -1,7 +1,8 @@
 # Variables
-RG=<yourResourceGroup>
+RG="privee-dev-rg"
+KV_RG="privee-dev-kv-rg"
 AKS=${namePrefix}-aks
-KV=$(az deployment group show -g $RG -n main --query "properties.outputs.keyVaultName.value" -o tsv)
+KV=$(az deployment group show -g $KV_RG -n main --query "properties.outputs.keyVaultName.value" -o tsv)
 ZONEID=$(az deployment group show -g $RG -n main --query "properties.outputs.dnsZoneId.value" -o tsv)
 
 # 2.1 Enable the Application Routing add‑on on the existing cluster

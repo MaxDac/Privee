@@ -39,3 +39,4 @@ node_modules/
 
 # Vitest results
 .vite
+.azure/error.log
