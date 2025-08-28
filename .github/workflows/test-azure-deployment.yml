@@ -15,10 +15,7 @@ env:
   CLUSTER_NAME: privee-aks
   CONTAINER_NAME: privee
   DEPLOYMENT_MANIFEST_PATH: |
-    ./k8s/deployment.yml
-    ./k8s/services.yml
-    ./k8s/secrets.yml
-    ./k8s/debug-pod.yml
+    ./.azure/k8s/deployment.yml
 
 permissions:
   id-token: write
@@ -65,12 +62,16 @@ jobs:
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
             VCS_REF=${GITHUB_SHA}
 
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1.2
+        with:
+          kubelogin-version: 'v0.0.24'
+
       - name: Gets K8s context
         uses: azure/aks-set-context@v4
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
-          use-kubelogin: true
 
       - name: Deploys application
         uses: Azure/k8s-deploy@v5
