@@ -21,6 +21,19 @@ param acrId string
 
 var aksName = '${namePrefix}-aks'
 
+@description('Enable autoscaling for the AKS agent pool (recommended). If disabled, a minimum of 2 nodes will be enforced.')
+param enableAutoScaling bool = false
+
+@description('Minimum node count when autoscaling is enabled (will be enforced to be at least 2).')
+param minNodeCount int = 2
+
+@description('Maximum node count when autoscaling is enabled.')
+param maxNodeCount int = 3
+
+// Enforce a minimum capacity of 2 nodes for HA and at least 2 replicas capacity
+var effectiveMinCount = max(minNodeCount, 2)
+var effectiveNodeCount = max(aksNodeCount, 2)
+
 // ----------------- AKS -----------------
 resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
   name: aksName
@@ -33,7 +46,11 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
     agentPoolProfiles: [
       {
         name: 'systempool'
-        count: aksNodeCount
+        // When autoscaling is enabled, omit count and set min/max; otherwise enforce a minimum of 2 nodes
+        count: enableAutoScaling ? null : effectiveNodeCount
+        enableAutoScaling: enableAutoScaling
+        minCount: enableAutoScaling ? effectiveMinCount : null
+        maxCount: enableAutoScaling ? maxNodeCount : null
         vmSize: aksVmSize
         osType: 'Linux'
         mode: 'System'

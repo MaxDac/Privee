@@ -119,10 +119,6 @@ echo "Applying manifests with real values..."
 # Deploy Kubernetes manifests in the correct order
 echo "Deploying Kubernetes manifests..."
 
-# Deploy secrets first
-echo "Applying secrets..."
-kubectl apply -f "$(dirname "$0")/secrets.yml"
-
 # Deploy SecretProviderClass and wait for it to be ready
 echo "Applying SecretProviderClass..."
 kubectl apply -f "$PROCESSED_SPC_FILE"
