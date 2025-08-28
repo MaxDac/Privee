@@ -35,7 +35,7 @@ param grantAksAccess bool = true
 param aksKubeletIdentityObjectId string = ''
 
 @description('Optional: Role definition ID to grant on the AKS control plane to allow fetching cluster credentials (e.g., Azure Kubernetes Service Cluster User Role). Leave empty to skip.')
-param aksGetCredentialsRoleDefinitionId string = ''
+param aksGetCredentialsRoleDefinitionId string = '4f8d06c2-cde2-4668-8864-4e9b0b23434e' // Azure Kubernetes Service Cluster User Role
 
 var uaiName = toLower('${namePrefix}-gha-oidc')
 var issuer = 'https://token.actions.githubusercontent.com'
@@ -55,6 +55,23 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   properties: {
     issuer: issuer
     subject: subject
+    audiences: [
+      audience
+    ]
+  }
+}
+
+// TODO: Remove this before merging the PR
+// Federated Identity Credential for the fix branch
+resource fic_fix_branch 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
+  name: 'github-oidc-fix-branch'
+  parent: uai
+  dependsOn: [
+    fic
+  ]
+  properties: {
+    issuer: issuer
+    subject: 'repo:${githubOwner}/${githubRepo}:ref:refs/heads/106-fix-azure-login-1'
     audiences: [
       audience
     ]
