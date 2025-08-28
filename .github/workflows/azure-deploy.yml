@@ -20,8 +20,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       RESOURCE_GROUP: Privee
-      AZURE_CONTAINER_REGISTRY: privee
-      REGISTRY_URL: privee.azurecr.io
+      AZURE_CONTAINER_REGISTRY: priveeregistry
+      REGISTRY_URL: priveeregistry.azurecr.io
       PROJECT_NAME: privee
       CLUSTER_NAME: Privee
       CONTAINER_NAME: privee

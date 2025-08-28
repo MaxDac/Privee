@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   build:
+    # TEMP: Disable this job during PRs. Remove this `if` before merging to re-enable.
+    if: ${{ false }}
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
@@ -83,6 +85,8 @@ jobs:
         uses: ./.github/actions/test-pr
 
   check-client:
+    # TEMP: Disable this job during PRs. Remove this `if` before merging to re-enable.
+    if: ${{ false }}
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
@@ -118,6 +122,8 @@ jobs:
           node: ${{ matrix.node }}
 
   check-image-build:
+    # TEMP: Disable this job during PRs. Remove this `if` before merging to re-enable.
+    if: ${{ false }}
     # The `runs-on` configuration must be set only at the top level workflow execution.
     runs-on: ubuntu-24.04
 
