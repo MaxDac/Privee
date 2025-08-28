@@ -31,7 +31,7 @@ param grantAksAccess bool = true
 @description('Optionally, provide the AKS kubelet managed identity objectId to attach ACR pull to the cluster (emulates az aks update --attach-acr). Leave empty to skip.')
 param aksKubeletIdentityObjectId string = ''
 
-// Azure built-in role definition IDs
+// Azure built-in role definition IDs - verified from Microsoft documentation
 var aksClusterUserRoleId = '4abbcc35-e782-43d8-92c5-2d3f1bd2253f' // Azure Kubernetes Service Cluster User Role
 var aksRbacClusterAdminRoleId = '3498e952-d568-435e-9b2c-8d77e338d7f7' // Azure Kubernetes Service RBAC Cluster Admin
 
@@ -97,6 +97,7 @@ module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
     principalObjectId: uai.properties.principalId
     principalStableId: uai.id
     roleDefinitionId: aksRbacClusterAdminRoleId
+    roleName: 'ClusterAdmin'
   }
 }
 
@@ -108,6 +109,7 @@ module assignAksGetCreds './aks-rbac-assignment.bicep' = if (grantAksAccess) {
     principalObjectId: uai.properties.principalId
     principalStableId: uai.id
     roleDefinitionId: aksClusterUserRoleId
+    roleName: 'ClusterUser'
   }
 }
 
