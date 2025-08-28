@@ -14,6 +14,9 @@ GRANT_AKS_ACCESS="true"     # Allow override if you want to skip AKS role assign
 # Role resolution: by default we will try to use the built-in role 'Azure Kubernetes Service RBAC Cluster Admin'
 AKS_ROLE_NAME="Azure Kubernetes Service RBAC Cluster Admin"
 AKS_ROLE_ID=""              # If provided, takes precedence over AKS_ROLE_NAME
+# Control-plane role to allow get-credentials (user credentials by default)
+AKS_GETCREDS_ROLE_NAME="Azure Kubernetes Service Cluster User Role"
+AKS_GETCREDS_ROLE_ID=""     # If provided, takes precedence over AKS_GETCREDS_ROLE_NAME
 
 usage() {
   cat <<EOF
@@ -29,6 +32,8 @@ Usage: $0 [options]
       --grant-aks-access <true|false>   Whether to create AKS RBAC assignment (default: ${GRANT_AKS_ACCESS})
       --aks-role-name <name>            Optional: RBAC role display name to assign at the AKS scope (default: "${AKS_ROLE_NAME}")
       --aks-role-id <guid>              Optional: Role definition GUID to use. Overrides --aks-role-name if set
+    --aks-getcreds-role-name <name>   Optional: Control-plane role to allow get-credentials (default: "${AKS_GETCREDS_ROLE_NAME}")
+    --aks-getcreds-role-id <guid>     Optional: Role definition GUID for get-credentials. Overrides --aks-getcreds-role-name if set
   -h, --help                            Show this help
 EOF
 }
@@ -47,6 +52,8 @@ while [[ "${1:-}" != "" ]]; do
     --grant-aks-access) GRANT_AKS_ACCESS="$2"; shift 2 ;;
     --aks-role-name) AKS_ROLE_NAME="$2"; shift 2 ;;
     --aks-role-id) AKS_ROLE_ID="$2"; shift 2 ;;
+  --aks-getcreds-role-name) AKS_GETCREDS_ROLE_NAME="$2"; shift 2 ;;
+  --aks-getcreds-role-id) AKS_GETCREDS_ROLE_ID="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown parameter: $1"; usage; exit 1 ;;
   esac
@@ -100,8 +107,27 @@ if ! az acr show -n "$ACR_NAME" -g "$ACR_RG" >/dev/null 2>&1; then
   fi
 fi
 
-# Verify AKS exists; auto-detect RG if needed (only if we will grant AKS access)
-if [[ "$GRANT_AKS_ACCESS" == "true" ]]; then
+# Resolve the AKS get-credentials role definition ID if not explicitly provided
+if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
+  AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$AKS_GETCREDS_ROLE_NAME" --query "[0].name" -o tsv 2>/dev/null || true)"
+  if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
+    # Try common alternatives
+    for alt in \
+      "Azure Kubernetes Service Cluster User Role" \
+      "Azure Kubernetes Service Cluster Admin Role"; do
+      AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv 2>/dev/null || true)"
+      if [[ -n "$AKS_GETCREDS_ROLE_ID" ]]; then
+        echo "Resolved AKS get-credentials role using alternative name: $alt -> $AKS_GETCREDS_ROLE_ID"
+        break
+      fi
+    done
+  else
+    echo "Resolved AKS get-credentials role '$AKS_GETCREDS_ROLE_NAME' -> $AKS_GETCREDS_ROLE_ID"
+  fi
+fi
+
+# Verify AKS exists; auto-detect RG if needed when assigning any AKS-scoped role
+if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" ]]; then
   echo "Validating AKS '$AKS_NAME'..."
   if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" >/dev/null 2>&1; then
     echo "AKS '$AKS_NAME' not found in RG '$AKS_RG'. Searching subscription by name..."
@@ -113,7 +139,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" ]]; then
     else
       echo "ERROR: AKS '$AKS_NAME' not found in subscription."
       echo "Hint: Create it first or pass --aks-name and/or --aks-rg to match existing resources,"
-      echo "      or rerun with --grant-aks-access false to skip AKS RBAC assignment."
+      echo "      or rerun with --grant-aks-access false and without --aks-getcreds-role-* to skip AKS role assignments."
       exit 1
     fi
   fi
@@ -177,14 +203,18 @@ fi
 if [[ "$GRANT_AKS_ACCESS" == "true" && -n "$AKS_ROLE_ID" ]]; then
   PARAMS+=( aksRoleDefinitionId="$AKS_ROLE_ID" )
 fi
+if [[ -n "$AKS_GETCREDS_ROLE_ID" ]]; then
+  PARAMS+=( aksGetCredentialsRoleDefinitionId="$AKS_GETCREDS_ROLE_ID" )
+fi
 
 echo "Summary of resolved targets:"
 echo "  Deployment RG:         $DEPLOY_RG"
 echo "  ACR:                   $ACR_NAME (rg: $ACR_RG)"
-if [[ "$GRANT_AKS_ACCESS" == "true" ]]; then
+if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" ]]; then
   echo "  AKS:                   $AKS_NAME (rg: $AKS_RG)"
   echo "  Kubelet Object ID:     ${AKS_KUBELET_OBJECT_ID:-<not provided/detected>}"
   echo "  AKS Role Definition:   ${AKS_ROLE_ID:-<default in module>}"
+  echo "  AKS GetCreds Role:     ${AKS_GETCREDS_ROLE_ID:-<skipped>}"
 else
   echo "  AKS RBAC assignment:   skipped (grantAksAccess=false)"
 fi

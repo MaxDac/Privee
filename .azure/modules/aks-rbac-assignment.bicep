@@ -16,7 +16,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' existing = 
 }
 
 resource aksRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aks.id, 'aks-rbac', principalStableId)
+  // Include roleDefinitionId to ensure uniqueness when assigning multiple roles to the same principal at the same scope
+  name: guid(aks.id, 'aks-rbac', principalStableId, roleDefinitionId)
   scope: aks
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionId)

@@ -32,8 +32,10 @@ param aksRoleDefinitionId string = '0ab0a1a7-8d01-4a35-8b0a-8ec5f50dfca1' // Azu
 param grantAksAccess bool = true
 
 @description('Optionally, provide the AKS kubelet managed identity objectId to attach ACR pull to the cluster (emulates az aks update --attach-acr). Leave empty to skip.')
-@secure()
 param aksKubeletIdentityObjectId string = ''
+
+@description('Optional: Role definition ID to grant on the AKS control plane to allow fetching cluster credentials (e.g., Azure Kubernetes Service Cluster User Role). Leave empty to skip.')
+param aksGetCredentialsRoleDefinitionId string = ''
 
 var uaiName = toLower('${namePrefix}-gha-oidc')
 var issuer = 'https://token.actions.githubusercontent.com'
@@ -80,6 +82,17 @@ module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
     principalObjectId: uai.properties.principalId
     principalStableId: uai.id
     roleDefinitionId: aksRoleDefinitionId
+  }
+}
+
+module assignAksGetCreds './aks-rbac-assignment.bicep' = if (!empty(aksGetCredentialsRoleDefinitionId)) {
+  name: '${uai.name}-aks-getcreds'
+  scope: resourceGroup(aksResourceGroup)
+  params: {
+    aksName: aksName
+    principalObjectId: uai.properties.principalId
+    principalStableId: uai.id
+    roleDefinitionId: aksGetCredentialsRoleDefinitionId
   }
 }
 

@@ -8,7 +8,6 @@ param principalObjectId string
 param principalStableId string
 
 @description('Optional kubelet identity objectId to grant AcrPull (attach-acr equivalent). Leave empty to skip.')
-@secure()
 param kubeletIdentityObjectId string = ''
 
 // Built-in role IDs

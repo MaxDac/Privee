@@ -1,15 +1,14 @@
 name: Privee PR CI
 
 on:
-  # TODO - decomment before merging
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - synchronize
-  #     - reopened
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
-  #   branches:
-  #     - main
+    branches:
+      - main
 
 permissions:
   contents: read
