@@ -8,11 +8,11 @@ name: Run Azure Login with Managed Identity
 on: [push]
 
 env:
-  RESOURCE_GROUP: Privee
+  RESOURCE_GROUP: privee-dev-rg
   AZURE_CONTAINER_REGISTRY: priveeregistry
   REGISTRY_URL: priveeregistry.azurecr.io
   PROJECT_NAME: privee
-  CLUSTER_NAME: Privee
+  CLUSTER_NAME: privee-aks
   CONTAINER_NAME: privee
   DEPLOYMENT_MANIFEST_PATH: |
     ./k8s/deployment.yml
