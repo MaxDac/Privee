@@ -50,6 +50,9 @@ param pgSubnetCidr string = '10.0.2.0/24'
 @description('Additional tags to apply to resources')
 param tags object = {}
 
+@description('Optional DNS label to assign to the web app routing public IP (cloudapp.azure.com). Leave empty to skip.')
+param ingressDnsLabel string = ''
+
 // ----------------- Deploy Resource Groups Modules -----------------
 module resourceGroups 'modules/resourcegroups.bicep' = {
   name: 'resourceGroups-deployment'
@@ -97,6 +100,7 @@ module infrastructure 'main.bicep' = {
     aksSubnetCidr: aksSubnetCidr
     pgSubnetCidr: pgSubnetCidr
     keyVaultId: keyVault.outputs.keyVaultId // Pass Key Vault ID
+    ingressDnsLabel: ingressDnsLabel
   }
 }
 
@@ -107,6 +111,7 @@ output aksName string = infrastructure.outputs.aksName
 output keyVaultName string = keyVault.outputs.keyVaultName
 output keyVaultId string = keyVault.outputs.keyVaultId
 output dnsZoneId string = infrastructure.outputs.dnsZoneId
+output ingressFqdn string = infrastructure.outputs.ingressFqdn
 
 // Keep backward compatibility
 output resourceGroupName string = resourceGroups.outputs.mainResourceGroupName

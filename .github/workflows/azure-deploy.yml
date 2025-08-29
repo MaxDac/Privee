@@ -27,6 +27,8 @@ jobs:
       CONTAINER_NAME: privee
       DEPLOYMENT_MANIFEST_PATH: |
         ./.azure/k8s/deployment.yml
+      # Set the Azure-specific host for Phoenix compilation
+      PHX_HOST: privee.northeurope.cloudapp.azure.com
 
     steps:
       - name: Checkout repository
@@ -63,6 +65,7 @@ jobs:
           build-args: |
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
             VCS_REF=${GITHUB_SHA}
+            PHX_HOST=${{ env.PHX_HOST }}
 
       - name: Set up kubelogin for non-interactive login
         uses: azure/use-kubelogin@v1.2

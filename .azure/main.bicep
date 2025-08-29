@@ -43,6 +43,9 @@ param pgSubnetCidr string = '10.0.2.0/24'
 @description('Key Vault resource ID for app routing add-on')
 param keyVaultId string
 
+@description('Optional DNS label to assign to the web app routing public IP (cloudapp.azure.com). Leave empty to skip.')
+param ingressDnsLabel string = ''
+
 // ----------------- Deploy Networking Module -----------------
 module networking 'modules/networking.bicep' = {
   params: {
@@ -92,6 +95,19 @@ module aks 'modules/aks.bicep' = {
   }
 }
 
+// Optionally set the Public IP DNS label for the ingress controller in the AKS node resource group
+module ingressDns 'modules/ingress-dnslabel.bicep' = if (!empty(ingressDnsLabel)) {
+  name: 'ingress-dnslabel'
+  // Node resource group name is deterministic: MC_{mainRG}_{aksName}_{location}
+  scope: az.resourceGroup(subscription().subscriptionId, 'MC_${resourceGroup().name}_${namePrefix}-aks_${location}')
+  dependsOn: [ aks ]
+  params: {
+    namePrefix: namePrefix
+    location: location
+    ingressDnsLabel: ingressDnsLabel
+  }
+}
+
 // ----------------- Grant AKS Web App Routing access to Key Vault -----------------
 var keyVaultSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
 var keyVaultName = split(keyVaultId, '/')[8]
@@ -113,3 +129,4 @@ module aksKeyVaultAccess 'modules/keyvault-role-assignment.bicep' = {
 output aksName string = aks.outputs.aksName
 output acrLoginServer string = acr.outputs.acrLoginServer
 output dnsZoneId string = networking.outputs.publicDnsZoneId
+output ingressFqdn string = !empty(ingressDnsLabel) ? '${ingressDnsLabel}.${location}.cloudapp.azure.com' : ''
