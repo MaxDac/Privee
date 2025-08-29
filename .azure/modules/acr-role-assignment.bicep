@@ -4,9 +4,6 @@ param acrName string
 @description('Object ID of the principal to assign AcrPush to (e.g., UAMI principalId)')
 param principalObjectId string
 
-@description('A stable, compile-time ID to build name deterministically (e.g., UAMI resourceId)')
-param principalStableId string
-
 @description('Optional kubelet identity objectId to grant AcrPull (attach-acr equivalent). Leave empty to skip.')
 param kubeletIdentityObjectId string = ''
 
@@ -21,7 +18,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
 
 // AcrPush to CI principal
 resource acrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acr.id, 'acr-push', principalStableId)
+  name: guid(acr.id, 'acr-push', principalObjectId)
   scope: acr
   properties: {
     roleDefinitionId: acrPushRoleId

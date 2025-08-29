@@ -59,6 +59,15 @@ module networking 'modules/networking.bicep' = {
   }
 }
 
+// ----------------- Deploy Key Vault Module -----------------
+module keyvault 'modules/keyvault.bicep' = {
+  params: {
+    namePrefix: namePrefix
+    location: location
+    resourceGroupName: resourceGroup().name
+  }
+}
+
 // ----------------- Deploy ACR Module -----------------
 module acr 'modules/acr.bicep' = {
   params: {
@@ -119,7 +128,6 @@ module aksKeyVaultAccess 'modules/keyvault-role-assignment.bicep' = {
   params: {
     keyVaultName: keyVaultName
     principalObjectId: aks.outputs.webAppRoutingIdentityObjectId
-    principalStableId: aks.outputs.aksId
     roleDefinitionId: keyVaultSecretsUserRoleId
     roleName: 'SecretsUser'
   }
@@ -129,4 +137,6 @@ module aksKeyVaultAccess 'modules/keyvault-role-assignment.bicep' = {
 output aksName string = aks.outputs.aksName
 output acrLoginServer string = acr.outputs.acrLoginServer
 output dnsZoneId string = networking.outputs.publicDnsZoneId
+
+// Ingress FQDN output (conditional on ingressDnsLabel being set)
 output ingressFqdn string = !empty(ingressDnsLabel) ? '${ingressDnsLabel}.${location}.cloudapp.azure.com' : ''

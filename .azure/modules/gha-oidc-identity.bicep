@@ -46,30 +46,13 @@ resource uai 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   location: location
 }
 
-// Federated Identity Credential (stable API)
-resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-  name: 'github-oidc'
+// ------------- Federated Identity Credential -------------
+resource federatedCredential 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
   parent: uai
+  name: 'github-actions'
   properties: {
     issuer: issuer
     subject: subject
-    audiences: [
-      audience
-    ]
-  }
-}
-
-// TODO: Remove this before merging the PR
-// Federated Identity Credential for the fix branch
-resource fic_fix_branch 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = {
-  name: 'github-oidc-fix-branch'
-  parent: uai
-  dependsOn: [
-    fic
-  ]
-  properties: {
-    issuer: issuer
-    subject: 'repo:${githubOwner}/${githubRepo}:ref:refs/heads/106-fix-azure-login-1'
     audiences: [
       audience
     ]
@@ -84,7 +67,6 @@ module assignAcr './acr-role-assignment.bicep' = {
   params: {
     acrName: acrName
     principalObjectId: uai.properties.principalId
-    principalStableId: uai.id
     kubeletIdentityObjectId: aksKubeletIdentityObjectId
   }
 }
@@ -95,7 +77,6 @@ module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   params: {
     aksName: aksName
     principalObjectId: uai.properties.principalId
-    principalStableId: uai.id
     roleDefinitionId: aksRbacClusterAdminRoleId
     roleName: 'ClusterAdmin'
   }
@@ -107,7 +88,6 @@ module assignAksGetCreds './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   params: {
     aksName: aksName
     principalObjectId: uai.properties.principalId
-    principalStableId: uai.id
     roleDefinitionId: aksClusterUserRoleId
     roleName: 'ClusterUser'
   }
