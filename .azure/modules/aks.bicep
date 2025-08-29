@@ -19,8 +19,8 @@ param aksSubnetId string
 @description('ACR resource ID for role assignment')
 param acrId string
 
-@description('DNS Zone resource ID for app routing add-on')
-param dnsZoneId string
+@description('Optional DNS Zone resource ID for app routing add-on. Leave empty to enable the add-on without Azure DNS integration.')
+param dnsZoneId string = ''
 
 var aksName = '${namePrefix}-aks'
 
@@ -67,12 +67,16 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
       serviceCidr: '10.1.0.0/16'
       dnsServiceIP: '10.1.0.10'
     }
-    // Enable Web Application Routing add-on with Key Vault and DNS zone integration
+    // Enable Web Application Routing add-on. If a DNS zone is provided, integrate with Azure DNS; otherwise, use the add-on without DNS integration.
     ingressProfile: {
-      webAppRouting: {
-        enabled: true
-        dnsZoneResourceIds: [dnsZoneId]
-      }
+      webAppRouting: empty(dnsZoneId)
+        ? {
+            enabled: true
+          }
+        : {
+            enabled: true
+            dnsZoneResourceIds: [dnsZoneId]
+          }
     }
   }
 }
@@ -94,10 +98,10 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-// Grant the Web Application Routing add-on permissions to manage DNS records
+// Grant the Web Application Routing add-on permissions to manage DNS records (only when a DNS zone is provided)
 var dnsZoneContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')
 
-resource dnsPermission 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource dnsPermission 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(dnsZoneId)) {
   name: guid(dnsZoneId, 'dns-contributor', aks.name)
   scope: resourceGroup()
   properties: {
