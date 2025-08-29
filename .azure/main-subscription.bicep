@@ -96,6 +96,7 @@ module infrastructure 'main.bicep' = {
     vnetCidr: vnetCidr
     aksSubnetCidr: aksSubnetCidr
     pgSubnetCidr: pgSubnetCidr
+    keyVaultId: keyVault.outputs.keyVaultId // Pass Key Vault ID
   }
 }
 

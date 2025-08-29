@@ -39,6 +39,10 @@ param aksSubnetCidr string = '10.0.1.0/24'
 @description('PostgreSQL delegated subnet CIDR')
 param pgSubnetCidr string = '10.0.2.0/24'
 
+// Add Key Vault ID parameter
+@description('Key Vault resource ID for app routing add-on')
+param keyVaultId string
+
 // ----------------- Deploy Networking Module -----------------
 module networking 'modules/networking.bicep' = {
   params: {
@@ -75,6 +79,7 @@ module postgresql 'modules/postgresql.bicep' = {
 
 // ----------------- Deploy AKS Module -----------------
 module aks 'modules/aks.bicep' = {
+  name: 'aks'
   params: {
     namePrefix: namePrefix
     location: location
@@ -83,6 +88,24 @@ module aks 'modules/aks.bicep' = {
     aksVersion: aksVersion
     aksSubnetId: networking.outputs.aksSubnetId
     acrId: acr.outputs.acrId
+    dnsZoneId: networking.outputs.publicDnsZoneId
+  }
+}
+
+// ----------------- Grant AKS Web App Routing access to Key Vault -----------------
+var keyVaultSecretsUserRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+var keyVaultName = split(keyVaultId, '/')[8]
+var keyVaultResourceGroupName = split(keyVaultId, '/')[4]
+
+module aksKeyVaultAccess 'modules/keyvault-role-assignment.bicep' = {
+  name: 'aks-keyvault-access'
+  scope: resourceGroup(keyVaultResourceGroupName)
+  params: {
+    keyVaultName: keyVaultName
+    principalObjectId: aks.outputs.webAppRoutingIdentityObjectId
+    principalStableId: aks.outputs.aksId
+    roleDefinitionId: keyVaultSecretsUserRoleId
+    roleName: 'SecretsUser'
   }
 }
 

@@ -19,6 +19,9 @@ param aksSubnetId string
 @description('ACR resource ID for role assignment')
 param acrId string
 
+@description('DNS Zone resource ID for app routing add-on')
+param dnsZoneId string
+
 var aksName = '${namePrefix}-aks'
 
 @description('Enable autoscaling for the AKS agent pool (recommended). If disabled, a minimum of 2 nodes will be enforced.')
@@ -64,6 +67,13 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-05-01' = {
       serviceCidr: '10.1.0.0/16'
       dnsServiceIP: '10.1.0.10'
     }
+    // Enable Web Application Routing add-on with Key Vault and DNS zone integration
+    ingressProfile: {
+      webAppRouting: {
+        enabled: true
+        dnsZoneResourceIds: [dnsZoneId]
+      }
+    }
   }
 }
 
@@ -84,8 +94,22 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+// Grant the Web Application Routing add-on permissions to manage DNS records
+var dnsZoneContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')
+
+resource dnsPermission 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(dnsZoneId, 'dns-contributor', aks.name)
+  scope: resourceGroup()
+  properties: {
+    principalId: aks.properties.ingressProfile.webAppRouting.identity.objectId
+    roleDefinitionId: dnsZoneContributorRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ----------------- Outputs -----------------
 output aksId string = aks.id
 output aksName string = aks.name
 output aksPrincipalId string = aks.identity.principalId
 output aksKubeletPrincipalId string = aks.properties.identityProfile.kubeletidentity.objectId
+output webAppRoutingIdentityObjectId string = aks.properties.ingressProfile.webAppRouting.identity.objectId

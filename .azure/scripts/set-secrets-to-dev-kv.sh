@@ -35,7 +35,7 @@ echo "� Creating POSTGRES_USER in Key Vault..."
 az keyvault secret set \
     --vault-name "$VAULT_NAME" \
     --name "POSTGRES-USER" \
-    --value "priveedbadmin" \
+    --value "pgadmin" \
     --output none
 
 echo "🔓 Creating POSTGRES_DB in Key Vault..."
@@ -68,7 +68,7 @@ echo "✅ All secrets have been created in Azure Key Vault!"
 echo "✨ Creation complete!"
 echo ""
 echo "📝 Secrets created in Key Vault:"
-echo "  - POSTGRES-USER: priveedbadmin"
+echo "  - POSTGRES-USER: pgadmin"
 echo "  - POSTGRES-DB: privee"
 echo "  - POSTGRES-PASSWORD: ~^KAT4e~"
 echo "  - privee-secret-key-base: QExJc2NvZW55c2RkZzIzeDFjTTk9d01OdDZWYXRscXp3N1VlT2p5VmNRTk0wZ2d4eDQx"
