@@ -22,6 +22,7 @@ ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 # Build argument for PHX_HOST with Fly.io as default
 ARG PHX_HOST=privee.fly.dev
+ARG ENABLE_DB_SSL=false
 
 FROM ${BUILDER_IMAGE} AS builder
 
@@ -139,6 +140,7 @@ RUN chown nobody /app
 
 # set runner ENV
 ENV MIX_ENV="prod"
+ENV ENABLE_DB_SSL=${ENABLE_DB_SSL}
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./

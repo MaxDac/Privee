@@ -16,8 +16,11 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  # Enable DB SSL if the ENABLE_DB_SSL environment variable is set to "true" or "1"; otherwise, it is disabled (including when unset).
+  ssl_enabled = System.get_env("ENABLE_DB_SSL") in ~w(true 1)
+
   config :privee, Privee.Repo,
-    ssl: true,
+    ssl: ssl_enabled,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
