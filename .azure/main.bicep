@@ -59,15 +59,6 @@ module networking 'modules/networking.bicep' = {
   }
 }
 
-// ----------------- Deploy Key Vault Module -----------------
-module keyvault 'modules/keyvault.bicep' = {
-  params: {
-    namePrefix: namePrefix
-    location: location
-    resourceGroupName: resourceGroup().name
-  }
-}
-
 // ----------------- Deploy ACR Module -----------------
 module acr 'modules/acr.bicep' = {
   params: {

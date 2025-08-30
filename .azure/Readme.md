@@ -4,22 +4,54 @@ This document outlines the procedures for deploying and managing the Azure infra
 
 ## Deployment
 
-The infrastructure is defined in Bicep templates and can be deployed using the `deploy.sh` script.
+The infrastructure is now split into two main components:
+1. **Key Vault** - Deployed independently for security isolation
+2. **Main Infrastructure** - Includes AKS, networking, PostgreSQL, and other resources
 
 ### Prerequisites
 
 - Azure CLI installed and authenticated (`az login`).
 - Permissions to create resource groups and deploy resources at the subscription level.
 
-### Usage
+### Known Deployment Warnings
 
-To deploy the entire infrastructure, run the main deployment script:
+During deployment, you may see warnings like:
+
+```
+[CONCAT('/subscriptions/.../registries/priveeregistry/providers/', concat('Microsoft.Authorization/roleAssignments/', guid(...)))] (Unsupported) Changes to the resource declared at 'properties.template.resources[2].properties.template.resources[0]' on line X and column Y cannot be analyzed because its resource ID or API version cannot be calculated until the deployment is under way.
+```
+
+**These warnings are safe to ignore.** They occur because ARM's what-if analysis cannot predict the exact resource IDs for role assignments that use dynamic GUID generation. The actual deployment will work correctly.
+
+### Deployment Order
+
+#### 1. Deploy Key Vault First
+
+The Key Vault must be deployed first as it's referenced by the main infrastructure:
+
+```bash
+./deploy-keyvault.sh --location northeurope --subscription YOUR_SUBSCRIPTION_ID
+```
+
+This will output the Key Vault ID which you need to copy to `main.parameters.json`:
+
+```json
+{
+  "keyVaultId": {
+    "value": "/subscriptions/{subscription-id}/resourceGroups/privee-dev-kv-rg/providers/Microsoft.KeyVault/vaults/privee-kv"
+  }
+}
+```
+
+For detailed Key Vault deployment instructions, see [KEYVAULT_DEPLOYMENT.md](./KEYVAULT_DEPLOYMENT.md).
+
+#### 2. Deploy Main Infrastructure
+
+After updating the Key Vault ID in parameters, deploy the main infrastructure:
 
 ```bash
 ./deploy.sh
 ```
-
-The script uses parameters defined in `main.parameters.json` and Bicep files in the `modules` directory. It will provision the necessary resource groups, networking, AKS cluster, and other resources.
 
 ## Key Vault Management
 

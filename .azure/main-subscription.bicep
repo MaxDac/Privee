@@ -53,6 +53,9 @@ param tags object = {}
 @description('Optional DNS label to assign to the web app routing public IP (cloudapp.azure.com). Leave empty to skip.')
 param ingressDnsLabel string = ''
 
+@description('Key Vault resource ID (must be deployed separately first)')
+param keyVaultId string
+
 // ----------------- Deploy Resource Groups Modules -----------------
 module resourceGroups 'modules/resourcegroups.bicep' = {
   name: 'resourceGroups-deployment'
@@ -61,20 +64,6 @@ module resourceGroups 'modules/resourcegroups.bicep' = {
     location: location
     environment: environment
     tags: tags
-  }
-}
-
-// ----------------- Deploy Key Vault in separate Resource Group -----------------
-module keyVault 'modules/keyvault.bicep' = {
-  name: 'keyVault-deployment'
-  scope: az.resourceGroup(subscription().subscriptionId, '${namePrefix}-${environment}-kv-rg')
-  dependsOn: [
-    resourceGroups
-  ]
-  params: {
-    namePrefix: namePrefix
-    location: location
-    resourceGroupName: '${namePrefix}-${environment}-kv-rg'
   }
 }
 
@@ -99,7 +88,7 @@ module infrastructure 'main.bicep' = {
     vnetCidr: vnetCidr
     aksSubnetCidr: aksSubnetCidr
     pgSubnetCidr: pgSubnetCidr
-    keyVaultId: keyVault.outputs.keyVaultId // Pass Key Vault ID
+    keyVaultId: keyVaultId // Key Vault ID should be provided as parameter
     ingressDnsLabel: ingressDnsLabel
   }
 }
@@ -108,8 +97,6 @@ module infrastructure 'main.bicep' = {
 output mainResourceGroupName string = resourceGroups.outputs.mainResourceGroupName
 output keyVaultResourceGroupName string = resourceGroups.outputs.keyVaultResourceGroupName
 output aksName string = infrastructure.outputs.aksName
-output keyVaultName string = keyVault.outputs.keyVaultName
-output keyVaultId string = keyVault.outputs.keyVaultId
 output dnsZoneId string = infrastructure.outputs.dnsZoneId
 output ingressFqdn string = infrastructure.outputs.ingressFqdn
 

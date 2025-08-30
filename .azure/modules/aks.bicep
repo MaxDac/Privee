@@ -89,7 +89,7 @@ resource existingAcr 'Microsoft.ContainerRegistry/registries@2023-07-01' existin
 }
 
 resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acrId, 'AcrPull', aks.name)
+  name: guid('${acrId}-AcrPull-${aks.name}')
   scope: existingAcr
   properties: {
     principalId: aks.properties.identityProfile.kubeletidentity.objectId
@@ -102,7 +102,7 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 var dnsZoneContributorRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'befefa01-2a29-4197-83a8-272ff33ce314')
 
 resource dnsPermission 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(dnsZoneId)) {
-  name: guid(dnsZoneId, 'dns-contributor', aks.name)
+  name: guid('${dnsZoneId}-dns-contributor-${aks.name}')
   scope: resourceGroup()
   properties: {
     principalId: aks.properties.ingressProfile.webAppRouting.identity.objectId

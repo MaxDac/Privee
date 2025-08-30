@@ -18,7 +18,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
 
 // AcrPush to CI principal
 resource acrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acr.id, 'acr-push', principalObjectId)
+  name: guid('${acr.id}-acr-push-${principalObjectId}')
   scope: acr
   properties: {
     roleDefinitionId: acrPushRoleId
@@ -29,7 +29,7 @@ resource acrPush 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
 
 // Optional: AcrPull to kubelet identity
 resource acrPullForKubelet 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(kubeletIdentityObjectId)) {
-  name: guid(acr.id, 'acr-pull-kubelet', kubeletIdentityObjectId)
+  name: guid('${acr.id}-acr-pull-kubelet-${kubeletIdentityObjectId}')
   scope: acr
   properties: {
     roleDefinitionId: acrPullRoleId

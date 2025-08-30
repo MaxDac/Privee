@@ -17,7 +17,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2024-02-01' existing = 
 
 // Role assignment based on the provided role definition ID
 resource aksRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(aks.id, roleName, principalObjectId)
+  name: guid('${aks.id}-${roleName}-${principalObjectId}')
   scope: aks
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleDefinitionId)

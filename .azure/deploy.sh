@@ -213,10 +213,13 @@ else
 fi
 
 echo "What-if: group deployment for OIDC identity + role assignments into RG '$DEPLOY_RG'..."
+echo "Note: Role assignment warnings about 'Unsupported' changes are expected and can be safely ignored."
+echo "These occur because ARM cannot analyze dynamic role assignment GUIDs during what-if operations."
+echo ""
 az deployment group what-if \
   -g "$DEPLOY_RG" \
   -f "$IDENTITY_BICEP" \
-  -p "${PARAMS[@]}" || true
+  -p "${PARAMS[@]}" 2>&1 | grep -v "WhatIfUnidentifiableResource" | grep -v "Unsupported.*Changes to the resource" || true
 
 echo "Deploying OIDC identity + role assignments into RG '$DEPLOY_RG'..."
 set +e
