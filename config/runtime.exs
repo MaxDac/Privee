@@ -16,18 +16,8 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
-  # Enable DB SSL on Azure (AKS/App Service) or when explicitly requested,
-  # keep it off on Fly.io unless overridden.
-  ssl_enabled =
-    cond do
-      # If PHX_HOST is set (non-empty) and not the Fly default, assume Azure/AppService or custom host
-      (phx_host = System.get_env("PHX_HOST")) && String.trim(phx_host) != "" &&
-          phx_host != "privee.fly.dev" ->
-        true
-
-      true ->
-        false
-    end
+  # Enable DB SSL based on ENABLE_DB_SSL environment variable, defaults to false
+  ssl_enabled = System.get_env("ENABLE_DB_SSL") in ~w(true 1)
 
   config :privee, Privee.Repo,
     ssl: ssl_enabled,
