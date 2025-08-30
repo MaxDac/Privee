@@ -5,7 +5,8 @@ name: Run Azure Login with Managed Identity
 #     workflows: ["Elixir CI - Compilation"]
 #     types:
 #       - completed
-on: [push]
+on:
+  workflow_dispatch:
 
 env:
   RESOURCE_GROUP: privee-dev-rg
