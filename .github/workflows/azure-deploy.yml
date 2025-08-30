@@ -28,7 +28,7 @@ jobs:
       DEPLOYMENT_MANIFEST_PATH: |
         ./.azure/k8s/deployment.yml
       # Set the Azure-specific host for Phoenix compilation
-      PHX_HOST: app.privee.northeurope.cloudapp.azure.com
+      PHX_HOST: privee.northeurope.cloudapp.azure.com
 
     steps:
       - name: Checkout repository

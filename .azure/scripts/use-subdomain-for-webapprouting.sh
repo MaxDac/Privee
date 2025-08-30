@@ -39,13 +39,13 @@ echo "Enabling Web App Routing with custom DNS zone..."
 az aks addon enable \
   --resource-group "$RG" \
   --name "$CLUSTER" \
-  --addons web_application_routing \
+  --addon web_application_routing \
   --dns-zone-resource-ids "$ZONE_ID" -o none || {
   # If already enabled, update
   az aks addon update \
     --resource-group "$RG" \
     --name "$CLUSTER" \
-    --addons web_application_routing \
+    --addon web_application_routing \
     --dns-zone-resource-ids "$ZONE_ID" -o none
 }
 
