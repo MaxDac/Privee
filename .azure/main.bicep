@@ -20,6 +20,9 @@ param aksVersion string = ''
 @description('Public Azure DNS zone to host your app domain (e.g., example.com).')
 param dnsZoneName string
 
+@description('Optional subdomain label to create and delegate as a child DNS zone (e.g., "app"). If provided, AKS will use the child zone for Web App Routing.')
+param subdomainLabel string = ''
+
 @description('PostgreSQL server name (globally unique).')
 param pgServerName string = '${namePrefix}pg'
 
@@ -46,6 +49,9 @@ param keyVaultId string
 @description('Optional DNS label to assign to the web app routing public IP (cloudapp.azure.com). Leave empty to skip.')
 param ingressDnsLabel string = ''
 
+@description('Optional explicit Public IP resource name in the AKS node resource group to update with the DNS label. If empty, the module will auto-select.')
+param ingressPublicIpName string = ''
+
 // ----------------- Deploy Networking Module -----------------
 module networking 'modules/networking.bicep' = {
   params: {
@@ -56,6 +62,7 @@ module networking 'modules/networking.bicep' = {
     pgSubnetCidr: pgSubnetCidr
     dnsZoneName: dnsZoneName
     pgServerName: pgServerName
+  subdomainLabel: subdomainLabel
   }
 }
 
@@ -105,6 +112,7 @@ module ingressDns 'modules/ingress-dnslabel.bicep' = if (!empty(ingressDnsLabel)
     namePrefix: namePrefix
     location: location
     ingressDnsLabel: ingressDnsLabel
+    ingressPublicIpName: ingressPublicIpName
   }
 }
 

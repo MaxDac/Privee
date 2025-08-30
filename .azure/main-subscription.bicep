@@ -28,6 +28,9 @@ param aksVersion string = ''
 @description('Public Azure DNS zone to host your app domain (e.g., example.com).')
 param dnsZoneName string
 
+@description('Optional subdomain label to create and delegate as a child DNS zone (e.g., "app"). If provided, AKS will use the child zone for Web App Routing.')
+param subdomainLabel string = ''
+
 @description('PostgreSQL server name (globally unique).')
 param pgServerName string = '${namePrefix}pg'
 
@@ -56,6 +59,9 @@ param ingressDnsLabel string = ''
 @description('Key Vault resource ID (must be deployed separately first)')
 param keyVaultId string
 
+@description('Optional explicit Public IP resource name in the AKS node resource group to update with the DNS label. If empty, the module will auto-select.')
+param ingressPublicIpName string = ''
+
 // ----------------- Deploy Resource Groups Modules -----------------
 module resourceGroups 'modules/resourcegroups.bicep' = {
   name: 'resourceGroups-deployment'
@@ -82,6 +88,7 @@ module infrastructure 'main.bicep' = {
     aksVmSize: aksVmSize
     aksVersion: aksVersion
     dnsZoneName: dnsZoneName
+  subdomainLabel: subdomainLabel
     pgServerName: pgServerName
     pgAdminUser: pgAdminUser
     pgAdminPassword: pgAdminPassword
@@ -90,6 +97,7 @@ module infrastructure 'main.bicep' = {
     pgSubnetCidr: pgSubnetCidr
     keyVaultId: keyVaultId // Key Vault ID should be provided as parameter
     ingressDnsLabel: ingressDnsLabel
+    ingressPublicIpName: ingressPublicIpName
   }
 }
 

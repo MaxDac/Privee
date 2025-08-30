@@ -18,6 +18,10 @@ AKS_ROLE_ID=""              # If provided, takes precedence over AKS_ROLE_NAME
 AKS_GETCREDS_ROLE_NAME="Azure Kubernetes Service Cluster User Role"
 AKS_GETCREDS_ROLE_ID=""     # If provided, takes precedence over AKS_GETCREDS_ROLE_NAME
 
+# DNS wiring automation
+DELEGATE_SUBDOMAIN="true"    # Automatically delegate child subdomain (NS record in parent)
+CONFIGURE_AKS_DNS="true"     # Ensure AKS Web App Routing points to the resulting zone
+
 usage() {
   cat <<EOF
 Usage: $0 [options]
@@ -34,6 +38,8 @@ Usage: $0 [options]
       --aks-role-id <guid>              Optional: Role definition GUID to use. Overrides --aks-role-name if set
     --aks-getcreds-role-name <name>   Optional: Control-plane role to allow get-credentials (default: "${AKS_GETCREDS_ROLE_NAME}")
     --aks-getcreds-role-id <guid>     Optional: Role definition GUID for get-credentials. Overrides --aks-getcreds-role-name if set
+  --delegate-subdomain <true|false>  Auto-delegate child subdomain from parent zone (default: ${DELEGATE_SUBDOMAIN})
+  --configure-aks-dns <true|false>   Ensure AKS Web App Routing uses the zone (default: ${CONFIGURE_AKS_DNS})
   -h, --help                            Show this help
 EOF
 }
@@ -54,6 +60,8 @@ while [[ "${1:-}" != "" ]]; do
     --aks-role-id) AKS_ROLE_ID="$2"; shift 2 ;;
   --aks-getcreds-role-name) AKS_GETCREDS_ROLE_NAME="$2"; shift 2 ;;
   --aks-getcreds-role-id) AKS_GETCREDS_ROLE_ID="$2"; shift 2 ;;
+  --delegate-subdomain) DELEGATE_SUBDOMAIN="$2"; shift 2 ;;
+  --configure-aks-dns) CONFIGURE_AKS_DNS="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown parameter: $1"; usage; exit 1 ;;
   esac
@@ -81,15 +89,49 @@ echo "Building subscription-level Bicep..."
 az bicep build --file "$SUB_BICEP" --outfile "$SUB_ARM"
 
 echo "Deploying subscription-level resources to location '$LOCATION'..."
-az deployment sub create \
+DEPLOY_JSON=$(az deployment sub create \
   --name "privee-main-deployment" \
   --location "$LOCATION" \
   --template-file "$SUB_ARM" \
-  --parameters "$SUB_PARAMS"
+  --parameters "$SUB_PARAMS" \
+  -o json)
+
+# Extract relevant outputs if present
+INGRESS_FQDN=$(echo "$DEPLOY_JSON" | jq -r '.properties.outputs.ingressFqdn.value // empty' 2>/dev/null || true)
+DNS_ZONE_ID=$(echo "$DEPLOY_JSON" | jq -r '.properties.outputs.dnsZoneId.value // empty' 2>/dev/null || true)
+
+echo "Deployment outputs:"
+echo "  ingressFqdn: ${INGRESS_FQDN:-<none>}"
+echo "  dnsZoneId:   ${DNS_ZONE_ID:-<none>}"
 
 # Ensure deployment RG exists before group-level deployments
 echo "Ensuring resource group '$DEPLOY_RG' exists in '$LOCATION'..."
 az group create -n "$DEPLOY_RG" -l "$LOCATION" >/dev/null
+
+# Optional DNS subdomain delegation and AKS DNS configuration
+SUBDOMAIN_LABEL=$(jq -r '.parameters.subdomainLabel.value // empty' "$SUB_PARAMS" 2>/dev/null || true)
+PARENT_ZONE=$(jq -r '.parameters.dnsZoneName.value' "$SUB_PARAMS")
+if [[ "$DELEGATE_SUBDOMAIN" == "true" && -n "$SUBDOMAIN_LABEL" ]]; then
+  echo "Ensuring child zone delegation for '${SUBDOMAIN_LABEL}.${PARENT_ZONE}' in RG '$DEPLOY_RG'..."
+  "$SCRIPT_DIR/scripts/create-delegate-subdomain.sh" --rg "$DEPLOY_RG" --zone "$PARENT_ZONE" --subdomain "$SUBDOMAIN_LABEL"
+fi
+
+if [[ "$CONFIGURE_AKS_DNS" == "true" ]]; then
+  # Compute child or parent zone resource ID for AKS based on parameter
+  if [[ -n "$SUBDOMAIN_LABEL" ]]; then
+    ZONE_NAME="${SUBDOMAIN_LABEL}.${PARENT_ZONE}"
+  else
+    ZONE_NAME="$PARENT_ZONE"
+  fi
+  echo "Resolving DNS zone resource ID for '$ZONE_NAME'..."
+  ZONE_ID=$(az network dns zone show -g "$DEPLOY_RG" -n "$ZONE_NAME" --query id -o tsv 2>/dev/null || true)
+  if [[ -n "$ZONE_ID" ]]; then
+    echo "Configuring AKS Web App Routing to use zone: $ZONE_ID"
+    "$SCRIPT_DIR/scripts/use-subdomain-for-webapprouting.sh" --rg "$AKS_RG" --cluster "$AKS_NAME" --dns-zone-id "$ZONE_ID"
+  else
+    echo "Warning: Could not resolve DNS zone ID for '$ZONE_NAME'. Skipping AKS DNS wiring."
+  fi
+fi
 
 # Verify ACR exists; auto-detect RG if needed
 echo "Validating ACR '$ACR_NAME'..."

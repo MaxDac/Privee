@@ -19,6 +19,9 @@ param dnsZoneName string
 @description('PostgreSQL server name (globally unique).')
 param pgServerName string
 
+@description('Optional subdomain label to create and delegate as a child DNS zone (e.g., "app"). When provided, this child zone will be used by AKS Web App Routing.')
+param subdomainLabel string = ''
+
 var vnetName = '${namePrefix}-vnet'
 var aksSubnetName = '${namePrefix}-aks-subnet'
 var pgSubnetName = 'pg-subnet'
@@ -102,10 +105,22 @@ resource publicZone 'Microsoft.Network/dnsZones@2018-05-01' = {
   location: 'global'
 }
 
+// Optional child DNS zone for a subdomain (e.g., app.<dnsZoneName>) and delegation from parent
+var childZoneName = empty(subdomainLabel) ? '' : '${subdomainLabel}.${dnsZoneName}'
+
+resource childZone 'Microsoft.Network/dnsZones@2018-05-01' = if (!empty(subdomainLabel)) {
+  name: childZoneName
+  location: 'global'
+}
+
+// Note: Delegation of the child zone from the parent requires the child's name servers,
+// which are only known at runtime. Perform delegation via an external script after deployment.
+
 // ----------------- Outputs -----------------
 output vnetId string = vnet.id
 output vnetName string = vnet.name
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, aksSubnetName)
 output pgSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, pgSubnetName)
 output pgPrivateDnsZoneId string = pgPrivDns.id
-output publicDnsZoneId string = publicZone.id
+// Use child zone when present; otherwise use parent
+output publicDnsZoneId string = empty(subdomainLabel) ? publicZone.id : childZone.id
