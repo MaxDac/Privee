@@ -1,0 +1,26 @@
+name: Manual Fly.io deploy (custom ref)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref (branch, tag, or SHA) to deploy
+        required: true
+        default: main
+
+jobs:
+  fly-deploy:
+    name: Deploy Fly.io app
+    runs-on: ubuntu-24.04
+    concurrency: deploy-group
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Fly.io deployment
+        uses: ./.github/actions/fly-deploy
+        with:
+          fly_api_token: ${{ secrets.FLY_API_TOKEN }}
+          build_only: false
