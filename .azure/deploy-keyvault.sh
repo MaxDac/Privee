@@ -21,6 +21,20 @@ SUBSCRIPTION_ID=""
 DEPLOYMENT_NAME="keyvault-deployment-$(date +%s)"
 AUTO_RECOVER=false
 
+# Helper: ensure resource group exists in a location
+ensure_rg_exists() {
+  local rg_name="$1"
+  local rg_location="$2"
+
+  if ! az group show --name "$rg_name" >/dev/null 2>&1; then
+    echo "Resource group '$rg_name' not found. Creating in location: $rg_location"
+    az group create --name "$rg_name" --location "$rg_location" >/dev/null
+    echo "Resource group '$rg_name' created."
+  else
+    echo "Resource group '$rg_name' already exists."
+  fi
+}
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -77,6 +91,12 @@ if [ "$DELETED_KV" != "[]" ] && [ -n "$DELETED_KV" ]; then
   if [ "$AUTO_RECOVER" = true ]; then
     echo "Auto-recovering soft-deleted Key Vault..."
     KV_LOCATION=$(echo "$DELETED_KV" | jq -r '.[0].properties.location')
+  # Determine expected resource group name from parameters file
+  NAME_PREFIX=$(jq -r '.parameters.namePrefix.value' "$SCRIPT_DIR/keyvault-standalone.parameters.json")
+  ENVIRONMENT=$(jq -r '.parameters.environment.value' "$SCRIPT_DIR/keyvault-standalone.parameters.json")
+  KEYVAULT_RG_NAME="${NAME_PREFIX}-${ENVIRONMENT}-kv-rg"
+  # Ensure resource group exists prior to recovery (required by Azure)
+  ensure_rg_exists "$KEYVAULT_RG_NAME" "$KV_LOCATION"
     az keyvault recover --name "privee-kv" --location "$KV_LOCATION"
     echo "Key Vault recovered successfully. Skipping deployment."
     
@@ -84,7 +104,7 @@ if [ "$DELETED_KV" != "[]" ] && [ -n "$DELETED_KV" ]; then
     echo ""
     echo "==================== RECOVERY OUTPUTS ===================="
     RECOVERED_KV_ID=$(az keyvault show --name "privee-kv" --query id -o tsv)
-    RECOVERED_KV_RG=$(az keyvault show --name "privee-kv" --query resourceGroup -o tsv)
+  RECOVERED_KV_RG=$(az keyvault show --name "privee-kv" --query resourceGroup -o tsv)
     echo "Key Vault ID: $RECOVERED_KV_ID"
     echo "Key Vault Name: privee-kv"
     echo "Key Vault Resource Group: $RECOVERED_KV_RG"
@@ -109,6 +129,12 @@ if [ "$DELETED_KV" != "[]" ] && [ -n "$DELETED_KV" ]; then
       1)
         echo "Recovering soft-deleted Key Vault..."
         KV_LOCATION=$(echo "$DELETED_KV" | jq -r '.[0].properties.location')
+  # Determine expected resource group name from parameters file
+  NAME_PREFIX=$(jq -r '.parameters.namePrefix.value' "$SCRIPT_DIR/keyvault-standalone.parameters.json")
+  ENVIRONMENT=$(jq -r '.parameters.environment.value' "$SCRIPT_DIR/keyvault-standalone.parameters.json")
+  KEYVAULT_RG_NAME="${NAME_PREFIX}-${ENVIRONMENT}-kv-rg"
+  # Ensure resource group exists prior to recovery (required by Azure)
+  ensure_rg_exists "$KEYVAULT_RG_NAME" "$KV_LOCATION"
         az keyvault recover --name "privee-kv" --location "$KV_LOCATION"
         echo "Key Vault recovered successfully. Skipping deployment."
         
