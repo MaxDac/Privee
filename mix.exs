@@ -8,7 +8,7 @@ defmodule Privee.Umbrella.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
-      listeners: [Phoenix.CodeReloader], 
+      listeners: [Phoenix.CodeReloader],
       releases: [
         privee_umbrella: [
           applications: [
