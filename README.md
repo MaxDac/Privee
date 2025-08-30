@@ -29,6 +29,14 @@ it will be necessary to run the dotnet app described below.
 
 To start the application, from the root folder, execute these commands
 
+- Build NIFs
+```bash
+zig build --build-file nifs/build.zig -- <path-to-erlang>/erts-16.0.1/include
+
+# Example with asdf
+zig build --build-file nifs/build.zig -- ~/.asdf/installs/erlang/28.0.1/erts-16.0.1/include
+```
+
 - Install the required dependencies:
 ```bash
 mix deps.get && mix deps compile
