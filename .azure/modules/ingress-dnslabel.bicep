@@ -66,42 +66,81 @@ resource setDns 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
       set -e
       echo "Node RG: $RG"
 
-      # Wait for at least one Public IP to exist (ingress controller startup)
-      for i in $(seq 1 30); do
-        COUNT=$(az network public-ip list -g "$RG" --query "length(@)" -o tsv)
-        if [ "$COUNT" -gt 0 ]; then break; fi
-        echo "Waiting for Public IPs to appear in $RG (attempt $i)..."
+      # Helper: join lines into space-delimited string
+      join_lines() {
+        tr '\n' ' ' | xargs
+      }
+
+      # Poll for an ingress Public IP (exclude outbound LB public IPs)
+      # Up to ~15 minutes (90 x 10s)
+      for i in $(seq 1 90); do
+        echo "[attempt $i] Inspecting load balancers and public IPs in $RG..."
+
+        # Identify outbound LBs (those having outboundRules)
+        OUTBOUND_LB_IDS=$(az network lb list -g "$RG" --query "[?length(outboundRules)>0].id" -o tsv 2>/dev/null || true)
+        OUTBOUND_PIP_IDS=""
+        if [ -n "$OUTBOUND_LB_IDS" ]; then
+          while IFS= read -r LB_ID; do
+            [ -z "$LB_ID" ] && continue
+            PIPS=$(az network lb show --ids "$LB_ID" --query "frontendIPConfigurations[?publicIPAddress!=null].[].publicIPAddress.id" -o tsv 2>/dev/null || true)
+            if [ -n "$PIPS" ]; then
+              OUTBOUND_PIP_IDS=$(printf "%s\n%s" "$OUTBOUND_PIP_IDS" "$PIPS")
+            fi
+          done <<< "$OUTBOUND_LB_IDS"
+        fi
+
+        # Gather candidate PIPs: those associated to any LB frontend and not part of outbound LBs
+        CANDIDATE_IDS=$(az network public-ip list -g "$RG" --query "[?ipConfiguration!=null].id" -o tsv 2>/dev/null || true)
+        SELECTED_ID=""
+
+        # Prefer PIPs whose name contains 'kubernetes' or 'ingress' or 'app-routing'
+        if [ -n "$CANDIDATE_IDS" ]; then
+          while IFS= read -r PID; do
+            [ -z "$PID" ] && continue
+            # Skip if belongs to outbound LB set
+            if echo "$OUTBOUND_PIP_IDS" | grep -q "$PID"; then
+              continue
+            fi
+            NAME=$(az network public-ip show --ids "$PID" --query name -o tsv 2>/dev/null || true)
+            if echo "$NAME" | grep -qiE 'kubernetes|ingress|app-routing'; then
+              SELECTED_ID="$PID"
+              break
+            fi
+          done <<< "$CANDIDATE_IDS"
+        fi
+
+        # Fallback: pick the first non-outbound candidate if none matched by name
+        if [ -z "$SELECTED_ID" ] && [ -n "$CANDIDATE_IDS" ]; then
+          while IFS= read -r PID; do
+            [ -z "$PID" ] && continue
+            if echo "$OUTBOUND_PIP_IDS" | grep -q "$PID"; then
+              continue
+            fi
+            SELECTED_ID="$PID"
+            break
+          done <<< "$CANDIDATE_IDS"
+        fi
+
+        # If parameter provided, override discovery
+        if [ -n "$PIP_NAME" ]; then
+          echo "PIP_NAME provided via parameter: $PIP_NAME"
+          SELECTED_ID=$(az network public-ip show -g "$RG" -n "$PIP_NAME" --query id -o tsv 2>/dev/null || true)
+        fi
+
+        if [ -n "$SELECTED_ID" ]; then
+          PIP_NAME=$(az network public-ip show --ids "$SELECTED_ID" --query name -o tsv)
+          echo "Chosen Public IP resource: $PIP_NAME"
+          break
+        fi
+
+        echo "Waiting for ingress Public IP to be created (or attached) in $RG..."
         sleep 10
       done
 
-      # 1) If not provided, prefer the PIP attached to the 'kubernetes' Load Balancer
       if [ -z "$PIP_NAME" ]; then
-        LB_NAME=$(az network lb list -g "$RG" --query "[?contains(name, 'kubernetes')].name" -o tsv | head -n1 || true)
-        if [ -n "$LB_NAME" ]; then
-          PIP_ID=$(az network lb show -g "$RG" -n "$LB_NAME" --query "frontendIPConfigurations[?publicIPAddress!=null][0].publicIPAddress.id" -o tsv || true)
-          if [ -n "$PIP_ID" ]; then
-            PIP_NAME=$(az network public-ip show --ids "$PIP_ID" --query name -o tsv || true)
-          fi
-        fi
-      fi
-
-      # 2) Fallback: first PIP with an assigned IP and no label
-      if [ -z "$PIP_NAME" ]; then
-        PIP_NAME=$(az network public-ip list -g "$RG" \
-          --query "[?ipAddress!=null && (dnsSettings.domainNameLabel==null || length(dnsSettings.domainNameLabel)==\`0\`)][0].name" -o tsv)
-      fi
-
-      # 3) Final fallback: just take the first PIP
-      if [ -z "$PIP_NAME" ]; then
-        PIP_NAME=$(az network public-ip list -g "$RG" --query "[0].name" -o tsv)
-      fi
-
-      if [ -z "$PIP_NAME" ]; then
-        echo "ERROR: Could not find a Public IP in node resource group $RG" >&2
+        echo "ERROR: Could not discover an ingress Public IP in resource group $RG. Ensure the Web App Routing add-on is enabled and the ingress Service has provisioned a public IP." >&2
         exit 1
       fi
-
-      echo "Chosen Public IP resource: $PIP_NAME"
 
       # If the desired label already exists on another PIP in this RG, remove it there first
       EXISTING_ON_OTHERS=$(az network public-ip list -g "$RG" \
