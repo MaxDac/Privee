@@ -34,7 +34,7 @@ To start the application, from the root folder, execute these commands
 zig build --build-file nifs/build.zig -- <path-to-erlang>/erts-16.0.1/include
 
 # Example with asdf
-zig build --build-file nifs/build.zig -- —/.asdf/instatts/ertang/28.0.1/erts-16.0.1/include
+zig build --build-file nifs/build.zig -- ~/.asdf/installs/erlang/28.0.1/erts-16.0.1/include
 ```
 
 - Install the required dependencies:
