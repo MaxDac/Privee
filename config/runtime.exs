@@ -21,8 +21,12 @@ if config_env() == :prod do
   ssl_enabled =
     cond do
       # If PHX_HOST is set (non-empty) and not the Fly default, assume Azure/AppService or custom host
-      (phx_host = System.get_env("PHX_HOST")) && String.trim(phx_host) != "" && phx_host != "privee.fly.dev" -> true
-      true -> false
+      (phx_host = System.get_env("PHX_HOST")) && String.trim(phx_host) != "" &&
+          phx_host != "privee.fly.dev" ->
+        true
+
+      true ->
+        false
     end
 
   config :privee, Privee.Repo,
