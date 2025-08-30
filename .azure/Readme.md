@@ -129,3 +129,20 @@ To delete all the resource groups and resources created by the deployment, you c
 ```bash
 ./scripts/delete-resource-groups.sh
 ```
+ 
+## Why there are two Public IPs in the AKS node resource group
+
+With AKS using the Standard Load Balancer (default), Azure typically provisions two Public IPs in the AKS node resource group (MC_...):
+
+- Outbound Public IP: managed by AKS for egress from cluster nodes (image pulls, OS/package updates, calls to Azure services). This IP belongs to the managed outbound load balancer and should not have a DNS label.
+- Ingress Public IP: created by the Web App Routing add-on (Service type LoadBalancer) for inbound traffic to your apps. This IP is the one that receives the DNS label (configured via `modules/ingress-dnslabel.bicep` and the `ingressDnsLabel` parameter in `main.bicep`).
+
+This is expected and recommended. Only the ingress IP gets your DNS name (e.g., `privee`). The outbound IP remains unlabeled and is used exclusively for egress.
+
+If you must have a single, controlled egress IP, you can replace the AKS-managed outbound with a NAT Gateway:
+
+1) Create a Standard Public IP and a NAT Gateway
+2) Associate the NAT Gateway to the AKS subnet
+3) Set AKS `outboundType` to `userDefinedRouting`
+
+Important: using `userDefinedRouting` without providing NAT/UDR breaks the default AKS-managed outbound load balancer, and scripts that expect the standard load balancer may fail until ingress is provisioned. Ensure NAT is in place to restore egress.

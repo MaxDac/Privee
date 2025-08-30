@@ -47,7 +47,18 @@ resource pg 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = {
   }
 }
 
+// ----------------- PostgreSQL Database -----------------
+resource priveeDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-03-01-preview' = {
+  name: 'privee'
+  parent: pg
+  properties: {
+    charset: 'UTF8'
+    collation: 'en_US.utf8'
+  }
+}
+
 // ----------------- Outputs -----------------
 output pgServerId string = pg.id
 output pgServerName string = pg.name
 output pgServerFqdn string = pg.properties.fullyQualifiedDomainName
+output priveeDatabaseName string = priveeDatabase.name
