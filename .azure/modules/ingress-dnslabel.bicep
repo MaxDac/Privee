@@ -74,7 +74,7 @@ resource setDns 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
         sleep 10
       done
 
-      # 1) If not provided, prefer the PIP attached to the 'kubernetes' Load Balancer
+      # 1) Find the PIP attached to the 'kubernetes' Load Balancer
       if [ -z "$PIP_NAME" ]; then
         LB_NAME=$(az network lb list -g "$RG" --query "[?contains(name, 'kubernetes')].name" -o tsv | head -n1 || true)
         if [ -n "$LB_NAME" ]; then
@@ -85,19 +85,8 @@ resource setDns 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
         fi
       fi
 
-      # 2) Fallback: first PIP with an assigned IP and no label
       if [ -z "$PIP_NAME" ]; then
-        PIP_NAME=$(az network public-ip list -g "$RG" \
-          --query "[?ipAddress!=null && (dnsSettings.domainNameLabel==null || length(dnsSettings.domainNameLabel)==\`0\`)][0].name" -o tsv)
-      fi
-
-      # 3) Final fallback: just take the first PIP
-      if [ -z "$PIP_NAME" ]; then
-        PIP_NAME=$(az network public-ip list -g "$RG" --query "[0].name" -o tsv)
-      fi
-
-      if [ -z "$PIP_NAME" ]; then
-        echo "ERROR: Could not find a Public IP in node resource group $RG" >&2
+        echo "ERROR: Could not find a Public IP associated with a 'kubernetes' load balancer in resource group $RG." >&2
         exit 1
       fi
 
