@@ -1,11 +1,24 @@
-name: Deploy to Azure
+name: Run Azure Login with Managed Identity
 
+# on:
+#   workflow_run:
+#     workflows: ["Elixir CI - Compilation"]
+#     types:
+#       - completed
 on:
-  workflow_run:
-    workflows: ["Privee Main CI/CD pipeline"]
-    types:
-      - completed
-    branches: [main]
+  workflow_dispatch:
+
+env:
+  RESOURCE_GROUP: privee-dev-rg
+  AZURE_CONTAINER_REGISTRY: priveeregistry
+  REGISTRY_URL: priveeregistry.azurecr.io
+  PROJECT_NAME: privee
+  CLUSTER_NAME: privee-aks
+  CONTAINER_NAME: privee
+  DEPLOYMENT_MANIFEST_PATH: |
+    ./.azure/k8s/deployment.yml
+  # Set the Azure-specific host for Phoenix compilation
+  PHX_HOST: privee.northeurope.cloudapp.azure.com
 
 permissions:
   id-token: write
@@ -13,22 +26,8 @@ permissions:
   actions: read
 
 jobs:
-  azure-deployment:
-    name: Deploy to Azure
+  build-and-deploy:
     runs-on: ubuntu-24.04
-    # Only run if the main CI workflow succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    env:
-      RESOURCE_GROUP: privee-dev-rg
-      AZURE_CONTAINER_REGISTRY: priveeregistry
-      REGISTRY_URL: priveeregistry.azurecr.io
-      PROJECT_NAME: privee
-      CLUSTER_NAME: privee-aks
-      CONTAINER_NAME: privee
-      DEPLOYMENT_MANIFEST_PATH: |
-        ./.azure/k8s/deployment.yml
-      # Set the Azure-specific host for Phoenix compilation
-      PHX_HOST: privee.northeurope.cloudapp.azure.com
 
     steps:
       - name: Checkout repository

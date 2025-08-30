@@ -16,7 +16,6 @@ defmodule PriveeWeb.Application do
       # Start to serve requests, typically the last entry
       # ,
       PriveeWeb.Endpoint,
-      # {Cluster.Supervisor, [get_topologies(), [name: GuildsWeb.ClusterSupervisor]]},
       Chats
     ]
 
@@ -25,28 +24,6 @@ defmodule PriveeWeb.Application do
     opts = [strategy: :one_for_one, name: PriveeWeb.Supervisor]
     Supervisor.start_link(children, opts)
   end
-
-  # Commented away until the Kubernetes deployment will be ready.
-  # defp get_topologies do
-  #   is_prod? = System.get_env("MIX_ENV")
-
-  #   strategy =
-  #     if is_prod? do
-  #       Cluster.Strategy.Kubernetes.DNS
-  #     else
-  #       Cluster.Strategy.Gossip
-  #     end
-
-  #   [
-  #     privee: [
-  #       strategy: strategy,
-  #       config: [
-  #         service: "privee-app-svc-headless",
-  #         application_name: "privee"
-  #       ]
-  #     ]
-  #   ]
-  # end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.

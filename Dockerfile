@@ -20,11 +20,15 @@ ARG DEBIAN_VERSION=bookworm-20250610-slim
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
+# Build argument for PHX_HOST with Fly.io as default
+ARG PHX_HOST=privee.fly.dev
+
 FROM ${BUILDER_IMAGE} AS builder
 
 ARG ZIG_VERSION="0.14.1"
 ARG ERLANG_ERTS
 ARG TARGETPLATFORM
+ARG PHX_HOST
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
@@ -58,6 +62,8 @@ RUN mix local.hex --force && \
 
 # set build ENV
 ENV MIX_ENV="prod"
+# Set PHX_HOST at build time for Phoenix compilation
+ENV PHX_HOST=${PHX_HOST}
 
 # Copying NIFs files over first
 COPY nifs nifs
@@ -116,6 +122,8 @@ FROM ${RUNNER_IMAGE}
 # Install runtime dependencies including those needed for NIFs
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
+    # Debug utils, comment when done
+    iputils-ping netcat-traditional sudo dnsutils telnet postgresql-client \
     libc6 libgcc-s1 && \
     apt-get clean && rm -f /var/lib/apt/lists/*_*
 

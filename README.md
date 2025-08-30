@@ -98,3 +98,110 @@ For more information refer the [package information](https://hex.pm/packages/lib
 
 There is also an interesting guide in parts on [how to configure Elixir nodes on Kubernetes](https://david-delassus.medium.com/elixir-and-kubernetes-a-love-story-721cc6a5c7d5),
 always with **libcluster**.
+
+## Azure configuration
+
+### GitHub Actions CI/CD
+
+#### Login to Azure
+
+To login to Azure, a User-defined Managed Identity has been created with a federated identity, and OpenID Connect
+authentication type has been selected; the reason Managed Identity has not been used as an authentication type 
+is that it required a **self-hosted** environment, i.e. a VM on Azure.
+
+For more information on how to setup the GitHub Action to work with Azure resources using User-defined Managed Identities,
+please refer to the [article of the `azure/login` GitHub Action](https://github.com/marketplace/actions/azure-login#login-with-openid-connect-oidc-recommended).
+
+### AKS configuration
+
+#### SECRET_KEY_BASE
+
+The SECRET_KEY_BASE environment variable required by the Phoenix application is currently being stored as a
+Kubernetes secret, and inject as an environment variables directly in the Kubernetes deployment file.
+This is not optimal, but there is issue #109 addressing this.
+
+## Deployment
+
+This application supports deployment to both Fly.io and Azure AKS with automatic environment detection.
+
+### Fly.io Deployment
+
+The application is pre-configured for Fly.io deployment. The `rel/env.sh.eex` file automatically detects Fly.io environment variables and configures clustering accordingly.
+
+1. Deploy using Fly CLI:
+
+   ```bash
+   fly deploy
+   ```
+
+   Or use the deployment script:
+
+   ```bash
+   ./infra/deploy-fly.sh
+   ```
+
+### Azure AKS Deployment
+
+For Azure Kubernetes Service deployment:
+
+1. **Build and push the Docker image:**
+   ```bash
+   # Build the image
+   docker build -t privee.azurecr.io/privee:latest .
+   
+   # Push to Azure Container Registry
+   docker push privee.azurecr.io/privee:latest
+   ```
+
+2. **Create necessary Kubernetes secrets:**
+   ```bash
+   # Create database secret
+   kubectl create secret generic postgres-secret \
+     --from-literal=POSTGRES_USER=your_user \
+     --from-literal=POSTGRES_PASSWORD=your_password \
+     --from-literal=POSTGRES_DB=your_database
+   
+   # Create application secret
+   kubectl create secret generic privee-app-secret \
+     --from-literal=SECRET_KEY_BASE=$(mix phx.gen.secret)
+   ```
+
+3. **Deploy to AKS:**
+
+   ```bash
+   kubectl apply -f k8s-deployment.yml
+   ```
+
+   Or use the deployment script for a complete deployment:
+
+   ```bash
+   ./infra/deploy-aks.sh
+   ```
+
+4. **Check deployment status:**
+
+   ```bash
+   kubectl get pods -l app=privee
+   kubectl get services
+   kubectl logs -l app=privee --tail=50
+   ```
+
+   Or use the status check script:
+
+   ```bash
+   ./infra/check-aks.sh
+   ```
+
+### Configuration Details
+
+The application automatically detects the deployment environment:
+
+- **Fly.io**: Detected by `FLY_APP_NAME` environment variable
+- **Azure AKS**: Detected by `KUBERNETES_SERVICE_HOST` environment variable  
+- **Local/Default**: Used when neither of the above are present
+
+Each environment uses appropriate clustering and networking configurations:
+
+- **Fly.io**: IPv6 support, DNS-based clustering via `${FLY_APP_NAME}.internal`
+- **Azure AKS**: IPv4, Kubernetes DNS service discovery via headless service
+- **Local**: Simple name-based distribution for development
