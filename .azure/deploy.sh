@@ -5,9 +5,9 @@ set -euo pipefail
 LOCATION="northeurope"      # Subscription-level deployment location
 DEPLOY_RG="privee-dev-rg"   # RG where the identity module will be deployed
 NAME_PREFIX="privee"        # Used to compute default ACR name: "<prefix>registry"
-ACR_RG=""                   # Defaults to DEPLOY_RG if unset
-AKS_RG=""                   # Defaults to DEPLOY_RG if unset
-ACR_NAME=""                 # Defaults to "${NAME_PREFIX}registry" (lowercased; matches .azure/modules/acr.bicep)
+ACR_RG="privee-dev-rg"      # Defaults to DEPLOY_RG if unset
+AKS_RG="privee-dev-rg"      # Defaults to DEPLOY_RG if unset
+ACR_NAME="priveeregistry"   # Defaults to "${NAME_PREFIX}registry" (lowercased; matches .azure/modules/acr.bicep)
 AKS_NAME="privee-aks"       # Set your AKS name here or override via --aks-name
 AKS_KUBELET_OBJECT_ID=""    # Optional: pass kubelet identity objectId to attach ACR pull
 GRANT_AKS_ACCESS="true"     # Allow override if you want to skip AKS role assignment
@@ -21,6 +21,10 @@ AKS_GETCREDS_ROLE_ID=""     # If provided, takes precedence over AKS_GETCREDS_RO
 # DNS wiring automation
 DELEGATE_SUBDOMAIN="true"    # Automatically delegate child subdomain (NS record in parent)
 CONFIGURE_AKS_DNS="true"     # Ensure AKS Web App Routing points to the resulting zone
+
+# Cert-manager automation
+INSTALL_CERT_MANAGER="true"
+APPLY_CERT_ISSUERS="true"
 
 usage() {
   cat <<EOF
@@ -36,10 +40,12 @@ Usage: $0 [options]
       --grant-aks-access <true|false>   Whether to create AKS RBAC assignment (default: ${GRANT_AKS_ACCESS})
       --aks-role-name <name>            Optional: RBAC role display name to assign at the AKS scope (default: "${AKS_ROLE_NAME}")
       --aks-role-id <guid>              Optional: Role definition GUID to use. Overrides --aks-role-name if set
-    --aks-getcreds-role-name <name>   Optional: Control-plane role to allow get-credentials (default: "${AKS_GETCREDS_ROLE_NAME}")
-    --aks-getcreds-role-id <guid>     Optional: Role definition GUID for get-credentials. Overrides --aks-getcreds-role-name if set
+  --aks-getcreds-role-name <name>   Optional: Control-plane role to allow get-credentials (default: "${AKS_GETCREDS_ROLE_NAME}")
+  --aks-getcreds-role-id <guid>     Optional: Role definition GUID for get-credentials. Overrides --aks-getcreds-role-name if set
   --delegate-subdomain <true|false>  Auto-delegate child subdomain from parent zone (default: ${DELEGATE_SUBDOMAIN})
   --configure-aks-dns <true|false>   Ensure AKS Web App Routing uses the zone (default: ${CONFIGURE_AKS_DNS})
+  --install-cert-manager <true|false> Install cert-manager from its official manifest (default: ${INSTALL_CERT_MANAGER})
+  --apply-cert-issuers <true|false>   Apply the staging and prod ClusterIssuers for Let's Encrypt (default: ${APPLY_CERT_ISSUERS})
   -h, --help                            Show this help
 EOF
 }
@@ -58,14 +64,23 @@ while [[ "${1:-}" != "" ]]; do
     --grant-aks-access) GRANT_AKS_ACCESS="$2"; shift 2 ;;
     --aks-role-name) AKS_ROLE_NAME="$2"; shift 2 ;;
     --aks-role-id) AKS_ROLE_ID="$2"; shift 2 ;;
-  --aks-getcreds-role-name) AKS_GETCREDS_ROLE_NAME="$2"; shift 2 ;;
-  --aks-getcreds-role-id) AKS_GETCREDS_ROLE_ID="$2"; shift 2 ;;
-  --delegate-subdomain) DELEGATE_SUBDOMAIN="$2"; shift 2 ;;
-  --configure-aks-dns) CONFIGURE_AKS_DNS="$2"; shift 2 ;;
+    --aks-getcreds-role-name) AKS_GETCREDS_ROLE_NAME="$2"; shift 2 ;;
+    --aks-getcreds-role-id) AKS_GETCREDS_ROLE_ID="$2"; shift 2 ;;
+    --delegate-subdomain) DELEGATE_SUBDOMAIN="$2"; shift 2 ;;
+    --configure-aks-dns) CONFIGURE_AKS_DNS="$2"; shift 2 ;;
+    --install-cert-manager) INSTALL_CERT_MANAGER="$2"; shift 2 ;;
+    --apply-cert-issuers) APPLY_CERT_ISSUERS="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown parameter: $1"; usage; exit 1 ;;
   esac
 done
+
+# Resolve paths
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SUB_BICEP="${SCRIPT_DIR}/main-subscription.bicep"
+SUB_ARM="${SCRIPT_DIR}/main-subscription.json"
+SUB_PARAMS="${SCRIPT_DIR}/main.parameters.json"
+IDENTITY_BICEP="${SCRIPT_DIR}/modules/gha-oidc-identity.bicep"
 
 # Derived defaults
 ACR_RG="${ACR_RG:-$DEPLOY_RG}"
@@ -169,7 +184,7 @@ if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
 fi
 
 # Verify AKS exists; auto-detect RG if needed when assigning any AKS-scoped role
-if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" ]]; then
+if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_CERT_MANAGER" == "true" ]]; then
   echo "Validating AKS '$AKS_NAME'..."
   if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" >/dev/null 2>&1; then
     echo "AKS '$AKS_NAME' not found in RG '$AKS_RG'. Searching subscription by name..."
@@ -246,7 +261,7 @@ fi
 echo "Summary of resolved targets:"
 echo "  Deployment RG:         $DEPLOY_RG"
 echo "  ACR:                   $ACR_NAME (rg: $ACR_RG)"
-if [[ "$GRANT_AKS_ACCESS" == "true" ]]; then
+if [[ "$GRANT_AKS_ACCESS" == "true" || "$INSTALL_CERT_MANAGER" == "true" ]]; then
   echo "  AKS:                   $AKS_NAME (rg: $AKS_RG)"
   echo "  Kubelet Object ID:     ${AKS_KUBELET_OBJECT_ID:-<not provided/detected>}"
   echo "  AKS Roles:             Cluster Admin + Cluster User (hardcoded in module)"
@@ -280,6 +295,15 @@ if [[ $DEPLOY_EXIT -ne 0 ]]; then
     echo "Deployment failed. See $SCRIPT_DIR/error.log for details." >&2
     exit $DEPLOY_EXIT
   fi
+fi
+
+# Install cert-manager and issuers if requested
+if [[ "$INSTALL_CERT_MANAGER" == "true" || "$APPLY_CERT_ISSUERS" == "true" ]]; then
+  "$SCRIPT_DIR/scripts/deploy-cert-manager.sh" \
+    --aks-rg "$AKS_RG" \
+    --aks-name "$AKS_NAME" \
+    --install-cert-manager "$INSTALL_CERT_MANAGER" \
+    --apply-cert-issuers "$APPLY_CERT_ISSUERS"
 fi
 
 echo

@@ -92,17 +92,6 @@ if [ -z "$CERT_NAME" ]; then
 fi
 CERT_URI="https://$KEYVAULT_NAME.vault.azure.net/certificates/$CERT_NAME"
 
-# Create a temporary ingress file with placeholders replaced
-PROCESSED_INGRESS_FILE="$(dirname "$0")/ingress-processed.yml"
-cp "$(dirname "$0")/ingress.yml" "$PROCESSED_INGRESS_FILE"
-
-# Create a temporary SecretProviderClass file with placeholders replaced (only if Key Vault is configured)
-PROCESSED_SPC_FILE=""
-if [ -n "$KEYVAULT_NAME" ]; then
-  PROCESSED_SPC_FILE="$(dirname "$0")/secret-provider-class-processed.yml"
-  cp "$(dirname "$0")/secret-provider-class.yml" "$PROCESSED_SPC_FILE"
-fi
-
 #############################
 # Discover Ingress Public IP and set DNS label
 #############################
@@ -147,23 +136,12 @@ fi
 INGRESS_HOST="$CURRENT_FQDN"
 echo "Using INGRESS_HOST: $INGRESS_HOST"
 
-# Replace placeholders in ingress
-sed -i "s|\${INGRESS_HOST}|${INGRESS_HOST}|g" "$PROCESSED_INGRESS_FILE"
-sed -i "s|\${CERT_URI}|${CERT_URI}|g" "$PROCESSED_INGRESS_FILE"
-
-# Always keep TLS; ensure the Key Vault annotation and TLS block are present via placeholder substitution above.
-
-if [ -n "$PROCESSED_SPC_FILE" ]; then
-  # Replace placeholders in SecretProviderClass
-  sed -i "s|\${KEYVAULT_NAME}|${KEYVAULT_NAME}|g" "$PROCESSED_SPC_FILE"
-  sed -i "s|\${TENANT_ID}|${TENANT_ID}|g" "$PROCESSED_SPC_FILE"
-  sed -i "s|\${UAMI_CLIENT_ID}|${UAMI_CLIENT_ID}|g" "$PROCESSED_SPC_FILE"
-fi
-
-# Prepare a processed deployment to inject INGRESS_HOST into PHX_HOST
-PROCESSED_DEPLOY_FILE="$(dirname "$0")/deployment-processed.yml"
-cp "$(dirname "$0")/deployment.yml" "$PROCESSED_DEPLOY_FILE"
-sed -i "s|\${INGRESS_HOST}|${INGRESS_HOST}|g" "$PROCESSED_DEPLOY_FILE"
+# Export all variables needed for substitution in YAML files
+export INGRESS_HOST
+export CERT_URI
+export KEYVAULT_NAME
+export TENANT_ID
+export UAMI_CLIENT_ID
 
 echo "Applying manifests with real values..."
 
@@ -171,9 +149,9 @@ echo "Applying manifests with real values..."
 echo "Deploying Kubernetes manifests..."
 
 # Deploy SecretProviderClass and wait for it to be ready
-if [ -n "$PROCESSED_SPC_FILE" ]; then
+if [ -n "$KEYVAULT_NAME" ]; then
   echo "Applying SecretProviderClass..."
-  kubectl apply -f "$PROCESSED_SPC_FILE"
+  envsubst < "$(dirname "$0")/secret-provider-class.yml" | kubectl apply -f -
 
   # Verify the SecretProviderClass was created
   echo "Waiting for SecretProviderClass to be available..."
@@ -197,16 +175,11 @@ kubectl apply -f "$(dirname "$0")/headless-service.yml"
 
 # Deploy the application
 echo "Applying deployment..."
-kubectl apply -f "$PROCESSED_DEPLOY_FILE"
+envsubst < "$(dirname "$0")/deployment.yml" | kubectl apply -f -
 
 # Deploy ingress
 echo "Applying ingress..."
-kubectl apply -f "$PROCESSED_INGRESS_FILE"
-
-# Clean up the processed files
-rm "$PROCESSED_INGRESS_FILE"
-[ -n "$PROCESSED_SPC_FILE" ] && rm "$PROCESSED_SPC_FILE"
-rm "$PROCESSED_DEPLOY_FILE"
+envsubst < "$(dirname "$0")/ingress.yml" | kubectl apply -f -
 
 echo "Kubernetes deployment completed successfully."
 if [ -n "$CERT_URI" ]; then
