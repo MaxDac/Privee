@@ -47,6 +47,16 @@ resource pg 'Microsoft.DBforPostgreSQL/flexibleServers@2023-03-01-preview' = {
   }
 }
 
+// ----------------- PostgreSQL Configuration (Enable Extensions) -----------------
+resource pgExtensionsConfig 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2023-03-01-preview' = {
+  name: 'azure.extensions'
+  parent: pg
+  properties: {
+    value: 'citext'
+    source: 'user-override'
+  }
+}
+
 // ----------------- PostgreSQL Database -----------------
 resource priveeDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-03-01-preview' = {
   name: 'privee'
@@ -55,6 +65,9 @@ resource priveeDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@202
     charset: 'UTF8'
     collation: 'en_US.utf8'
   }
+  dependsOn: [
+    pgExtensionsConfig
+  ]
 }
 
 // ----------------- Outputs -----------------
