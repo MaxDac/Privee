@@ -28,12 +28,6 @@ erl_crash.dump
 # Elixir Tools
 /.elixir-tools/
 
-# Zig output folders
-zig-out
-
-# Zig cache
-.zig-cache
-
 # Node
 node_modules/
 

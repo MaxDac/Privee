@@ -13,7 +13,6 @@
 #
 ARG TARGETPLATFORM="linux/amd64"
 ARG ELIXIR_VERSION=1.18.4
-ARG ERLANG_ERTS=16.0.1
 ARG OTP_VERSION=28.0.1
 ARG DEBIAN_VERSION=bookworm-20250610-slim
 
@@ -25,29 +24,12 @@ ARG PHX_HOST=privee.fly.dev
 
 FROM ${BUILDER_IMAGE} AS builder
 
-ARG ZIG_VERSION="0.14.1"
-ARG ERLANG_ERTS
 ARG TARGETPLATFORM
 ARG PHX_HOST
 
 # install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git xz-utils wget curl \
+RUN apt-get update -y && apt-get install -y build-essential git curl \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-WORKDIR /tmp
-
-# Installing Zig with multi-architecture support
-RUN case "${TARGETPLATFORM}" in \
-        "linux/amd64") ZIG_ARCH="x86_64" ;; \
-        "linux/arm64") ZIG_ARCH="aarch64" ;; \
-        *) echo "Unsupported platform: ${TARGETPLATFORM}" && exit 1 ;; \
-    esac && \
-    wget https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
-    tar -xf zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
-    mv zig-${ZIG_ARCH}-linux-${ZIG_VERSION} /usr/local/lib/zig && \
-    ln -s /usr/local/lib/zig/zig /usr/local/bin/zig && \
-    rm -rf zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz && \
-    zig version
 
 # Install Node.js early for better caching
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
@@ -64,14 +46,6 @@ RUN mix local.hex --force && \
 ENV MIX_ENV="prod"
 # Set PHX_HOST at build time for Phoenix compilation
 ENV PHX_HOST=${PHX_HOST}
-
-# Copying NIFs files over first
-COPY nifs nifs
-
-# Building Zig dependencies with proper ERTS path
-RUN cd nifs && \
-    zig build -- /usr/local/lib/erlang/erts-${ERLANG_ERTS}/include && \
-    echo "NIFs compiled successfully"
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
@@ -119,7 +93,7 @@ RUN ls -la _build/${MIX_ENV}/rel/privee_umbrella/ && \
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
-# Install runtime dependencies including those needed for NIFs
+# Install runtime dependencies
 RUN apt-get update -y && \
     apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates \
     # Debug utils, comment when done
@@ -142,9 +116,6 @@ ENV MIX_ENV="prod"
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./
-
-# Copy the compiled NIFs to the correct location
-COPY --from=builder --chown=nobody:root /app/nifs/zig-out/lib ./nifs
 
 USER nobody
 

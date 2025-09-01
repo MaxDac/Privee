@@ -1,4 +1,4 @@
-name: Run Azure Login with Managed Identity
+name: Run Azure test deployment
 
 # on:
 #   workflow_run:
