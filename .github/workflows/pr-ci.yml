@@ -2,12 +2,7 @@ name: Privee PR CI
 
 on:
   pull_request:
-    types:      - name: Load tooling
-        uses: ./.github/actions/load-tooling
-        with:
-          otp: ${{ matrix.otp }}
-          elixir: ${{ matrix.elixir }}
-          node: ${{ matrix.node }}- opened
+    types:
       - synchronize
       - reopened
 
