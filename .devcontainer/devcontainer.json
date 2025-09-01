@@ -40,9 +40,6 @@
                     "<C-d>": true,
                     "<C-p>": false
                 },
-                "zig.initialSetupDone": true,
-                "zig.path": "",
-                "zig.zls.path": "",
                 "editor.fontLigatures": true,
                 "editor.fontSize": 12,
                 "editor.fontFamily": "'FiraCode Nerd Font Mono', 'Courier New', monospace",
@@ -58,10 +55,6 @@
                 "pantajoe.vscode-elixir-credo",
                 "phoenixframework.phoenix",
                 "bradlc.vscode-tailwindcss",
-
-                // Zig
-                "ziglang.vscode-zig",
-                "vadimcn.vscode-lldb",
 
                 // JS
                 "dbaeumer.vscode-eslint",

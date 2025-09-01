@@ -1,5 +1,5 @@
 name: load-tooling
-description: "Loads the Elixir, Erlang and Zig tooling"
+description: "Loads the Elixir, Erlang tooling"
 
 inputs:
   otp:
@@ -10,10 +10,6 @@ inputs:
     description: "Elixir version"
     required: true
     default: "1.18.4"
-  zig:
-    description: "Zig compiler version"
-    required: true
-    default: "0.14.1"
   node:
     description: "Node version"
     required: true
@@ -28,11 +24,6 @@ runs:
       with:
         otp-version: ${{ inputs.otp }}
         elixir-version: ${{ inputs.elixir }}
-
-    - name: Loading Zig compiler
-      uses: goto-bus-stop/setup-zig@v2
-      with:
-        version: ${{ inputs.zig }}
 
     - uses: actions/setup-node@v4
       with:
