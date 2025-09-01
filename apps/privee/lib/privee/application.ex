@@ -15,8 +15,7 @@ defmodule Privee.Application do
     children = [
       Privee.Repo,
       {DNSCluster,
-       query: Application.get_env(:privee, :dns_cluster_query) || :ignore,
-       log: :info},
+       query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
       {Phoenix.PubSub, name: Privee.PubSub}
       # Start a worker by calling: Privee.Worker.start_link(arg)
       # {Privee.Worker, arg}
