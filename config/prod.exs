@@ -8,8 +8,7 @@ import Config
 config :privee_web, PriveeWeb.Endpoint,
   # Dynamic host configuration based on deployment platform
   url: [
-    # host: System.get_env("PHX_HOST") || "privee.fly.dev",
-    host: "privee.northeurope.cloudapp.azure.com",
+    host: System.get_env("PHX_HOST") || "privee.fly.dev",
     port: String.to_integer(System.get_env("PHX_PORT") || "80")
   ],
   cache_static_manifest: "priv/static/cache_manifest.json"
