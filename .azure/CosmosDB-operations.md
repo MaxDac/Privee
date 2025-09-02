@@ -126,8 +126,8 @@ psql -h c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com -p 5432 -U citus
 # Alternative with SSL requirement
 psql "postgresql://citus:<your-password>@c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com:5432/privee?sslmode=require"
 
-# Connect to default citus database first (recommended)
-psql "host=c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com port=5432 dbname=citus user=citus sslmode=require"
+# Connect to default privee database (the one created by our Bicep template)
+psql "host=c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com port=5432 dbname=privee user=citus sslmode=require"
 ```
 
 **Connection Requirements:**

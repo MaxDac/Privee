@@ -102,4 +102,5 @@ output serverNames array = cosmosDbPostgreCluster.properties.serverNames
 output coordinatorEndpoint string = cosmosDbPostgreCluster.properties.serverNames[0].fullyQualifiedDomainName
 output administratorLogin string = 'citus'  // Fixed value for CosmosDB PostgreSQL
 output privateEndpointId string = privateEndpoint.id
-output privateEndpointFqdn string = privateEndpoint.properties.customDnsConfigs[0].fqdn
+// Use the coordinator endpoint as the private FQDN since it's accessible via private endpoint
+output privateEndpointFqdn string = cosmosDbPostgreCluster.properties.serverNames[0].fullyQualifiedDomainName

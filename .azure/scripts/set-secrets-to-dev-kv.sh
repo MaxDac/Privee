@@ -31,27 +31,27 @@ az role assignment create \
 echo "⏳ Waiting for role assignment propagation..."
 sleep 10
 
-echo "� Creating POSTGRES_USER in Key Vault..."
+echo "🌩️ Creating COSMOS_USER in Key Vault..."
 az keyvault secret set \
     --vault-name "$VAULT_NAME" \
-    --name "POSTGRES-USER" \
-    --value "pgadmin" \
+    --name "COSMOS-USER" \
+    --value "citus" \
     --output none
 
-echo "🔓 Creating POSTGRES_DB in Key Vault..."
+echo "🔓 Creating COSMOS_DB in Key Vault..."
 az keyvault secret set \
     --vault-name "$VAULT_NAME" \
-    --name "POSTGRES-DB" \
-    --value "privee" \
+    --name "COSMOS-DB" \
+    --value "citus" \
     --output none
 
-echo "🔒 Creating POSTGRES_PASSWORD in Key Vault..."
-# Using the original value from secrets.yml (base64 decoded: ~KEEN4e~)
-POSTGRES_PASSWORD="~KEEN4e~"
+echo "🔒 Creating COSMOS_PASSWORD in Key Vault..."
+# Using the same password as before for consistency
+COSMOS_PASSWORD="~KEEN4e~"
 az keyvault secret set \
     --vault-name "$VAULT_NAME" \
-    --name "POSTGRES-PASSWORD" \
-    --value "$POSTGRES_PASSWORD" \
+    --name "COSMOS-PASSWORD" \
+    --value "$COSMOS_PASSWORD" \
     --output none
 
 echo "🔑 Creating Phoenix secret key base in Key Vault..."
@@ -68,7 +68,7 @@ echo "✅ All secrets have been created in Azure Key Vault!"
 echo "✨ Creation complete!"
 echo ""
 echo "📝 Secrets created in Key Vault:"
-echo "  - POSTGRES-USER: pgadmin"
-echo "  - POSTGRES-DB: privee"
-echo "  - POSTGRES-PASSWORD: ~^KAT4e~"
+echo "  - COSMOS-USER: citus"
+echo "  - COSMOS-DB: citus"
+echo "  - COSMOS-PASSWORD: ~KEEN4e~"
 echo "  - privee-secret-key-base: QExJc2NvZW55c2RkZzIzeDFjTTk9d01OdDZWYXRscXp3N1VlT2p5VmNRTk0wZ2d4eDQx"

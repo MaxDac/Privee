@@ -21,10 +21,7 @@ The database configuration has been updated to use CosmosDB PostgreSQL:
       name: postgres-secret
       key: POSTGRES_PASSWORD
 - name: POSTGRES_DB
-  valueFrom:
-    secretKeyRef:
-      name: postgres-secret
-      key: POSTGRES_DB
+  value: "privee"  # CosmosDB PostgreSQL database name as configured in Bicep template
 - name: POSTGRES_HOST
   value: privee-db.postgres.database.azure.com  # Kept for reference
 - name: COSMOS_HOST
