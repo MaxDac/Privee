@@ -9,6 +9,7 @@ set -e
 resource_groups=(
   "MC_privee-dev-rg_privee-aks_northeurope"
   "NetworkWatcherRG"
+  "privee-dev-kv-rg"
   "privee-dev-rg"
 )
 

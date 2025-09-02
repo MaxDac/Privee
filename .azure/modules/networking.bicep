@@ -13,6 +13,9 @@ param aksSubnetCidr string = '10.0.1.0/24'
 @description('PostgreSQL delegated subnet CIDR')
 param pgSubnetCidr string = '10.0.2.0/24'
 
+@description('CosmosDB PostgreSQL subnet CIDR')
+param cosmosSubnetCidr string = '10.0.3.0/24'
+
 @description('Public Azure DNS zone to host your app domain (e.g., example.com).')
 param dnsZoneName string
 
@@ -25,7 +28,9 @@ param subdomainLabel string = ''
 var vnetName = '${namePrefix}-vnet'
 var aksSubnetName = '${namePrefix}-aks-subnet'
 var pgSubnetName = 'pg-subnet'
+var cosmosSubnetName = '${namePrefix}-cosmos-subnet'
 var pgPrivateDnsZoneName = '${pgServerName}.private.postgres.database.azure.com'
+var cosmosPrivateDnsZoneName = 'privatelink.postgres.cosmos.azure.com'
 
 // ----------------- Networking -----------------
 resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
@@ -38,6 +43,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
         name: aksSubnetName
         properties: {
           addressPrefix: aksSubnetCidr
+        }
+      }
+      {
+        name: cosmosSubnetName
+        properties: {
+          addressPrefix: cosmosSubnetCidr
         }
       }
       {
@@ -81,6 +92,29 @@ resource pgNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   }
 }
 
+// Optional NSG to limit CosmosDB PostgreSQL to AKS subnet only
+resource cosmosNsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: '${namePrefix}-cosmos-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'allow-aks-to-cosmos-5432'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefixes: [ aksSubnetCidr ]
+          destinationAddressPrefix: '*'
+          destinationPortRange: '5432'
+        }
+      }
+    ]
+  }
+}
+
 // Note: NSG association is handled via subnet properties in the VNet resource above
 
 // Private DNS zone for PG Flexible Server (private access mode requires a private DNS zone linked to VNet)
@@ -92,6 +126,23 @@ resource pgPrivDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 resource pgPrivDnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
   parent: pgPrivDns
   name: '${namePrefix}-pgdns-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: { id: vnet.id }
+  }
+}
+
+// Private DNS zone for CosmosDB PostgreSQL (separate zone required)
+// Note: This may already exist from manual portal deployment
+resource cosmosPrivDns 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: cosmosPrivateDnsZoneName
+  location: 'global'
+}
+
+resource cosmosPrivDnsLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: cosmosPrivDns
+  name: '${namePrefix}-cosmosdns-link'
   location: 'global'
   properties: {
     registrationEnabled: false
@@ -121,6 +172,8 @@ output vnetId string = vnet.id
 output vnetName string = vnet.name
 output aksSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, aksSubnetName)
 output pgSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, pgSubnetName)
+output cosmosSubnetId string = resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, cosmosSubnetName)
 output pgPrivateDnsZoneId string = pgPrivDns.id
+output cosmosPrivateDnsZoneId string = cosmosPrivDns.id
 // Use child zone when present; otherwise use parent
 output publicDnsZoneId string = empty(subdomainLabel) ? publicZone.id : childZone.id
