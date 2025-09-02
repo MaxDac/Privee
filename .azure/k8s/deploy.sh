@@ -52,6 +52,22 @@ if [ -z "$KEYVAULT_NAME" ]; then
   exit 1
 fi
 
+# Get CosmosDB PostgreSQL coordinator endpoint
+echo "Fetching CosmosDB PostgreSQL coordinator endpoint..."
+COSMOS_COORDINATOR_ENDPOINT=$(az cosmosdb postgres cluster show \
+  --cluster-name "priveecosmos" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "serverNames[0].fullyQualifiedDomainName" \
+  -o tsv 2>/dev/null || true)
+
+if [ -z "$COSMOS_COORDINATOR_ENDPOINT" ]; then
+  echo "Warning: Could not fetch CosmosDB coordinator endpoint. Using placeholder value."
+  echo "Make sure the CosmosDB PostgreSQL cluster 'priveecosmos' exists in resource group '$RESOURCE_GROUP'"
+  COSMOS_COORDINATOR_ENDPOINT="c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com"
+else
+  echo "Found CosmosDB coordinator endpoint: $COSMOS_COORDINATOR_ENDPOINT"
+fi
+
 # Get Key Vault scope
 KV_ID=$(az keyvault show -g "$KV_RESOURCE_GROUP" -n "$KEYVAULT_NAME" --query id -o tsv)
 if [ -z "$KV_ID" ]; then
@@ -142,6 +158,7 @@ export CERT_URI
 export KEYVAULT_NAME
 export TENANT_ID
 export UAMI_CLIENT_ID
+export COSMOS_COORDINATOR_ENDPOINT
 
 echo "Applying manifests with real values..."
 

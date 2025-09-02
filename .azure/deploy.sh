@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 # Defaults
 LOCATION="northeurope"      # Subscription-level deployment location
@@ -101,15 +101,18 @@ if ! az account show > /dev/null 2>&1; then
 fi
 
 echo "Building subscription-level Bicep..."
-az bicep build --file "$SUB_BICEP" --outfile "$SUB_ARM"
+az bicep build --file "$SUB_BICEP" --outfile "$SUB_ARM" --debug
 
 echo "Deploying subscription-level resources to location '$LOCATION'..."
+DEPLOYMENT_NAME="privee-main-deployment-$(date +%Y%m%d-%H%M%S)"
+echo "Using deployment name: $DEPLOYMENT_NAME"
 DEPLOY_JSON=$(az deployment sub create \
-  --name "privee-main-deployment" \
+  --name "$DEPLOYMENT_NAME" \
   --location "$LOCATION" \
   --template-file "$SUB_ARM" \
   --parameters "$SUB_PARAMS" \
-  -o json)
+  -o json \
+  --debug)
 
 # Extract relevant outputs if present
 INGRESS_FQDN=$(echo "$DEPLOY_JSON" | jq -r '.properties.outputs.ingressFqdn.value // empty' 2>/dev/null || true)
@@ -121,7 +124,7 @@ echo "  dnsZoneId:   ${DNS_ZONE_ID:-<none>}"
 
 # Ensure deployment RG exists before group-level deployments
 echo "Ensuring resource group '$DEPLOY_RG' exists in '$LOCATION'..."
-az group create -n "$DEPLOY_RG" -l "$LOCATION" >/dev/null
+az group create -n "$DEPLOY_RG" -l "$LOCATION" --debug >/dev/null
 
 # Optional DNS subdomain delegation and AKS DNS configuration
 SUBDOMAIN_LABEL=$(jq -r '.parameters.subdomainLabel.value // empty' "$SUB_PARAMS" 2>/dev/null || true)
@@ -139,7 +142,7 @@ if [[ "$CONFIGURE_AKS_DNS" == "true" ]]; then
     ZONE_NAME="$PARENT_ZONE"
   fi
   echo "Resolving DNS zone resource ID for '$ZONE_NAME'..."
-  ZONE_ID=$(az network dns zone show -g "$DEPLOY_RG" -n "$ZONE_NAME" --query id -o tsv 2>/dev/null || true)
+  ZONE_ID=$(az network dns zone show -g "$DEPLOY_RG" -n "$ZONE_NAME" --query id -o tsv --debug 2>/dev/null || true)
   if [[ -n "$ZONE_ID" ]]; then
     echo "Configuring AKS Web App Routing to use zone: $ZONE_ID"
     "$SCRIPT_DIR/scripts/use-subdomain-for-webapprouting.sh" --rg "$AKS_RG" --cluster "$AKS_NAME" --dns-zone-id "$ZONE_ID"
@@ -150,9 +153,9 @@ fi
 
 # Verify ACR exists; auto-detect RG if needed
 echo "Validating ACR '$ACR_NAME'..."
-if ! az acr show -n "$ACR_NAME" -g "$ACR_RG" >/dev/null 2>&1; then
+if ! az acr show -n "$ACR_NAME" -g "$ACR_RG" --debug >/dev/null 2>&1; then
   echo "ACR '$ACR_NAME' not found in RG '$ACR_RG'. Searching subscription by name..."
-  ACR_INFO="$(az acr list --query "[?name=='$ACR_NAME'].{rg:resourceGroup,name:name}" -o tsv)"
+  ACR_INFO="$(az acr list --query "[?name=='$ACR_NAME'].{rg:resourceGroup,name:name}" -o tsv --debug)"
   if [[ -n "$ACR_INFO" ]]; then
     ACR_RG_FOUND="$(echo "$ACR_INFO" | awk '{print $1}')"
     echo "Found ACR '$ACR_NAME' in RG '$ACR_RG_FOUND'. Using that."
@@ -166,13 +169,13 @@ fi
 
 # Resolve the AKS get-credentials role definition ID if not explicitly provided
 if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
-  AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$AKS_GETCREDS_ROLE_NAME" --query "[0].name" -o tsv 2>/dev/null || true)"
+  AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$AKS_GETCREDS_ROLE_NAME" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
   if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
     # Try common alternatives
     for alt in \
       "Azure Kubernetes Service Cluster User Role" \
       "Azure Kubernetes Service Cluster Admin Role"; do
-      AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv 2>/dev/null || true)"
+      AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
       if [[ -n "$AKS_GETCREDS_ROLE_ID" ]]; then
         echo "Resolved AKS get-credentials role using alternative name: $alt -> $AKS_GETCREDS_ROLE_ID"
         break
@@ -186,9 +189,9 @@ fi
 # Verify AKS exists; auto-detect RG if needed when assigning any AKS-scoped role
 if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_CERT_MANAGER" == "true" ]]; then
   echo "Validating AKS '$AKS_NAME'..."
-  if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" >/dev/null 2>&1; then
+  if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" --debug >/dev/null 2>&1; then
     echo "AKS '$AKS_NAME' not found in RG '$AKS_RG'. Searching subscription by name..."
-    AKS_INFO="$(az aks list --query "[?name=='$AKS_NAME'].{rg:resourceGroup,name:name}" -o tsv)"
+    AKS_INFO="$(az aks list --query "[?name=='$AKS_NAME'].{rg:resourceGroup,name:name}" -o tsv --debug)"
     if [[ -n "$AKS_INFO" ]]; then
       AKS_RG_FOUND="$(echo "$AKS_INFO" | awk '{print $1}')"
       echo "Found AKS '$AKS_NAME' in RG '$AKS_RG_FOUND'. Using that."
@@ -203,7 +206,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
 
   # Auto-populate kubelet identity if not provided
   if [[ -z "$AKS_KUBELET_OBJECT_ID" ]]; then
-    AKS_KUBELET_OBJECT_ID="$(az aks show -n "$AKS_NAME" -g "$AKS_RG" --query "identityProfile.kubeletidentity.objectId" -o tsv 2>/dev/null || true)"
+    AKS_KUBELET_OBJECT_ID="$(az aks show -n "$AKS_NAME" -g "$AKS_RG" --query "identityProfile.kubeletidentity.objectId" -o tsv --debug 2>/dev/null || true)"
     if [[ -n "$AKS_KUBELET_OBJECT_ID" ]]; then
       echo "Detected AKS kubelet identity objectId: $AKS_KUBELET_OBJECT_ID"
     else
@@ -214,7 +217,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
   # Resolve the AKS RBAC role definition ID if not explicitly provided
   if [[ -z "$AKS_ROLE_ID" ]]; then
     # Try exact match first
-    AKS_ROLE_ID="$(az role definition list --name "$AKS_ROLE_NAME" --query "[0].name" -o tsv 2>/dev/null || true)"
+    AKS_ROLE_ID="$(az role definition list --name "$AKS_ROLE_NAME" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
     # Fallbacks if not found
     if [[ -z "$AKS_ROLE_ID" ]]; then
       # Try common alternative display names
@@ -222,7 +225,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
         "Azure Kubernetes Service RBAC Admin" \
         "Azure Kubernetes Service RBAC Cluster Admin" \
         "Azure Kubernetes Service RBAC Owner"; do
-        AKS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv 2>/dev/null || true)"
+        AKS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
         if [[ -n "$AKS_ROLE_ID" ]]; then
           echo "Resolved AKS role using alternative name: $alt -> $AKS_ROLE_ID"
           break
@@ -276,14 +279,16 @@ echo ""
 az deployment group what-if \
   -g "$DEPLOY_RG" \
   -f "$IDENTITY_BICEP" \
-  -p "${PARAMS[@]}" 2>&1 | grep -v "WhatIfUnidentifiableResource" | grep -v "Unsupported.*Changes to the resource" || true
+  -p "${PARAMS[@]}" \
+  --debug 2>&1 | grep -v "WhatIfUnidentifiableResource" | grep -v "Unsupported.*Changes to the resource" || true
 
 echo "Deploying OIDC identity + role assignments into RG '$DEPLOY_RG'..."
 set +e
 DEPLOY_OUTPUT=$(az deployment group create \
   -g "$DEPLOY_RG" \
   -f "$IDENTITY_BICEP" \
-  -p "${PARAMS[@]}" 2>&1)
+  -p "${PARAMS[@]}" \
+  --debug 2>&1)
 DEPLOY_EXIT=$?
 set -e
 
@@ -312,4 +317,4 @@ echo "Useful values for GitHub Actions:"
 echo "  AZURE_TENANT_ID         -> \$(az account show --query tenantId -o tsv)"
 echo "  AZURE_SUBSCRIPTION_ID   -> \$(az account show --query id -o tsv)"
 echo "  AZURE_CLIENT_ID         -> from deployment outputs (clientId)"
-echo "  ACR_LOGIN_SERVER        -> \$(az acr show -n \"$ACR_NAME\" -g \"$ACR_RG\" --query loginServer -o tsv)"
+echo "  ACR_LOGIN_SERVER        -> \$(az acr show -n \"$ACR_NAME\" -g \"$ACR_RG\" --query loginServer -o tsv --debug)"

@@ -31,24 +31,15 @@ param dnsZoneName string
 @description('Optional subdomain label to create and delegate as a child DNS zone (e.g., "app"). If provided, AKS will use the child zone for Web App Routing.')
 param subdomainLabel string = ''
 
-@description('PostgreSQL server name (globally unique).')
-param pgServerName string = '${namePrefix}pg'
-
-@description('PostgreSQL admin user')
-param pgAdminUser string = 'pgadmin'
-
 @secure()
-@description('PostgreSQL admin password')
-param pgAdminPassword string
+@description('CosmosDB admin password')
+param cosmosAdminPassword string
 
 @description('VNet CIDR')
 param vnetCidr string = '10.0.0.0/16'
 
 @description('AKS subnet CIDR')
 param aksSubnetCidr string = '10.0.1.0/24'
-
-@description('PostgreSQL delegated subnet CIDR')
-param pgSubnetCidr string = '10.0.2.0/24'
 
 @description('Additional tags to apply to resources')
 param tags object = {}
@@ -88,13 +79,10 @@ module infrastructure 'main.bicep' = {
     aksVmSize: aksVmSize
     aksVersion: aksVersion
     dnsZoneName: dnsZoneName
-  subdomainLabel: subdomainLabel
-    pgServerName: pgServerName
-    pgAdminUser: pgAdminUser
-    pgAdminPassword: pgAdminPassword
+    subdomainLabel: subdomainLabel
+    cosmosAdminPassword: cosmosAdminPassword
     vnetCidr: vnetCidr
     aksSubnetCidr: aksSubnetCidr
-    pgSubnetCidr: pgSubnetCidr
     keyVaultId: keyVaultId // Key Vault ID should be provided as parameter
     ingressDnsLabel: ingressDnsLabel
     ingressPublicIpName: ingressPublicIpName

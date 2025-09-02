@@ -23,15 +23,12 @@ param dnsZoneName string
 @description('Optional subdomain label to create and delegate as a child DNS zone (e.g., "app"). If provided, AKS will use the child zone for Web App Routing.')
 param subdomainLabel string = ''
 
-@description('PostgreSQL server name (globally unique).')
-param pgServerName string = '${namePrefix}pg'
-
-@description('PostgreSQL admin user')
-param pgAdminUser string = 'pgadmin'
+@description('CosmosDB PostgreSQL cluster name (globally unique).')
+param cosmosClusterName string = '${namePrefix}cosmos'
 
 @secure()
-@description('PostgreSQL admin password')
-param pgAdminPassword string
+@description('CosmosDB admin password')
+param cosmosAdminPassword string
 
 @description('VNet CIDR')
 param vnetCidr string = '10.0.0.0/16'
@@ -39,8 +36,8 @@ param vnetCidr string = '10.0.0.0/16'
 @description('AKS subnet CIDR')
 param aksSubnetCidr string = '10.0.1.0/24'
 
-@description('PostgreSQL delegated subnet CIDR')
-param pgSubnetCidr string = '10.0.2.0/24'
+@description('CosmosDB PostgreSQL subnet CIDR')
+param cosmosSubnetCidr string = '10.0.3.0/24'
 
 // Add Key Vault ID parameter
 @description('Key Vault resource ID for app routing add-on')
@@ -59,10 +56,9 @@ module networking 'modules/networking.bicep' = {
     location: location
     vnetCidr: vnetCidr
     aksSubnetCidr: aksSubnetCidr
-    pgSubnetCidr: pgSubnetCidr
+    cosmosSubnetCidr: cosmosSubnetCidr
     dnsZoneName: dnsZoneName
-    pgServerName: pgServerName
-  subdomainLabel: subdomainLabel
+    subdomainLabel: subdomainLabel
   }
 }
 
@@ -75,15 +71,15 @@ module acr 'modules/acr.bicep' = {
   }
 }
 
-// ----------------- Deploy PostgreSQL Module -----------------
-module postgresql 'modules/postgresql.bicep' = {
+// ----------------- Deploy CosmosDB for PostgreSQL -----------------
+module cosmosdb 'modules/cosmosdb-postgresql.bicep' = {
+  name: 'cosmosdb'
   params: {
-    pgServerName: pgServerName
+    clusterName: cosmosClusterName
     location: location
-    pgAdminUser: pgAdminUser
-    pgAdminPassword: pgAdminPassword
-    pgSubnetId: networking.outputs.pgSubnetId
-    pgPrivateDnsZoneId: networking.outputs.pgPrivateDnsZoneId
+    administratorPassword: cosmosAdminPassword
+    cosmosSubnetId: networking.outputs.cosmosSubnetId
+    cosmosPrivateDnsZoneId: networking.outputs.cosmosPrivateDnsZoneId
   }
 }
 
@@ -136,6 +132,12 @@ module aksKeyVaultAccess 'modules/keyvault-role-assignment.bicep' = {
 output aksName string = aks.outputs.aksName
 output acrLoginServer string = acr.outputs.acrLoginServer
 output dnsZoneId string = networking.outputs.publicDnsZoneId
+
+// CosmosDB PostgreSQL outputs
+output cosmosClusterName string = cosmosdb.outputs.clusterName
+output cosmosCoordinatorEndpoint string = cosmosdb.outputs.coordinatorEndpoint
+output cosmosDatabaseName string = cosmosdb.outputs.databaseName
+output cosmosAdminLogin string = cosmosdb.outputs.administratorLogin
 
 // Ingress FQDN output (conditional on ingressDnsLabel being set)
 output ingressFqdn string = !empty(ingressDnsLabel) ? '${ingressDnsLabel}.${location}.cloudapp.azure.com' : ''
