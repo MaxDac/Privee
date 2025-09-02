@@ -55,15 +55,15 @@ fi
 # Get CosmosDB PostgreSQL coordinator endpoint
 echo "Fetching CosmosDB PostgreSQL coordinator endpoint..."
 COSMOS_COORDINATOR_ENDPOINT=$(az cosmosdb postgres cluster show \
-  --cluster-name "priveecosmoscluster" \
+  --cluster-name "priveecosmos" \
   --resource-group "$RESOURCE_GROUP" \
   --query "serverNames[0].fullyQualifiedDomainName" \
   -o tsv 2>/dev/null || true)
 
 if [ -z "$COSMOS_COORDINATOR_ENDPOINT" ]; then
   echo "Warning: Could not fetch CosmosDB coordinator endpoint. Using placeholder value."
-  echo "Make sure the CosmosDB PostgreSQL cluster 'priveecosmoscluster' exists in resource group '$RESOURCE_GROUP'"
-  COSMOS_COORDINATOR_ENDPOINT="c-priveecosmoscluster.privatelink.postgres.cosmos.azure.com"
+  echo "Make sure the CosmosDB PostgreSQL cluster 'priveecosmos' exists in resource group '$RESOURCE_GROUP'"
+  COSMOS_COORDINATOR_ENDPOINT="c-priveecosmos.5bwsp5etlxdldh.postgres.cosmos.azure.com"
 else
   echo "Found CosmosDB coordinator endpoint: $COSMOS_COORDINATOR_ENDPOINT"
 fi
