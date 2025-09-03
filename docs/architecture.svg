@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <style>
+    .box { fill:#f8f9fb; stroke:#9fc5ff; stroke-width:2; rx:8; }
+    .smallbox { fill:#fff; stroke:#cfd8e3; stroke-width:1.5; rx:6; }
+    .text { font-family: Arial, Helvetica, sans-serif; font-size:14px; fill:#1f2937; }
+    .title { font-size:18px; font-weight:600; }
+    .arrow { stroke:#444; stroke-width:2; fill:none; marker-end:url(#arrowhead); }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#444" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="30" y="30" class="text title">Privee - Azure Deployment Architecture</text>
+
+  <!-- Left column: CI/CD & ACR -->
+  <g>
+    <rect x="30" y="60" width="200" height="60" class="smallbox" />
+    <text x="40" y="95" class="text">GitHub Actions (OIDC)</text>
+
+    <rect x="30" y="140" width="240" height="72" class="box" />
+    <text x="40" y="170" class="text">Azure Container Registry (ACR)</text>
+    <text x="40" y="188" class="text">modules/acr.bicep</text>
+  </g>
+
+  <!-- Center: AKS cluster -->
+  <g>
+    <rect x="320" y="60" width="520" height="420" class="box" />
+    <text x="540" y="82" class="text" style="text-anchor:middle;font-weight:600;">AKS Cluster (k8s)</text>
+
+    <!-- Ingress -->
+    <rect x="360" y="110" width="200" height="56" class="smallbox" />
+    <text x="470" y="140" class="text" style="text-anchor:middle;">Ingress Controller</text>
+
+    <!-- Cert manager -->
+    <rect x="590" y="110" width="200" height="56" class="smallbox" />
+    <text x="690" y="140" class="text" style="text-anchor:middle;">Cert-Manager (Let's Encrypt)</text>
+
+    <!-- App -->
+    <rect x="430" y="200" width="300" height="120" class="smallbox" />
+    <text x="580" y="230" class="text" style="text-anchor:middle;">Application Pods</text>
+    <text x="580" y="250" class="text" style="text-anchor:middle;">k8s/deployment.yml</text>
+
+    <!-- CSI -->
+    <rect x="360" y="340" width="200" height="56" class="smallbox" />
+    <text x="460" y="370" class="text" style="text-anchor:middle;">Secrets Store CSI</text>
+
+    <!-- Headless service -->
+    <rect x="590" y="340" width="200" height="56" class="smallbox" />
+    <text x="690" y="370" class="text" style="text-anchor:middle;">Headless Service</text>
+  </g>
+
+  <!-- Right column: Key Vault and DBs -->
+  <g>
+    <rect x="920" y="80" width="240" height="72" class="box" />
+    <text x="1000" y="110" class="text" style="text-anchor:middle;">Azure Key Vault</text>
+    <text x="1000" y="128" class="text" style="text-anchor:middle;">modules/keyvault.bicep</text>
+
+    <rect x="920" y="180" width="240" height="88" class="box" />
+    <text x="1000" y="210" class="text" style="text-anchor:middle;">Datastores</text>
+    <text x="1000" y="230" class="text" style="text-anchor:middle;">Cosmos DB + PostgreSQL</text>
+    <text x="1000" y="248" class="text" style="text-anchor:middle;">modules/cosmosdb-postgresql.bicep</text>
+
+    <rect x="920" y="300" width="240" height="56" class="smallbox" />
+    <text x="1000" y="335" class="text" style="text-anchor:middle;">Public IP & DNS</text>
+  </g>
+
+  <!-- Arrows and flows -->
+  <path d="M 150 120 L 320 176" class="arrow" /> <!-- GHA -> ACR (visual) -->
+  <path d="M 150 176 L 320 200" class="arrow" /> <!-- ACR -> AKS -->
+  <path d="M 680 260 L 920 220" class="arrow" /> <!-- App -> DBs -->
+  <path d="M 680 200 L 920 110" class="arrow" /> <!-- AKS -> Key Vault -->
+  <path d="M 1100 356 L 720 160" class="arrow" /> <!-- Public IP -> Ingress -->
+  <path d="M 480 396 L 920 335" class="arrow" /> <!-- CSI -> Key Vault (visual) -->
+
+  <!-- Labels near arrows -->
+  <text x="230" y="150" class="text">push images / deploy</text>
+  <text x="560" y="235" class="text">reads / writes</text>
+  <text x="540" y="185" class="text">uses managed identity</text>
+  <text x="770" y="320" class="text">TLS / DNS</text>
+
+  <!-- Footer note -->
+  <text x="30" y="780" class="text">Generated diagram (static render). See docs/architecture.md for the Mermaid source and full explanation.</text>
+</svg>
