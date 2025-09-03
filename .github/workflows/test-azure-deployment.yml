@@ -77,7 +77,7 @@ jobs:
   deploy:
     runs-on: ubuntu-24.04
     needs: build
-    if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request'
     environment: 
       name: ${{ github.ref_name == 'main' && 'production' || 'development' }}
 
