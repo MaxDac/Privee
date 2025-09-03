@@ -1,57 +1,6 @@
 # Azure Deployment Architecture
 
-Below is a diagram (Mermaid) that represents the inferred Azure deployment architecture for this project. The diagram was produced from files in the `.azure` folder (e.g. `modules/*.bicep`, `k8s/*.yml`, `base/*`, `k8s/cert-manager/*`).
-
-```mermaid
-flowchart LR
-  %% Azure control plane & infra
-  subgraph Azure[Azure]
-    direction TB
-    ACR[Azure Container Registry\n`modules/acr.bicep` / `acr-role-assignment.bicep`]
-    AKS[Azure Kubernetes Service (AKS)\n`modules/aks.bicep` / `aks-rbac-assignment.bicep`]
-    KV[Azure Key Vault\n`modules/keyvault.bicep` / `keyvault-role-assignment.bicep`]
-    DBs[(Datastores)\nCosmos DB + PostgreSQL\n`modules/cosmosdb-postgresql.bicep`]
-    PIP[Public IP & DNS\n`modules/ingress-dnslabel.bicep`]
-    MI[Managed Identities\n`base/identity.bicep` / `base/admin-identity.bicep`]
-    GHA[GitHub Actions OIDC Identity\n`modules/gha-oidc-identity.bicep`]
-  end
-
-  %% Kubernetes logical components
-  subgraph AKSCluster["AKS Cluster (k8s)"]
-    direction TB
-    Ingress[Ingress Controller\n`k8s/ingress.yml`]
-    CertManager[Cert-Manager\n`k8s/cert-manager/*.yml` (Let's Encrypt issuers)]
-    CSI[Secrets Store CSI Driver\n`k8s/secret-provider-class.yml`]
-    App[Application Deployment\n`k8s/deployment.yml`\n`k8s/service.yml`]
-    Headless[Headless Service\n`k8s/headless-service.yml`]
-  end
-
-  %% CI/CD flows
-  GHA -->|push images & deploy| ACR
-  GHA -->|deploy manifests / az cli| AKS
-
-  %% runtime flows
-  ACR -->|image pull| AKS
-  AKS -->|uses Managed Identity| MI
-  MI -->|access & RBAC| KV
-  KV -->|secrets via CSI| CSI
-  CSI -->|mount secrets| App
-
-  %% networking & TLS
-  PIP -->|public endpoint / DNS| Ingress
-  Ingress -->|routes traffic| App
-  CertManager -->|issue TLS certs| Ingress
-
-  %% data layer
-  App -->|reads/writes| DBs
-
-  %% role assignments & infra glue (annotations)
-  ACR -. role assignment .-> AKS
-  AKS -. role assignment .-> KV
-
-  style Azure fill:#f8f9fb,stroke:#ccc
-  style AKSCluster fill:#eef6ff,stroke:#9fc5ff
-```
+![Architecture](docs/privee-architecture-diagram.svg)
 
 Summary of resources, what they are and why they are used
 
