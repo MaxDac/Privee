@@ -28,6 +28,9 @@ erl_crash.dump
 # Elixir Tools
 /.elixir-tools/
 
+# Elixir Expert
+/.expert/
+
 # Node
 node_modules/
 

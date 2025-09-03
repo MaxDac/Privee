@@ -26,6 +26,9 @@ CONFIGURE_AKS_DNS="true"     # Ensure AKS Web App Routing points to the resultin
 INSTALL_CERT_MANAGER="true"
 APPLY_CERT_ISSUERS="true"
 
+# Debug option
+DEBUG="false"               # Enable verbose/debug output (default: false)
+
 usage() {
   cat <<EOF
 Usage: $0 [options]
@@ -46,6 +49,7 @@ Usage: $0 [options]
   --configure-aks-dns <true|false>   Ensure AKS Web App Routing uses the zone (default: ${CONFIGURE_AKS_DNS})
   --install-cert-manager <true|false> Install cert-manager from its official manifest (default: ${INSTALL_CERT_MANAGER})
   --apply-cert-issuers <true|false>   Apply the staging and prod ClusterIssuers for Let's Encrypt (default: ${APPLY_CERT_ISSUERS})
+  --debug <true|false>              Enable verbose/debug output for Azure CLI commands (default: ${DEBUG})
   -h, --help                            Show this help
 EOF
 }
@@ -70,10 +74,20 @@ while [[ "${1:-}" != "" ]]; do
     --configure-aks-dns) CONFIGURE_AKS_DNS="$2"; shift 2 ;;
     --install-cert-manager) INSTALL_CERT_MANAGER="$2"; shift 2 ;;
     --apply-cert-issuers) APPLY_CERT_ISSUERS="$2"; shift 2 ;;
+    --debug) DEBUG="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown parameter: $1"; usage; exit 1 ;;
   esac
 done
+
+# Set debug flags based on parameter
+if [[ "$DEBUG" == "true" ]]; then
+  DEBUG_FLAG="--debug"
+  echo "Debug mode enabled - verbose output will be shown"
+else
+  DEBUG_FLAG=""
+  echo "Debug mode disabled - minimal output"
+fi
 
 # Resolve paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -87,13 +101,6 @@ ACR_RG="${ACR_RG:-$DEPLOY_RG}"
 AKS_RG="${AKS_RG:-$DEPLOY_RG}"
 ACR_NAME="${ACR_NAME:-$(echo "${NAME_PREFIX}registry" | tr '[:upper:]' '[:lower:]')}"
 
-# Resolve paths
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SUB_BICEP="${SCRIPT_DIR}/main-subscription.bicep"
-SUB_ARM="${SCRIPT_DIR}/main-subscription.json"
-SUB_PARAMS="${SCRIPT_DIR}/main.parameters.json"
-IDENTITY_BICEP="${SCRIPT_DIR}/modules/gha-oidc-identity.bicep"
-
 # Check Azure login
 if ! az account show > /dev/null 2>&1; then
   echo "You are not logged in to Azure. Please run 'az login' to authenticate."
@@ -101,7 +108,7 @@ if ! az account show > /dev/null 2>&1; then
 fi
 
 echo "Building subscription-level Bicep..."
-az bicep build --file "$SUB_BICEP" --outfile "$SUB_ARM" --debug
+az bicep build --file "$SUB_BICEP" --outfile "$SUB_ARM" $DEBUG_FLAG
 
 echo "Deploying subscription-level resources to location '$LOCATION'..."
 DEPLOYMENT_NAME="privee-main-deployment-$(date +%Y%m%d-%H%M%S)"
@@ -112,7 +119,7 @@ DEPLOY_JSON=$(az deployment sub create \
   --template-file "$SUB_ARM" \
   --parameters "$SUB_PARAMS" \
   -o json \
-  --debug)
+  $DEBUG_FLAG)
 
 # Extract relevant outputs if present
 INGRESS_FQDN=$(echo "$DEPLOY_JSON" | jq -r '.properties.outputs.ingressFqdn.value // empty' 2>/dev/null || true)
@@ -124,7 +131,7 @@ echo "  dnsZoneId:   ${DNS_ZONE_ID:-<none>}"
 
 # Ensure deployment RG exists before group-level deployments
 echo "Ensuring resource group '$DEPLOY_RG' exists in '$LOCATION'..."
-az group create -n "$DEPLOY_RG" -l "$LOCATION" --debug >/dev/null
+az group create -n "$DEPLOY_RG" -l "$LOCATION" $DEBUG_FLAG >/dev/null
 
 # Optional DNS subdomain delegation and AKS DNS configuration
 SUBDOMAIN_LABEL=$(jq -r '.parameters.subdomainLabel.value // empty' "$SUB_PARAMS" 2>/dev/null || true)
@@ -142,7 +149,7 @@ if [[ "$CONFIGURE_AKS_DNS" == "true" ]]; then
     ZONE_NAME="$PARENT_ZONE"
   fi
   echo "Resolving DNS zone resource ID for '$ZONE_NAME'..."
-  ZONE_ID=$(az network dns zone show -g "$DEPLOY_RG" -n "$ZONE_NAME" --query id -o tsv --debug 2>/dev/null || true)
+  ZONE_ID=$(az network dns zone show -g "$DEPLOY_RG" -n "$ZONE_NAME" --query id -o tsv $DEBUG_FLAG 2>/dev/null || true)
   if [[ -n "$ZONE_ID" ]]; then
     echo "Configuring AKS Web App Routing to use zone: $ZONE_ID"
     "$SCRIPT_DIR/scripts/use-subdomain-for-webapprouting.sh" --rg "$AKS_RG" --cluster "$AKS_NAME" --dns-zone-id "$ZONE_ID"
@@ -153,9 +160,9 @@ fi
 
 # Verify ACR exists; auto-detect RG if needed
 echo "Validating ACR '$ACR_NAME'..."
-if ! az acr show -n "$ACR_NAME" -g "$ACR_RG" --debug >/dev/null 2>&1; then
+if ! az acr show -n "$ACR_NAME" -g "$ACR_RG" $DEBUG_FLAG >/dev/null 2>&1; then
   echo "ACR '$ACR_NAME' not found in RG '$ACR_RG'. Searching subscription by name..."
-  ACR_INFO="$(az acr list --query "[?name=='$ACR_NAME'].{rg:resourceGroup,name:name}" -o tsv --debug)"
+  ACR_INFO="$(az acr list --query "[?name=='$ACR_NAME'].{rg:resourceGroup,name:name}" -o tsv $DEBUG_FLAG)"
   if [[ -n "$ACR_INFO" ]]; then
     ACR_RG_FOUND="$(echo "$ACR_INFO" | awk '{print $1}')"
     echo "Found ACR '$ACR_NAME' in RG '$ACR_RG_FOUND'. Using that."
@@ -169,13 +176,13 @@ fi
 
 # Resolve the AKS get-credentials role definition ID if not explicitly provided
 if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
-  AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$AKS_GETCREDS_ROLE_NAME" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
+  AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$AKS_GETCREDS_ROLE_NAME" --query "[0].name" -o tsv $DEBUG_FLAG 2>/dev/null || true)"
   if [[ -z "$AKS_GETCREDS_ROLE_ID" ]]; then
     # Try common alternatives
     for alt in \
       "Azure Kubernetes Service Cluster User Role" \
       "Azure Kubernetes Service Cluster Admin Role"; do
-      AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
+      AKS_GETCREDS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv $DEBUG_FLAG 2>/dev/null || true)"
       if [[ -n "$AKS_GETCREDS_ROLE_ID" ]]; then
         echo "Resolved AKS get-credentials role using alternative name: $alt -> $AKS_GETCREDS_ROLE_ID"
         break
@@ -189,9 +196,9 @@ fi
 # Verify AKS exists; auto-detect RG if needed when assigning any AKS-scoped role
 if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_CERT_MANAGER" == "true" ]]; then
   echo "Validating AKS '$AKS_NAME'..."
-  if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" --debug >/dev/null 2>&1; then
+  if ! az aks show -n "$AKS_NAME" -g "$AKS_RG" $DEBUG_FLAG >/dev/null 2>&1; then
     echo "AKS '$AKS_NAME' not found in RG '$AKS_RG'. Searching subscription by name..."
-    AKS_INFO="$(az aks list --query "[?name=='$AKS_NAME'].{rg:resourceGroup,name:name}" -o tsv --debug)"
+    AKS_INFO="$(az aks list --query "[?name=='$AKS_NAME'].{rg:resourceGroup,name:name}" -o tsv $DEBUG_FLAG)"
     if [[ -n "$AKS_INFO" ]]; then
       AKS_RG_FOUND="$(echo "$AKS_INFO" | awk '{print $1}')"
       echo "Found AKS '$AKS_NAME' in RG '$AKS_RG_FOUND'. Using that."
@@ -206,7 +213,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
 
   # Auto-populate kubelet identity if not provided
   if [[ -z "$AKS_KUBELET_OBJECT_ID" ]]; then
-    AKS_KUBELET_OBJECT_ID="$(az aks show -n "$AKS_NAME" -g "$AKS_RG" --query "identityProfile.kubeletidentity.objectId" -o tsv --debug 2>/dev/null || true)"
+    AKS_KUBELET_OBJECT_ID="$(az aks show -n "$AKS_NAME" -g "$AKS_RG" --query "identityProfile.kubeletidentity.objectId" -o tsv $DEBUG_FLAG 2>/dev/null || true)"
     if [[ -n "$AKS_KUBELET_OBJECT_ID" ]]; then
       echo "Detected AKS kubelet identity objectId: $AKS_KUBELET_OBJECT_ID"
     else
@@ -217,7 +224,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
   # Resolve the AKS RBAC role definition ID if not explicitly provided
   if [[ -z "$AKS_ROLE_ID" ]]; then
     # Try exact match first
-    AKS_ROLE_ID="$(az role definition list --name "$AKS_ROLE_NAME" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
+    AKS_ROLE_ID="$(az role definition list --name "$AKS_ROLE_NAME" --query "[0].name" -o tsv $DEBUG_FLAG 2>/dev/null || true)"
     # Fallbacks if not found
     if [[ -z "$AKS_ROLE_ID" ]]; then
       # Try common alternative display names
@@ -225,7 +232,7 @@ if [[ "$GRANT_AKS_ACCESS" == "true" || -n "$AKS_GETCREDS_ROLE_ID" || "$INSTALL_C
         "Azure Kubernetes Service RBAC Admin" \
         "Azure Kubernetes Service RBAC Cluster Admin" \
         "Azure Kubernetes Service RBAC Owner"; do
-        AKS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv --debug 2>/dev/null || true)"
+        AKS_ROLE_ID="$(az role definition list --name "$alt" --query "[0].name" -o tsv $DEBUG_FLAG 2>/dev/null || true)"
         if [[ -n "$AKS_ROLE_ID" ]]; then
           echo "Resolved AKS role using alternative name: $alt -> $AKS_ROLE_ID"
           break
@@ -280,7 +287,7 @@ az deployment group what-if \
   -g "$DEPLOY_RG" \
   -f "$IDENTITY_BICEP" \
   -p "${PARAMS[@]}" \
-  --debug 2>&1 | grep -v "WhatIfUnidentifiableResource" | grep -v "Unsupported.*Changes to the resource" || true
+  $DEBUG_FLAG 2>&1 | grep -v "WhatIfUnidentifiableResource" | grep -v "Unsupported.*Changes to the resource" || true
 
 echo "Deploying OIDC identity + role assignments into RG '$DEPLOY_RG'..."
 set +e
@@ -288,7 +295,7 @@ DEPLOY_OUTPUT=$(az deployment group create \
   -g "$DEPLOY_RG" \
   -f "$IDENTITY_BICEP" \
   -p "${PARAMS[@]}" \
-  --debug 2>&1)
+  $DEBUG_FLAG 2>&1)
 DEPLOY_EXIT=$?
 set -e
 
@@ -304,11 +311,20 @@ fi
 
 # Install cert-manager and issuers if requested
 if [[ "$INSTALL_CERT_MANAGER" == "true" || "$APPLY_CERT_ISSUERS" == "true" ]]; then
-  "$SCRIPT_DIR/scripts/deploy-cert-manager.sh" \
-    --aks-rg "$AKS_RG" \
-    --aks-name "$AKS_NAME" \
-    --install-cert-manager "$INSTALL_CERT_MANAGER" \
+  # Pass debug flag to cert-manager script if it supports it
+  CERT_MANAGER_ARGS=(
+    --aks-rg "$AKS_RG"
+    --aks-name "$AKS_NAME"
+    --install-cert-manager "$INSTALL_CERT_MANAGER"
     --apply-cert-issuers "$APPLY_CERT_ISSUERS"
+  )
+  
+  # Add debug flag if enabled (assuming the cert-manager script supports it)
+  if [[ "$DEBUG" == "true" ]]; then
+    CERT_MANAGER_ARGS+=(--debug true)
+  fi
+  
+  "$SCRIPT_DIR/scripts/deploy-cert-manager.sh" "${CERT_MANAGER_ARGS[@]}"
 fi
 
 echo
@@ -317,4 +333,4 @@ echo "Useful values for GitHub Actions:"
 echo "  AZURE_TENANT_ID         -> \$(az account show --query tenantId -o tsv)"
 echo "  AZURE_SUBSCRIPTION_ID   -> \$(az account show --query id -o tsv)"
 echo "  AZURE_CLIENT_ID         -> from deployment outputs (clientId)"
-echo "  ACR_LOGIN_SERVER        -> \$(az acr show -n \"$ACR_NAME\" -g \"$ACR_RG\" --query loginServer -o tsv --debug)"
+echo "  ACR_LOGIN_SERVER        -> \$(az acr show -n \"$ACR_NAME\" -g \"$ACR_RG\" --query loginServer -o tsv $DEBUG_FLAG)"
