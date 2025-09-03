@@ -93,6 +93,20 @@ module assignAksGetCreds './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   }
 }
 
+// ------------- Resource Group Reader Access -------------
+// Grant Reader role at resource group scope to allow listing resources.
+// Required by the GitHub action which pushes images to the ACR.
+var readerRoleId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7') // Reader role
+
+resource resourceGroupReaderAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'reader', uaiName)
+  properties: {
+    roleDefinitionId: readerRoleId
+    principalId: uai.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ------------- Outputs -------------
 output clientId string = uai.properties.clientId
 output principalId string = uai.properties.principalId
