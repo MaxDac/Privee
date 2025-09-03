@@ -56,6 +56,3 @@ Relevant files in this repo (under `.azure` and `k8s`)
 - `.azure/k8s/*` (kubernetes manifests: `deployment.yml`, `service.yml`, `ingress.yml`, `secret-provider-class.yml`, `cert-manager` manifests)
 - `.azure/scripts/*` (helper deployment scripts)
 
-If you'd like, I can also:
-- Create a separate `docs/architecture.mmd` source file and an npm script to render an SVG into `docs/`.
-- Expand the diagram to show VNet/subnet, NSGs, Azure Application Gateway or WAF if you plan to add them.
