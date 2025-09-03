@@ -74,13 +74,13 @@ az deployment sub create \\
 
 ## Security Considerations
 
-### Owner Role Permissions
+### Contributor Role Permissions
 
-The User Managed Identity is granted the **Owner** role at subscription level, which provides:
+The User Managed Identity is granted the **Contributor** role at subscription level, which provides:
 
 - ✅ **Full resource management** - Create, modify, delete all Azure resources
-- ✅ **Access management** - Assign roles and manage permissions
-- ✅ **Subscription administration** - Full administrative control
+- ❌ **Access management** - Cannot assign roles or manage permissions
+- ❌ **Subscription administration** - No access to subscription-level administrative actions
 
 ### Alternative: Granular Permissions
 
