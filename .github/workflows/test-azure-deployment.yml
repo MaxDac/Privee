@@ -66,6 +66,7 @@ jobs:
           additional-tags: ${{ github.event_name != 'pull_request' && 'latest' || '' }}
           dockerfile: "Dockerfile"
           build-context: "."
+          resource-group: ${{ env.RESOURCE_GROUP }}
           build-args: |
             BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
             VCS_REF=${{ github.sha }}

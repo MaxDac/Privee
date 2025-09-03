@@ -39,6 +39,10 @@ inputs:
     description: "Build arguments as key=value pairs (one per line)"
     required: false
     default: ""
+  resource-group:
+    description: "Azure Resource Group name (for diagnostics)"
+    required: false
+    default: ""
 
 outputs:
   image-digest:
@@ -71,66 +75,96 @@ runs:
         echo "Current Azure account:"
         az account show --query "{subscriptionId: id, tenantId: tenantId, name: name, state: state}" -o table
         
-        echo "Full account details:"
-        az account show
+        echo "Service Principal details:"
+        az account show --query "{servicePrincipalId: user.name, type: user.type}" -o table
         
-        # List all available subscriptions
-        echo "Available subscriptions:"
-        az account list --query "[].{Name:name, SubscriptionId:id, State:state, TenantId:tenantId}" -o table
+        # Check service principal permissions
+        echo "🔐 Checking service principal permissions..."
         
-        # Check if we can list resource groups
-        echo "Available resource groups:"
-        az group list --query "[].{Name:name, Location:location}" -o table || echo "Failed to list resource groups"
-        
-        # List all ACR registries across all accessible subscriptions
-        echo "Searching for ACR registries across all subscriptions..."
-        for sub_id in $(az account list --query "[?state=='Enabled'].id" -o tsv); do
-          echo "Checking subscription: $sub_id"
-          az account set --subscription "$sub_id" 2>/dev/null || continue
-          REGISTRIES=$(az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location, Subscription:'$sub_id'}" -o table 2>/dev/null)
-          if [[ -n "$REGISTRIES" ]] && [[ "$REGISTRIES" != "[]" ]]; then
-            echo "Registries in subscription $sub_id:"
-            echo "$REGISTRIES"
-          fi
-        done
-        
-        # Reset to original subscription
-        az account set --subscription "${{ inputs.azure-subscription-id }}"
-        
-        # Test ACR access in current subscription
-        echo "Testing ACR access to registry: ${{ inputs.registry }} in subscription: ${{ inputs.azure-subscription-id }}"
-        if az acr show --name "${{ inputs.registry }}" --query "name" -o tsv > /dev/null 2>&1; then
-          echo "✅ Successfully connected to ACR registry: ${{ inputs.registry }}"
+        # Test basic subscription access
+        echo "Testing subscription read access:"
+        if az account show > /dev/null 2>&1; then
+          echo "✅ Can read subscription information"
         else
-          echo "❌ Failed to access ACR registry: ${{ inputs.registry }} in current subscription"
-          echo "Available registries in current subscription:"
-          az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table || echo "No registries found or insufficient permissions"
-          
-          # Try to find the registry in other subscriptions
-          echo "Searching for registry '${{ inputs.registry }}' in all accessible subscriptions..."
-          FOUND=false
-          for sub_id in $(az account list --query "[?state=='Enabled'].id" -o tsv); do
-            echo "Checking subscription: $sub_id"
-            az account set --subscription "$sub_id" 2>/dev/null || continue
-            if az acr show --name "${{ inputs.registry }}" --query "name" -o tsv > /dev/null 2>&1; then
-              echo "✅ Found registry '${{ inputs.registry }}' in subscription: $sub_id"
-              REGISTRY_INFO=$(az acr show --name "${{ inputs.registry }}" --query "{name:name, resourceGroup:resourceGroup, location:location, subscription:'$sub_id'}" -o table)
-              echo "$REGISTRY_INFO"
-              FOUND=true
-              break
-            fi
-          done
-          
-          # Reset to original subscription
-          az account set --subscription "${{ inputs.azure-subscription-id }}"
-          
-          if [[ "$FOUND" == "false" ]]; then
-            echo "❌ Registry '${{ inputs.registry }}' not found in any accessible subscription"
-            exit 1
+          echo "❌ Cannot read subscription information"
+        fi
+        
+        # Test resource group listing with detailed error handling
+        echo "Testing resource group listing:"
+        RG_OUTPUT=$(az group list --query "[].{Name:name, Location:location}" -o table 2>&1) || true
+        if [[ "$RG_OUTPUT" == *"ERROR"* ]] || [[ "$RG_OUTPUT" == *"Forbidden"* ]]; then
+          echo "❌ Failed to list resource groups - Permission denied"
+          echo "Error details: $RG_OUTPUT"
+        elif [[ -z "$RG_OUTPUT" ]] || [[ "$RG_OUTPUT" == "[]" ]]; then
+          echo "⚠️  No resource groups found (empty result)"
+        else
+          echo "✅ Successfully listed resource groups:"
+          echo "$RG_OUTPUT"
+        fi
+        
+        # Test specific resource group access
+        echo "Testing specific resource group access (if provided via env):"
+        if [[ -n "${{ inputs.resource-group }}" ]]; then
+          echo "Checking access to resource group: ${{ inputs.resource-group }}"
+          RG_SHOW=$(az group show --name "${{ inputs.resource-group }}" --query "{Name:name, Location:location, State:properties.provisioningState}" -o table 2>&1) || true
+          if [[ "$RG_SHOW" == *"ERROR"* ]] || [[ "$RG_SHOW" == *"NotFound"* ]] || [[ "$RG_SHOW" == *"Forbidden"* ]]; then
+            echo "❌ Cannot access resource group '${{ inputs.resource-group }}'"
+            echo "Error: $RG_SHOW"
           else
-            echo "❌ Registry found but not in the target subscription. Please check subscription configuration."
-            exit 1
+            echo "✅ Successfully accessed resource group:"
+            echo "$RG_SHOW"
           fi
+        fi
+        
+        # Test ACR specific permissions
+        echo "Testing ACR service permissions:"
+        ACR_LIST_OUTPUT=$(az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table 2>&1) || true
+        if [[ "$ACR_LIST_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_LIST_OUTPUT" == *"Forbidden"* ]]; then
+          echo "❌ Failed to list ACR registries - Permission denied"
+          echo "Error details: $ACR_LIST_OUTPUT"
+        elif [[ -z "$ACR_LIST_OUTPUT" ]] || [[ "$ACR_LIST_OUTPUT" == "[]" ]]; then
+          echo "⚠️  No ACR registries found (may be permission or existence issue)"
+        else
+          echo "✅ Successfully listed ACR registries:"
+          echo "$ACR_LIST_OUTPUT"
+        fi
+        
+        # Test direct access to the specific registry
+        echo "Testing direct access to registry: ${{ inputs.registry }}"
+        ACR_SHOW_OUTPUT=$(az acr show --name "${{ inputs.registry }}" --query "{name:name, resourceGroup:resourceGroup, location:location}" -o table 2>&1) || true
+        if [[ "$ACR_SHOW_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_SHOW_OUTPUT" == *"NotFound"* ]]; then
+          echo "❌ Cannot access ACR registry '${{ inputs.registry }}'"
+          echo "Error details: $ACR_SHOW_OUTPUT"
+          
+          # Additional diagnostic: check if registry exists by trying different approaches
+          echo "🔍 Additional diagnostics:"
+          echo "Trying alternative ACR access methods..."
+          
+          # Try with resource group if available
+          if [[ -n "${{ inputs.resource-group }}" ]]; then
+            echo "Trying to list ACRs in resource group: ${{ inputs.resource-group }}"
+            RG_ACR_OUTPUT=$(az acr list --resource-group "${{ inputs.resource-group }}" --query "[].name" -o table 2>&1) || true
+            if [[ "$RG_ACR_OUTPUT" != *"ERROR"* ]]; then
+              echo "ACRs in resource group ${{ inputs.resource-group }}: $RG_ACR_OUTPUT"
+            else
+              echo "Failed to list ACRs in resource group: $RG_ACR_OUTPUT"
+            fi
+          fi
+          
+          # Check role assignments
+          echo "Checking current user's role assignments:"
+          ROLE_OUTPUT=$(az role assignment list --assignee "$(az account show --query user.name -o tsv)" --query "[].{Role:roleDefinitionName, Scope:scope}" -o table 2>&1) || true
+          if [[ "$ROLE_OUTPUT" != *"ERROR"* ]]; then
+            echo "Current role assignments:"
+            echo "$ROLE_OUTPUT"
+          else
+            echo "Failed to retrieve role assignments: $ROLE_OUTPUT"
+          fi
+          
+          exit 1
+        else
+          echo "✅ Successfully accessed ACR registry '${{ inputs.registry }}':"
+          echo "$ACR_SHOW_OUTPUT"
         fi
     
     - name: Build and push to ACR
