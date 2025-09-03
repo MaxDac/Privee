@@ -221,15 +221,90 @@ runs:
           # Print the full command for debugging
           echo "Executing: az ${CMD_ARGS[*]}"
           
-          # Execute the build command
+          # Execute the build command with timeout and better error handling
           set -e  # Exit on error
-          OUTPUT=$(az "${CMD_ARGS[@]}" 2>&1) || {
+          echo "Starting ACR build (timeout: 20 minutes)..."
+          
+          # Use timeout to prevent hanging builds
+          timeout 1200s az "${CMD_ARGS[@]}" 2>&1 | tee acr_build_output.log || {
             EXIT_CODE=$?
             echo "❌ ACR build failed with exit code ${EXIT_CODE}"
+            
+            if [[ ${EXIT_CODE} -eq 124 ]]; then
+              echo "Build timed out after 20 minutes"
+              echo "This might indicate:"
+              echo "  - Build is taking too long (check Dockerfile efficiency)"
+              echo "  - Network connectivity issues"
+              echo "  - ACR service issues"
+              
+              # Try to check if the build is still running
+              echo "Checking for recent ACR tasks..."
+              az acr task list-runs --registry "${{ inputs.registry }}" --top 5 --query "[].{RunId:runId, Status:status, StartTime:startTime, FinishTime:finishTime}" -o table 2>/dev/null || echo "Could not retrieve ACR task status"
+            elif [[ ${EXIT_CODE} -eq 1 ]]; then
+              echo "Build failed - checking if it's a log retrieval issue..."
+              
+              # Check if build was queued but logs failed
+              BUILD_OUTPUT=$(cat acr_build_output.log 2>/dev/null || echo "")
+              if [[ "$BUILD_OUTPUT" == *"Queued a build with ID:"* ]] && [[ "$BUILD_OUTPUT" == *"Could not get logs for ID:"* ]]; then
+                BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -oP 'Queued a build with ID: \K\w+' | head -1)
+                echo "Build was queued with ID: $BUILD_ID but logs could not be retrieved"
+                echo "This is likely a transient ACR service issue"
+                
+                # Try to get the build status directly
+                echo "Attempting to check build status directly..."
+                sleep 10  # Give the build a moment to start
+                
+                for i in {1..12}; do  # Check for 2 minutes
+                  BUILD_STATUS=$(az acr task list-runs --registry "${{ inputs.registry }}" --run-id "$BUILD_ID" --query "[0].status" -o tsv 2>/dev/null || echo "Unknown")
+                  echo "Build $BUILD_ID status: $BUILD_STATUS (check $i/12)"
+                  
+                  if [[ "$BUILD_STATUS" == "Succeeded" ]]; then
+                    echo "✅ Build completed successfully despite log retrieval issue"
+                    
+                    # Try to get the final image info
+                    IMAGES=$(az acr task list-runs --registry "${{ inputs.registry }}" --run-id "$BUILD_ID" --query "[0].outputImages" -o tsv 2>/dev/null || echo "")
+                    if [[ -n "$IMAGES" ]]; then
+                      echo "Built images: $IMAGES"
+                      # Set output for the first image
+                      FIRST_IMAGE=$(echo "$IMAGES" | head -1)
+                      if [[ "$FIRST_IMAGE" == *"@sha256:"* ]]; then
+                        echo "uri=$FIRST_IMAGE" >> $GITHUB_OUTPUT
+                        DIGEST=$(echo "$FIRST_IMAGE" | grep -oP '@sha256:\K[a-f0-9]+')
+                        echo "digest=sha256:$DIGEST" >> $GITHUB_OUTPUT
+                      else
+                        echo "uri=${{ inputs.registry }}.azurecr.io/${{ inputs.image-name }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
+                      fi
+                    fi
+                    exit 0
+                  elif [[ "$BUILD_STATUS" == "Failed" ]]; then
+                    echo "❌ Build failed - getting error details..."
+                    az acr task logs --registry "${{ inputs.registry }}" --run-id "$BUILD_ID" 2>/dev/null || echo "Could not retrieve build logs"
+                    exit 1
+                  elif [[ "$BUILD_STATUS" == "Canceled" ]]; then
+                    echo "❌ Build was canceled"
+                    exit 1
+                  elif [[ "$BUILD_STATUS" == "Error" ]]; then
+                    echo "❌ Build encountered an error"
+                    exit 1
+                  elif [[ "$BUILD_STATUS" != "Running" ]] && [[ "$BUILD_STATUS" != "Queued" ]]; then
+                    echo "❌ Unexpected build status: $BUILD_STATUS"
+                    exit 1
+                  fi
+                  
+                  sleep 10
+                done
+                
+                echo "❌ Build status check timed out. Final status: $BUILD_STATUS"
+                exit 1
+              fi
+            fi
+            
             echo "Error output:"
-            echo "${OUTPUT}"
+            cat acr_build_output.log 2>/dev/null || echo "Could not read build output"
             exit ${EXIT_CODE}
           }
+          
+          OUTPUT=$(cat acr_build_output.log)
           
           echo "${OUTPUT}"
           
