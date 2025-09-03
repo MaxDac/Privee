@@ -59,6 +59,31 @@ resource federatedCredential 'Microsoft.ManagedIdentity/userAssignedIdentities/f
   }
 }
 
+// ------------- ACR Build Custom Role Definition -------------
+// Deterministic GUID for the custom role definition
+var acrBuildUploadRoleGuid = guid(subscription().id, 'acr-build-upload-role', namePrefix)
+
+// Minimal custom role containing only the action needed for ACR build source upload
+resource acrBuildUploadRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: acrBuildUploadRoleGuid
+  properties: {
+    roleName: '${namePrefix} ACR Build - Upload Source URL'
+    description: 'Minimal custom role to allow obtaining SAS URL for ACR build context upload.'
+    type: 'CustomRole'
+    permissions: [
+      {
+        actions: [
+          'Microsoft.ContainerRegistry/registries/listBuildSourceUploadUrl/action'
+        ]
+        notActions: []
+      }
+    ]
+    assignableScopes: [
+      resourceId(acrResourceGroup, 'Microsoft.ContainerRegistry/registries', acrName)
+    ]
+  }
+}
+
 // ------------- Modules for role assignments (cross-RG safe) -------------
 // Note: module paths are relative to this file's directory
 module assignAcr './acr-role-assignment.bicep' = {
@@ -68,6 +93,7 @@ module assignAcr './acr-role-assignment.bicep' = {
     acrName: acrName
     principalObjectId: uai.properties.principalId
     kubeletIdentityObjectId: aksKubeletIdentityObjectId
+    acrBuildRoleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrBuildUploadRoleGuid)
   }
 }
 
