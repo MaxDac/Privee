@@ -2,7 +2,7 @@
 
 ![Architecture](./privee-architecture-diagram.svg)
 
-Summary of resources, what they are and why they are used
+Summary of resources, what they are and why they are used:
 
 - Azure Container Registry (ACR)
   - What: Private container image registry hosted in Azure.
