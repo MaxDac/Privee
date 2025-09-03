@@ -1,0 +1,114 @@
+name: Delete Azure Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deletion:
+        description: 'Type "DELETE" to confirm resource group deletion'
+        required: true
+        default: ''
+      skip_confirmation:
+        description: 'Skip interactive confirmation (use with caution)'
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+concurrency:
+  group: azure-infra-delete
+  cancel-in-progress: false
+
+jobs:
+  delete:
+    name: Delete Azure Resource Groups
+    runs-on: ubuntu-24.04
+    
+    steps:
+      - name: Validate deletion confirmation
+        if: github.event.inputs.confirm_deletion != 'DELETE'
+        run: |
+          echo "❌ Deletion not confirmed. You must type 'DELETE' in the confirm_deletion input."
+          echo "This is a safety measure to prevent accidental deletions."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CONTRIBUTOR_CLIENT_ID }}
+          tenant-id: ${{ secrets.CONTRIBUTOR_TENANT_ID }}
+          subscription-id: ${{ secrets.CONTRIBUTOR_SUBSCRIPTION_ID }}
+
+      - name: Display current Azure context
+        run: |
+          echo "🔍 Current Azure Context:"
+          az account show --query "{name:name, id:id, tenantId:tenantId}" --output table
+          echo ""
+          echo "📋 Resource Groups to be deleted:"
+          echo "• MC_privee-dev-rg_privee-aks_northeurope (AKS managed resources)"
+          echo "• NetworkWatcherRG (Network monitoring resources)"  
+          echo "• privee-dev-rg (Main application resources)"
+          echo ""
+          echo "⚠️  WARNING: This action is IRREVERSIBLE!"
+
+      - name: List existing resource groups
+        run: |
+          echo "📦 Current Resource Groups in subscription:"
+          az group list --query "[].{Name:name, Location:location, Status:properties.provisioningState}" --output table || echo "No resource groups found or access denied"
+
+      - name: Execute resource group deletion
+        run: |
+          echo "🗑️  Starting resource group deletion process..."
+          chmod +x ./.azure/scripts/delete-resource-groups.sh
+          bash ./.azure/scripts/delete-resource-groups.sh
+
+      - name: Wait and verify deletions
+        if: github.event.inputs.skip_confirmation != 'true'
+        run: |
+          echo "⏳ Waiting 30 seconds before checking deletion status..."
+          sleep 30
+          
+          echo ""
+          echo "📊 Checking deletion status:"
+          
+          # List of resource groups from the script
+          declare -a resource_groups=(
+            "MC_privee-dev-rg_privee-aks_northeurope"
+            "NetworkWatcherRG"
+            "privee-dev-rg"
+          )
+          
+          for rg in "${resource_groups[@]}"; do
+            echo -n "  • $rg: "
+            if az group show --name "$rg" &>/dev/null; then
+              status=$(az group show --name "$rg" --query "properties.provisioningState" --output tsv 2>/dev/null || echo "Unknown")
+              echo "Still exists (Status: $status)"
+            else
+              echo "✅ Deleted or not found"
+            fi
+          done
+          
+          echo ""
+          echo "ℹ️  Note: Some resources may take additional time to be fully deleted."
+          echo "   Check the Azure Portal for final confirmation."
+
+      - name: Final summary
+        run: |
+          echo ""
+          echo "=================================================="
+          echo "🗑️  AZURE RESOURCE GROUP DELETION SUMMARY"
+          echo "=================================================="
+          echo "Deletion commands executed for:"
+          echo "  • MC_privee-dev-rg_privee-aks_northeurope"
+          echo "  • NetworkWatcherRG"
+          echo "  • privee-dev-rg"
+          echo ""
+          echo "⏰ Deletions are processed asynchronously by Azure."
+          echo "🔍 Monitor progress in the Azure Portal or via Azure CLI."
+          echo "✅ Workflow completed successfully."
+          echo "=================================================="
