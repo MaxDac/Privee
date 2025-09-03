@@ -7,11 +7,6 @@ on:
   # Run on pull requests for branch validation
   pull_request:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.gitignore'
-      - 'LICENSE'
 
 env:
   # Environment-specific configuration
