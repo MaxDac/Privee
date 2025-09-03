@@ -6,35 +6,39 @@ Summary of resources, what they are and why they are used
 
 - Azure Container Registry (ACR)
   - What: Private container image registry hosted in Azure.
-  - Why: Hold built container images built by CI (GitHub Actions) so AKS can pull them. `modules/acr.bicep` and `acr-role-assignment.bicep` create and give AKS permission to pull.
+  - Why: Hold built container images built by CI (GitHub Actions) so AKS can pull them. `.azure/modules/acr.bicep` and `.azure/modules/acr-role-assignment.bicep` create and give AKS permission to pull.
 
 - Azure Kubernetes Service (AKS)
   - What: Managed Kubernetes offering.
-  - Why: Run the application as pods, provide autoscaling, integrations (managed identity, AAD, networking). `modules/aks.bicep` and `aks-rbac-assignment.bicep` define the cluster and RBAC glue.
+  - Why: Run the application as pods, provide autoscaling, integrations (managed identity, AAD, networking). `.azure/modules/aks.bicep` and `.azure/modules/aks-rbac-assignment.bicep` define the cluster and RBAC glue.
 
 - Azure Key Vault
   - What: Centralized secret and key management.
-  - Why: Store sensitive configuration (DB passwords, API keys). The Secrets Store CSI Driver (and `k8s/secret-provider-class.yml`) mounts Key Vault secrets into pods so apps don't store secrets in plain text.
+  - Why: Store sensitive configuration (DB passwords, API keys). The Secrets Store CSI Driver (and `.azure/k8s/secret-provider-class.yml`) mounts Key Vault secrets into pods so apps don't store secrets in plain text. Provisioned via `.azure/modules/keyvault.bicep` with RBAC via `.azure/modules/keyvault-role-assignment.bicep`.
+
+- Networking (VNet, subnets, DNS)
+  - What: Virtual network with subnets for AKS and Cosmos DB for PostgreSQL; private DNS zone link and public DNS zone (optional delegated child zone).
+  - Why: Provide network isolation and private connectivity for data layer; expose public DNS for ingress. See `.azure/modules/networking.bicep`.
 
 - Managed Identities
   - What: Azure-managed identities (system or user-assigned) for resources.
-  - Why: Allow AKS (and other services) to authenticate to Key Vault and other Azure resources without credentials in code. Configured in `base/identity.bicep` / `base/admin-identity.bicep`.
+  - Why: Allow AKS (and other services) to authenticate to Key Vault and other Azure resources without credentials in code. Configured in `.azure/base/identity.bicep` / `.azure/base/admin-identity.bicep`.
 
 - Cert-Manager + Let's Encrypt
   - What: Kubernetes controller for automated TLS certificate management.
-  - Why: Issue and renew TLS certificates automatically for ingress hostnames. Configs live in `k8s/cert-manager` (issuers for staging/prod).
+  - Why: Issue and renew TLS certificates automatically for ingress hostnames. Configs live in `.azure/k8s/cert-manager` (issuers for staging/prod).
 
 - Ingress Controller & Public IP / DNS
   - What: The ingress controller (e.g., nginx/Traefik deployed by manifests) plus a public IP and a DNS label.
-  - Why: Terminate TLS, route external HTTP(s) traffic into the cluster to services and pods. DNS label / public IP resources are provisioned by `modules/ingress-dnslabel.bicep` or related scripts.
+  - Why: Terminate TLS, route external HTTP(s) traffic into the cluster to services and pods. DNS label / public IP resources are provisioned by `.azure/modules/ingress-dnslabel.bicep`; public DNS zone (and optional child zone) is set up in `.azure/modules/networking.bicep`.
 
-- Datastores: Cosmos DB and Azure Database for PostgreSQL
-  - What: Managed database services (NoSQL and relational).
-  - Why: Persist application data. `modules/cosmosdb-postgresql.bicep` provisions these.
+- Datastores: Azure Cosmos DB for PostgreSQL (Citus)
+  - What: Managed distributed PostgreSQL service.
+  - Why: Persist application data with private endpoints and private DNS. `.azure/modules/cosmosdb-postgresql.bicep` provisions the cluster and its private networking.
 
 - GitHub Actions OIDC and CI/CD
   - What: OIDC integration allows GitHub Actions to request short-lived tokens to authenticate to Azure.
-  - Why: Securely push images to ACR and deploy infrastructure/manifests without storing long-lived Azure credentials. See `modules/gha-oidc-identity.bicep` in the repo.
+  - Why: Securely push images to ACR and deploy infrastructure/manifests without storing long-lived Azure credentials. See `.azure/modules/gha-oidc-identity.bicep` in the repo.
 
 How internet traffic is served (request flow)
 
@@ -48,9 +52,9 @@ Notes and pointers
 
 - This architecture emphasizes: managed services (AKS, ACR, Key Vault, managed DBs), least-privilege access (managed identities, role assignments), and automated cert management.
 
-Relevant files in this repo (under `.azure` and `k8s`)
-- `.azure/modules/*` (bicep modules provisioning ACR, AKS, Key Vault, DBs, ingress DNS label, RBAC)
-- `.azure/base/*` (identity and helper scripts)
-- `.azure/k8s/*` (kubernetes manifests: `deployment.yml`, `service.yml`, `ingress.yml`, `secret-provider-class.yml`, `cert-manager` manifests)
+Relevant files in this repo (under `.azure`)
+- `.azure/modules/*` (Bicep modules provisioning networking/VNet & DNS, ACR, AKS, Key Vault, Cosmos DB for PostgreSQL, ingress DNS label, and RBAC assignments)
+- `.azure/base/*` (managed identities)
+- `.azure/k8s/*` (Kubernetes manifests: `deployment.yml`, `service.yml`, `headless-service.yml`, `ingress.yml`, `secret-provider-class.yml`, `cert-manager/*`)
 - `.azure/scripts/*` (helper deployment scripts)
 
