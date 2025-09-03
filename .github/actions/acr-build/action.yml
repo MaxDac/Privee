@@ -63,179 +63,183 @@ runs:
         subscription-id: ${{ inputs.azure-subscription-id }}
     
     - name: Verify Azure CLI and ACR access
-      shell: bash
-      run: |
-        echo "🔍 Verifying Azure CLI and ACR access..."
-        
-        # Check Azure CLI version
-        echo "Azure CLI version:"
-        az --version | head -1
-        
-        # Check current Azure account with full details
-        echo "Current Azure account:"
-        az account show --query "{subscriptionId: id, tenantId: tenantId, name: name, state: state}" -o table
-        
-        echo "Service Principal details:"
-        az account show --query "{servicePrincipalId: user.name, type: user.type}" -o table
-        
-        # Check service principal permissions
-        echo "🔐 Checking service principal permissions..."
-        
-        # Test basic subscription access
-        echo "Testing subscription read access:"
-        if az account show > /dev/null 2>&1; then
-          echo "✅ Can read subscription information"
-        else
-          echo "❌ Cannot read subscription information"
-        fi
-        
-        # Test resource group listing with detailed error handling
-        echo "Testing resource group listing:"
-        RG_OUTPUT=$(az group list --query "[].{Name:name, Location:location}" -o table 2>&1) || true
-        if [[ "$RG_OUTPUT" == *"ERROR"* ]] || [[ "$RG_OUTPUT" == *"Forbidden"* ]]; then
-          echo "❌ Failed to list resource groups - Permission denied"
-          echo "Error details: $RG_OUTPUT"
-        elif [[ -z "$RG_OUTPUT" ]] || [[ "$RG_OUTPUT" == "[]" ]]; then
-          echo "⚠️  No resource groups found (empty result)"
-        else
-          echo "✅ Successfully listed resource groups:"
-          echo "$RG_OUTPUT"
-        fi
-        
-        # Test specific resource group access
-        echo "Testing specific resource group access (if provided via env):"
-        if [[ -n "${{ inputs.resource-group }}" ]]; then
-          echo "Checking access to resource group: ${{ inputs.resource-group }}"
-          RG_SHOW=$(az group show --name "${{ inputs.resource-group }}" --query "{Name:name, Location:location, State:properties.provisioningState}" -o table 2>&1) || true
-          if [[ "$RG_SHOW" == *"ERROR"* ]] || [[ "$RG_SHOW" == *"NotFound"* ]] || [[ "$RG_SHOW" == *"Forbidden"* ]]; then
-            echo "❌ Cannot access resource group '${{ inputs.resource-group }}'"
-            echo "Error: $RG_SHOW"
+      uses: azure/CLI@v2.1.0
+      with:
+        azcliversion: latest
+        inlineScript: |
+          echo "🔍 Verifying Azure CLI and ACR access..."
+          
+          # Check Azure CLI version
+          echo "Azure CLI version:"
+          az --version | head -1
+          
+          # Check current Azure account with full details
+          echo "Current Azure account:"
+          az account show --query "{subscriptionId: id, tenantId: tenantId, name: name, state: state}" -o table
+          
+          echo "Service Principal details:"
+          az account show --query "{servicePrincipalId: user.name, type: user.type}" -o table
+          
+          # Check service principal permissions
+          echo "🔐 Checking service principal permissions..."
+          
+          # Test basic subscription access
+          echo "Testing subscription read access:"
+          if az account show > /dev/null 2>&1; then
+            echo "✅ Can read subscription information"
           else
-            echo "✅ Successfully accessed resource group:"
-            echo "$RG_SHOW"
+            echo "❌ Cannot read subscription information"
           fi
-        fi
-        
-        # Test ACR specific permissions
-        echo "Testing ACR service permissions:"
-        ACR_LIST_OUTPUT=$(az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table 2>&1) || true
-        if [[ "$ACR_LIST_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_LIST_OUTPUT" == *"Forbidden"* ]]; then
-          echo "❌ Failed to list ACR registries - Permission denied"
-          echo "Error details: $ACR_LIST_OUTPUT"
-        elif [[ -z "$ACR_LIST_OUTPUT" ]] || [[ "$ACR_LIST_OUTPUT" == "[]" ]]; then
-          echo "⚠️  No ACR registries found (may be permission or existence issue)"
-        else
-          echo "✅ Successfully listed ACR registries:"
-          echo "$ACR_LIST_OUTPUT"
-        fi
-        
-        # Test direct access to the specific registry
-        echo "Testing direct access to registry: ${{ inputs.registry }}"
-        ACR_SHOW_OUTPUT=$(az acr show --name "${{ inputs.registry }}" --query "{name:name, resourceGroup:resourceGroup, location:location}" -o table 2>&1) || true
-        if [[ "$ACR_SHOW_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_SHOW_OUTPUT" == *"NotFound"* ]]; then
-          echo "❌ Cannot access ACR registry '${{ inputs.registry }}'"
-          echo "Error details: $ACR_SHOW_OUTPUT"
           
-          # Additional diagnostic: check if registry exists by trying different approaches
-          echo "🔍 Additional diagnostics:"
-          echo "Trying alternative ACR access methods..."
+          # Test resource group listing with detailed error handling
+          echo "Testing resource group listing:"
+          RG_OUTPUT=$(az group list --query "[].{Name:name, Location:location}" -o table 2>&1) || true
+          if [[ "$RG_OUTPUT" == *"ERROR"* ]] || [[ "$RG_OUTPUT" == *"Forbidden"* ]]; then
+            echo "❌ Failed to list resource groups - Permission denied"
+            echo "Error details: $RG_OUTPUT"
+          elif [[ -z "$RG_OUTPUT" ]] || [[ "$RG_OUTPUT" == "[]" ]]; then
+            echo "⚠️  No resource groups found (empty result)"
+          else
+            echo "✅ Successfully listed resource groups:"
+            echo "$RG_OUTPUT"
+          fi
           
-          # Try with resource group if available
+          # Test specific resource group access
+          echo "Testing specific resource group access (if provided via env):"
           if [[ -n "${{ inputs.resource-group }}" ]]; then
-            echo "Trying to list ACRs in resource group: ${{ inputs.resource-group }}"
-            RG_ACR_OUTPUT=$(az acr list --resource-group "${{ inputs.resource-group }}" --query "[].name" -o table 2>&1) || true
-            if [[ "$RG_ACR_OUTPUT" != *"ERROR"* ]]; then
-              echo "ACRs in resource group ${{ inputs.resource-group }}: $RG_ACR_OUTPUT"
+            echo "Checking access to resource group: ${{ inputs.resource-group }}"
+            RG_SHOW=$(az group show --name "${{ inputs.resource-group }}" --query "{Name:name, Location:location, State:properties.provisioningState}" -o table 2>&1) || true
+            if [[ "$RG_SHOW" == *"ERROR"* ]] || [[ "$RG_SHOW" == *"NotFound"* ]] || [[ "$RG_SHOW" == *"Forbidden"* ]]; then
+              echo "❌ Cannot access resource group '${{ inputs.resource-group }}'"
+              echo "Error: $RG_SHOW"
             else
-              echo "Failed to list ACRs in resource group: $RG_ACR_OUTPUT"
+              echo "✅ Successfully accessed resource group:"
+              echo "$RG_SHOW"
             fi
           fi
           
-          # Check role assignments
-          echo "Checking current user's role assignments:"
-          ROLE_OUTPUT=$(az role assignment list --assignee "$(az account show --query user.name -o tsv)" --query "[].{Role:roleDefinitionName, Scope:scope}" -o table 2>&1) || true
-          if [[ "$ROLE_OUTPUT" != *"ERROR"* ]]; then
-            echo "Current role assignments:"
-            echo "$ROLE_OUTPUT"
+          # Test ACR specific permissions
+          echo "Testing ACR service permissions:"
+          ACR_LIST_OUTPUT=$(az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table 2>&1) || true
+          if [[ "$ACR_LIST_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_LIST_OUTPUT" == *"Forbidden"* ]]; then
+            echo "❌ Failed to list ACR registries - Permission denied"
+            echo "Error details: $ACR_LIST_OUTPUT"
+          elif [[ -z "$ACR_LIST_OUTPUT" ]] || [[ "$ACR_LIST_OUTPUT" == "[]" ]]; then
+            echo "⚠️  No ACR registries found (may be permission or existence issue)"
           else
-            echo "Failed to retrieve role assignments: $ROLE_OUTPUT"
+            echo "✅ Successfully listed ACR registries:"
+            echo "$ACR_LIST_OUTPUT"
           fi
           
-          exit 1
-        else
-          echo "✅ Successfully accessed ACR registry '${{ inputs.registry }}':"
-          echo "$ACR_SHOW_OUTPUT"
-        fi
+          # Test direct access to the specific registry
+          echo "Testing direct access to registry: ${{ inputs.registry }}"
+          ACR_SHOW_OUTPUT=$(az acr show --name "${{ inputs.registry }}" --query "{name:name, resourceGroup:resourceGroup, location:location}" -o table 2>&1) || true
+          if [[ "$ACR_SHOW_OUTPUT" == *"ERROR"* ]] || [[ "$ACR_SHOW_OUTPUT" == *"NotFound"* ]]; then
+            echo "❌ Cannot access ACR registry '${{ inputs.registry }}'"
+            echo "Error details: $ACR_SHOW_OUTPUT"
+            
+            # Additional diagnostic: check if registry exists by trying different approaches
+            echo "🔍 Additional diagnostics:"
+            echo "Trying alternative ACR access methods..."
+            
+            # Try with resource group if available
+            if [[ -n "${{ inputs.resource-group }}" ]]; then
+              echo "Trying to list ACRs in resource group: ${{ inputs.resource-group }}"
+              RG_ACR_OUTPUT=$(az acr list --resource-group "${{ inputs.resource-group }}" --query "[].name" -o table 2>&1) || true
+              if [[ "$RG_ACR_OUTPUT" != *"ERROR"* ]]; then
+                echo "ACRs in resource group ${{ inputs.resource-group }}: $RG_ACR_OUTPUT"
+              else
+                echo "Failed to list ACRs in resource group: $RG_ACR_OUTPUT"
+              fi
+            fi
+            
+            # Check role assignments
+            echo "Checking current user's role assignments:"
+            ROLE_OUTPUT=$(az role assignment list --assignee "$(az account show --query user.name -o tsv)" --query "[].{Role:roleDefinitionName, Scope:scope}" -o table 2>&1) || true
+            if [[ "$ROLE_OUTPUT" != *"ERROR"* ]]; then
+              echo "Current role assignments:"
+              echo "$ROLE_OUTPUT"
+            else
+              echo "Failed to retrieve role assignments: $ROLE_OUTPUT"
+            fi
+            
+            exit 1
+          else
+            echo "✅ Successfully accessed ACR registry '${{ inputs.registry }}':"
+            echo "$ACR_SHOW_OUTPUT"
+          fi
     
     - name: Build and push to ACR
       id: build
-      shell: bash
-      run: |
-        echo "🏗️ Building and pushing image to Azure Container Registry..."
-        
-        # Build the command step by step for better debugging
-        echo "Registry: ${{ inputs.registry }}"
-        echo "Image Name: ${{ inputs.image-name }}"
-        echo "Image Tag: ${{ inputs.image-tag }}"
-        echo "Dockerfile: ${{ inputs.dockerfile }}"
-        echo "Build Context: ${{ inputs.build-context }}"
-        echo "Additional Tags: ${{ inputs.additional-tags }}"
-        echo "Build Args: ${{ inputs.build-args }}"
-        
-        # Start with base command
-        CMD_ARGS=(
-          "acr" "build"
-          "--registry" "${{ inputs.registry }}"
-          "--file" "${{ inputs.dockerfile }}"
-        )
-        
-        # Add primary image tag
-        CMD_ARGS+=("--image" "${{ inputs.image-name }}:${{ inputs.image-tag }}")
-        
-        # Add additional tags if provided
-        if [[ -n "${{ inputs.additional-tags }}" ]]; then
-          IFS=' ' read -ra TAGS <<< "${{ inputs.additional-tags }}"
-          for tag in "${TAGS[@]}"; do
-            if [[ -n "${tag}" ]]; then
-              CMD_ARGS+=("--image" "${{ inputs.image-name }}:${tag}")
-            fi
-          done
-        fi
-        
-        # Add build arguments if provided
-        if [[ -n "${{ inputs.build-args }}" ]]; then
-          while IFS= read -r line; do
-            if [[ -n "$line" ]]; then
-              CMD_ARGS+=("--build-arg" "${line}")
-            fi
-          done <<< "${{ inputs.build-args }}"
-        fi
-        
-        # Add build context
-        CMD_ARGS+=("${{ inputs.build-context }}")
-        
-        # Print the full command for debugging
-        echo "Executing: az ${CMD_ARGS[*]}"
-        
-        # Execute the build command
-        set -e  # Exit on error
-        OUTPUT=$(az "${CMD_ARGS[@]}" 2>&1) || {
-          EXIT_CODE=$?
-          echo "❌ ACR build failed with exit code ${EXIT_CODE}"
-          echo "Error output:"
+      uses: azure/CLI@v2.1.0
+      with:
+        azcliversion: latest
+        inlineScript: |
+          echo "🏗️ Building and pushing image to Azure Container Registry..."
+          
+          # Build the command step by step for better debugging
+          echo "Registry: ${{ inputs.registry }}"
+          echo "Image Name: ${{ inputs.image-name }}"
+          echo "Image Tag: ${{ inputs.image-tag }}"
+          echo "Dockerfile: ${{ inputs.dockerfile }}"
+          echo "Build Context: ${{ inputs.build-context }}"
+          echo "Additional Tags: ${{ inputs.additional-tags }}"
+          echo "Build Args: ${{ inputs.build-args }}"
+          
+          # Start with base command
+          CMD_ARGS=(
+            "acr" "build"
+            "--registry" "${{ inputs.registry }}"
+            "--file" "${{ inputs.dockerfile }}"
+          )
+          
+          # Add primary image tag
+          CMD_ARGS+=("--image" "${{ inputs.image-name }}:${{ inputs.image-tag }}")
+          
+          # Add additional tags if provided
+          if [[ -n "${{ inputs.additional-tags }}" ]]; then
+            IFS=' ' read -ra TAGS <<< "${{ inputs.additional-tags }}"
+            for tag in "${TAGS[@]}"; do
+              if [[ -n "${tag}" ]]; then
+                CMD_ARGS+=("--image" "${{ inputs.image-name }}:${tag}")
+              fi
+            done
+          fi
+          
+          # Add build arguments if provided
+          if [[ -n "${{ inputs.build-args }}" ]]; then
+            while IFS= read -r line; do
+              if [[ -n "$line" ]]; then
+                CMD_ARGS+=("--build-arg" "${line}")
+              fi
+            done <<< "${{ inputs.build-args }}"
+          fi
+          
+          # Add build context
+          CMD_ARGS+=("${{ inputs.build-context }}")
+          
+          # Print the full command for debugging
+          echo "Executing: az ${CMD_ARGS[*]}"
+          
+          # Execute the build command
+          set -e  # Exit on error
+          OUTPUT=$(az "${CMD_ARGS[@]}" 2>&1) || {
+            EXIT_CODE=$?
+            echo "❌ ACR build failed with exit code ${EXIT_CODE}"
+            echo "Error output:"
+            echo "${OUTPUT}"
+            exit ${EXIT_CODE}
+          }
+          
           echo "${OUTPUT}"
-          exit ${EXIT_CODE}
-        }
-        
-        echo "${OUTPUT}"
-        
-        # Extract digest and URI from output (if available)
-        DIGEST=$(echo "${OUTPUT}" | grep -oP 'digest: sha256:\K[a-f0-9]+' | head -1 || echo "")
-        if [[ -n "${DIGEST}" ]]; then
-          echo "digest=sha256:${DIGEST}" >> $GITHUB_OUTPUT
-          echo "uri=${{ inputs.registry }}.azurecr.io/${{ inputs.image-name }}@sha256:${DIGEST}" >> $GITHUB_OUTPUT
-        else
-          echo "uri=${{ inputs.registry }}.azurecr.io/${{ inputs.image-name }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
-        fi
-        
-        echo "✅ Successfully built and pushed image to ACR"
+          
+          # Extract digest and URI from output (if available)
+          DIGEST=$(echo "${OUTPUT}" | grep -oP 'digest: sha256:\K[a-f0-9]+' | head -1 || echo "")
+          if [[ -n "${DIGEST}" ]]; then
+            echo "digest=sha256:${DIGEST}" >> $GITHUB_OUTPUT
+            echo "uri=${{ inputs.registry }}.azurecr.io/${{ inputs.image-name }}@sha256:${DIGEST}" >> $GITHUB_OUTPUT
+          else
+            echo "uri=${{ inputs.registry }}.azurecr.io/${{ inputs.image-name }}:${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "✅ Successfully built and pushed image to ACR"
