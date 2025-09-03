@@ -1,6 +1,6 @@
 # Azure Deployment Architecture
 
-![Architecture](docs/privee-architecture-diagram.svg)
+![Architecture](./privee-architecture-diagram.svg)
 
 Summary of resources, what they are and why they are used
 
