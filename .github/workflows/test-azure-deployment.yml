@@ -1,27 +1,24 @@
 name: Run Azure test deployment
 
+# on:
+#   workflow_run:
+#     workflows: ["Elixir CI - Compilation"]
+#     types:
+#       - completed
 on:
-  # Enable manual triggers for testing
   workflow_dispatch:
-  
-  # Run on pull requests for branch validation
-  pull_request:
-    branches: [main]
 
 env:
-  # Environment-specific configuration
-  RESOURCE_GROUP: ${{ github.event_name == 'pull_request' && 'privee-dev-rg' || 'privee-dev-rg' }}
+  RESOURCE_GROUP: privee-dev-rg
   AZURE_CONTAINER_REGISTRY: priveeregistry
   REGISTRY_URL: priveeregistry.azurecr.io
   PROJECT_NAME: privee
-  CLUSTER_NAME: ${{ github.event_name == 'pull_request' && 'privee-aks' || 'privee-aks' }}
+  CLUSTER_NAME: privee-aks
   CONTAINER_NAME: privee
   DEPLOYMENT_MANIFEST_PATH: |
     ./.azure/k8s/deployment.yml
   # Set the Azure-specific host for Phoenix compilation
   PHX_HOST: privee.northeurope.cloudapp.azure.com
-  # Add PR context for tagging
-  IS_PR: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   id-token: write
@@ -29,57 +26,8 @@ permissions:
   actions: read
 
 jobs:
-  # Build job - runs on all triggers (PR validation + deployment prep)
-  build:
+  build-and-deploy:
     runs-on: ubuntu-24.04
-    outputs:
-      image-tag: ${{ steps.build-vars.outputs.image-tag }}
-      image-uri: ${{ steps.acr-build.outputs.image-uri }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set build variables
-        id: build-vars
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # For PRs, use pr-<number>-<short-sha>
-            IMAGE_TAG="pr-${{ github.event.number }}-$(echo ${{ github.sha }} | cut -c1-8)"
-          else
-            # For main/develop, use branch-<short-sha>
-            IMAGE_TAG="${{ github.ref_name }}-$(echo ${{ github.sha }} | cut -c1-8)"
-          fi
-          echo "image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "🏷️ Image tag will be: ${IMAGE_TAG}"
-        
-      - name: Build and push image using Azure Container Registry
-        id: acr-build
-        uses: ./.github/actions/acr-build
-        with:
-          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          registry: ${{ env.AZURE_CONTAINER_REGISTRY }}
-          image-name: ${{ env.PROJECT_NAME }}
-          image-tag: ${{ steps.build-vars.outputs.image-tag }}
-          additional-tags: ${{ github.event_name != 'pull_request' && 'latest' || '' }}
-          dockerfile: "Dockerfile"
-          build-context: "."
-          resource-group: ${{ env.RESOURCE_GROUP }}
-          build-args: |
-            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-            VCS_REF=${{ github.sha }}
-            PHX_HOST=${{ env.PHX_HOST }}
-            ENABLE_DB_SSL=true
-
-  # Deploy job - only runs on main/develop branch pushes or manual dispatch
-  deploy:
-    runs-on: ubuntu-24.04
-    needs: build
-    # if: github.event_name != 'pull_request'
-    environment: 
-      name: ${{ github.ref_name == 'main' && 'production' || 'development' }}
 
     steps:
       - name: Checkout repository
@@ -91,6 +39,33 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # - name: Build image on ACR
+      #   uses: azure/CLI@v2
+      #   with:
+      #     inlineScript: |
+      #       cd ${{ github.workspace }}
+      #       az configure --defaults acr=${{ env.AZURE_CONTAINER_REGISTRY }}
+      #       az acr build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }} .
+
+      - name: Log in to ACR using OIDC session
+        run: |
+          az acr login --name "${AZURE_CONTAINER_REGISTRY}"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${GITHUB_SHA}
+            PHX_HOST=${{ env.PHX_HOST }}
+            ENABLE_DB_SSL=true
 
       - name: Set up kubelogin for non-interactive login
         uses: azure/use-kubelogin@v1.2
@@ -109,6 +84,6 @@ jobs:
           namespace: default
           action: deploy
           images: |
-            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ needs.build.outputs.image-tag }}
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ github.sha }}
           manifests: |
             ${{ env.DEPLOYMENT_MANIFEST_PATH }}

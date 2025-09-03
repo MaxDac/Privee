@@ -1,17 +1,13 @@
 name: Privee PR CI
 
-# Temporarily blocked - original triggers commented out
 on:
-  workflow_dispatch: # Manual trigger only
+  pull_request:
+    types:
+      - synchronize
+      - reopened
 
-# Original triggers (temporarily disabled):
-# on:
-#   pull_request:
-#     types:
-#       - synchronize
-#       - reopened
-#     branches:
-#       - main
+    branches:
+      - main
 
 permissions:
   contents: read
