@@ -46,8 +46,6 @@ How internet traffic is served (request flow)
 
 Notes and pointers
 
-- To preview this Mermaid diagram locally: open `docs/architecture.md` in VS Code and use the built-in Markdown Preview or install a Mermaid-support extension (e.g., "Markdown Preview Mermaid Support" or "Markdown Preview Enhanced").
-- To include a committed SVG artifact instead of relying on runtime rendering, generate an SVG from a `.mmd` source using the Mermaid CLI (`mmdc`) and commit it to `docs/`.
 - This architecture emphasizes: managed services (AKS, ACR, Key Vault, managed DBs), least-privilege access (managed identities, role assignments), and automated cert management.
 
 Relevant files in this repo (under `.azure` and `k8s`)
