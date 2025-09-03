@@ -40,7 +40,7 @@ Summary of resources, what they are and why they are used:
   - What: OIDC integration allows GitHub Actions to request short-lived tokens to authenticate to Azure.
   - Why: Securely push images to ACR and deploy infrastructure/manifests without storing long-lived Azure credentials. See `.azure/modules/gha-oidc-identity.bicep` in the repo.
 
-How internet traffic is served (request flow)
+How internet traffic is served (request flow):
 
 1. A client/browser resolves the application hostname via DNS to the public IP provisioned for the ingress.
 2. The request reaches Azure's public IP and is forwarded to AKS's Load Balancer (Service of type LoadBalancer) and then to the Ingress Controller.
