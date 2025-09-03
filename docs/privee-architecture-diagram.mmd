@@ -1,33 +1,44 @@
-flowchart LR
+flowchart TB
   %% Azure control plane & infra
-  subgraph Azure[Azure]
-    direction TB
-    ACR["Azure Container Registry<br>modules_acr_bicep / acr_role_assignment"]
-    AKS["Azure Kubernetes Service<br>modules_aks_bicep / aks_rbac_assignment"]
-    KV["Azure Key Vault<br>modules_keyvault_bicep / keyvault_role_assignment"]
-    DBs["(Datastores)<br>CosmosDB + PostgreSQL<br>modules_cosmosdb_postgresql"]
+  subgraph AzureExternal
     PIP["Public IP & DNS<br>modules_ingress_dnslabel"]
-    MI["Managed Identities<br>base_identity / base_admin_identity"]
-    GHA["GitHub Actions OIDC Identity<br>modules_gha_oidc_identity"]
+        
+    subgraph Azure[Azure]
+        direction TB
+        ACR["Azure Container Registry<br>modules_acr_bicep / acr_role_assignment"]
+        KV["Azure Key Vault<br>modules_keyvault_bicep / keyvault_role_assignment"]
+        
+        subgraph MIs["Managed Identities"]
+            MI["Managed Identities<br>base_identity / base_admin_identity"]
+            GHA["GitHub Actions OIDC Identity<br>modules_gha_oidc_identity"]
+        end
+
+        subgraph VNet["Application VNet"]
+            %% Kubernetes logical components
+            subgraph AKSCluster["AKS Cluster - k8s"]
+                direction TB
+                %% AKS["Azure Kubernetes Service<br>modules_aks_bicep / aks_rbac_assignment"]
+                Ingress["Ingress Controller<br>k8s_ingress"]
+                CertManager["Cert-Manager<br>k8s_cert_manager (LetsEncrypt)"]
+                CSI["Secrets Store CSI Driver<br>k8s_secret_provider_class"]
+                App["Application Deployment<br>k8s_deployment / k8s_service"]
+                Headless["Headless Service<br>k8s_headless_service"]
+            end
+
+            DBs["(Datastores)<br>CosmosDB + PostgreSQL<br>modules_cosmosdb_postgresql"]
+        end
+    end
   end
 
-  %% Kubernetes logical components
-  subgraph AKSCluster["AKS Cluster - k8s"]
-    direction TB
-    Ingress["Ingress Controller<br>k8s_ingress"]
-    CertManager["Cert-Manager<br>k8s_cert_manager (LetsEncrypt)"]
-    CSI["Secrets Store CSI Driver<br>k8s_secret_provider_class"]
-    App["Application Deployment<br>k8s_deployment / k8s_service"]
-    Headless["Headless Service<br>k8s_headless_service"]
-  end
+  INT["Internet"]
 
   %% CI/CD flows
   GHA -->|push images & deploy| ACR
-  GHA -->|deploy manifests / az cli| AKS
+  GHA -->|deploy manifests / az cli| AKSCluster
 
   %% runtime flows
-  ACR -->|image pull| AKS
-  AKS -->|uses Managed Identity| MI
+  ACR -->|image pull| AKSCluster
+  AKSCluster -->|uses Managed Identity| MI
   MI -->|access & RBAC| KV
   KV -->|secrets via CSI| CSI
   CSI -->|mount secrets| App
@@ -41,8 +52,13 @@ flowchart LR
   App -->|reads/writes| DBs
 
   %% role assignments & infra glue (annotations)
-  ACR -. role assignment .-> AKS
-  AKS -. role assignment .-> KV
+  ACR -. role assignment .-> AKSCluster
+  AKSCluster -. role assignment .-> KV
+
+  %% Connection to internet
+  PIP -->|connects to| INT
 
   style Azure fill:#f8f9fb,stroke:#ccc
   style AKSCluster fill:#eef6ff,stroke:#9fc5ff
+  style MIs fill:#ffe74b,stroke:#ccb83c
+  style VNet fill:#c1b1f9,stroke:#857aac
