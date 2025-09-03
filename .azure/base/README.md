@@ -9,7 +9,7 @@ The base infrastructure creates:
 1. **Resource Group** - A dedicated resource group for identity resources
 2. **User Managed Identity** - Azure identity for GitHub Actions authentication
 3. **Federated Identity Credential** - OIDC configuration for GitHub repository
-4. **Owner Role Assignment** - Subscription-level administrative permissions
+4. **Contributor Role Assignment** - Subscription-level contributor permissions
 
 ## Prerequisites
 
