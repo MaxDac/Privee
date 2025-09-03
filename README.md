@@ -196,4 +196,4 @@ Each environment uses appropriate clustering and networking configurations:
 
 - **Fly.io**: IPv6 support, DNS-based clustering via `${FLY_APP_NAME}.internal`
 - **Azure AKS**: IPv4, Kubernetes DNS service discovery via headless service
-- **Local**: Simple name-based distribution for development# Test ACR build improvements
+- **Local**: Simple name-based distribution for development # Test ACR build improvements
