@@ -2,6 +2,18 @@ name: Azure Container Registry - Build and Push
 description: "Build and push container images to Azure Container Registry using OIDC authentication"
 
 inputs:
+  # Azure Authentication
+  azure-client-id:
+    description: "Azure Client ID for OIDC authentication"
+    required: true
+  azure-tenant-id:
+    description: "Azure Tenant ID for OIDC authentication"
+    required: true
+  azure-subscription-id:
+    description: "Azure Subscription ID for OIDC authentication"
+    required: true
+  
+  # ACR Build Configuration
   registry:
     description: "Azure Container Registry name (without .azurecr.io suffix)"
     required: true
@@ -39,6 +51,13 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        client-id: ${{ inputs.azure-client-id }}
+        tenant-id: ${{ inputs.azure-tenant-id }}
+        subscription-id: ${{ inputs.azure-subscription-id }}
+    
     - name: Verify Azure CLI and ACR access
       shell: bash
       run: |

@@ -58,17 +58,13 @@ jobs:
           echo "image-tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "🏷️ Image tag will be: ${IMAGE_TAG}"
         
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Build and push image using Azure Container Registry
         id: acr-build
         uses: ./.github/actions/acr-build
         with:
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           registry: ${{ env.AZURE_CONTAINER_REGISTRY }}
           image-name: ${{ env.PROJECT_NAME }}
           image-tag: ${{ steps.build-vars.outputs.image-tag }}
