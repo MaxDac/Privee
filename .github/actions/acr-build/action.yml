@@ -67,19 +67,70 @@ runs:
         echo "Azure CLI version:"
         az --version | head -1
         
-        # Check current Azure account
+        # Check current Azure account with full details
         echo "Current Azure account:"
-        az account show --query "{subscriptionId: id, tenantId: tenantId, name: name}" -o table
+        az account show --query "{subscriptionId: id, tenantId: tenantId, name: name, state: state}" -o table
         
-        # Test ACR access
-        echo "Testing ACR access to registry: ${{ inputs.registry }}"
+        echo "Full account details:"
+        az account show
+        
+        # List all available subscriptions
+        echo "Available subscriptions:"
+        az account list --query "[].{Name:name, SubscriptionId:id, State:state, TenantId:tenantId}" -o table
+        
+        # Check if we can list resource groups
+        echo "Available resource groups:"
+        az group list --query "[].{Name:name, Location:location}" -o table || echo "Failed to list resource groups"
+        
+        # List all ACR registries across all accessible subscriptions
+        echo "Searching for ACR registries across all subscriptions..."
+        for sub_id in $(az account list --query "[?state=='Enabled'].id" -o tsv); do
+          echo "Checking subscription: $sub_id"
+          az account set --subscription "$sub_id" 2>/dev/null || continue
+          REGISTRIES=$(az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location, Subscription:'$sub_id'}" -o table 2>/dev/null)
+          if [[ -n "$REGISTRIES" ]] && [[ "$REGISTRIES" != "[]" ]]; then
+            echo "Registries in subscription $sub_id:"
+            echo "$REGISTRIES"
+          fi
+        done
+        
+        # Reset to original subscription
+        az account set --subscription "${{ inputs.azure-subscription-id }}"
+        
+        # Test ACR access in current subscription
+        echo "Testing ACR access to registry: ${{ inputs.registry }} in subscription: ${{ inputs.azure-subscription-id }}"
         if az acr show --name "${{ inputs.registry }}" --query "name" -o tsv > /dev/null 2>&1; then
           echo "✅ Successfully connected to ACR registry: ${{ inputs.registry }}"
         else
-          echo "❌ Failed to access ACR registry: ${{ inputs.registry }}"
+          echo "❌ Failed to access ACR registry: ${{ inputs.registry }} in current subscription"
           echo "Available registries in current subscription:"
-          az acr list --query "[].name" -o table || echo "No registries found or insufficient permissions"
-          exit 1
+          az acr list --query "[].{Name:name, ResourceGroup:resourceGroup, Location:location}" -o table || echo "No registries found or insufficient permissions"
+          
+          # Try to find the registry in other subscriptions
+          echo "Searching for registry '${{ inputs.registry }}' in all accessible subscriptions..."
+          FOUND=false
+          for sub_id in $(az account list --query "[?state=='Enabled'].id" -o tsv); do
+            echo "Checking subscription: $sub_id"
+            az account set --subscription "$sub_id" 2>/dev/null || continue
+            if az acr show --name "${{ inputs.registry }}" --query "name" -o tsv > /dev/null 2>&1; then
+              echo "✅ Found registry '${{ inputs.registry }}' in subscription: $sub_id"
+              REGISTRY_INFO=$(az acr show --name "${{ inputs.registry }}" --query "{name:name, resourceGroup:resourceGroup, location:location, subscription:'$sub_id'}" -o table)
+              echo "$REGISTRY_INFO"
+              FOUND=true
+              break
+            fi
+          done
+          
+          # Reset to original subscription
+          az account set --subscription "${{ inputs.azure-subscription-id }}"
+          
+          if [[ "$FOUND" == "false" ]]; then
+            echo "❌ Registry '${{ inputs.registry }}' not found in any accessible subscription"
+            exit 1
+          else
+            echo "❌ Registry found but not in the target subscription. Please check subscription configuration."
+            exit 1
+          fi
         fi
     
     - name: Build and push to ACR
