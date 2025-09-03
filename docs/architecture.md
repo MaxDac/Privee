@@ -48,7 +48,7 @@ How internet traffic is served (request flow)
 4. TLS is terminated at the Ingress Controller using certificates issued and renewed by cert-manager (which uses Let's Encrypt). Secrets for TLS or other credentials can be sourced from Key Vault via CSI.
 5. Pods may connect to Cosmos DB or PostgreSQL using credentials retrieved from Key Vault or from environment/config maps.
 
-Notes and pointers
+Notes and pointers:
 
 - This architecture emphasizes: managed services (AKS, ACR, Key Vault, managed DBs), least-privilege access (managed identities, role assignments), and automated cert management.
 
