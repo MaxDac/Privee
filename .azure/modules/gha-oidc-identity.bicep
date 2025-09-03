@@ -63,17 +63,21 @@ resource federatedCredential 'Microsoft.ManagedIdentity/userAssignedIdentities/f
 // Deterministic GUID for the custom role definition
 var acrBuildUploadRoleGuid = guid(subscription().id, 'acr-build-upload-role', namePrefix)
 
-// Minimal custom role containing only the action needed for ACR build source upload
+// Minimal custom role containing only the actions needed for ACR build operations
+// This role provides the minimum permissions required for GitHub Actions to execute 'az acr build' commands
 resource acrBuildUploadRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
   name: acrBuildUploadRoleGuid
   properties: {
-    roleName: '${namePrefix} ACR Build - Upload Source URL'
-    description: 'Minimal custom role to allow obtaining SAS URL for ACR build context upload.'
+    roleName: '${namePrefix} ACR Build - Upload and Schedule'
+    description: 'Minimal custom role to allow ACR build operations: obtaining SAS URL for context upload and scheduling build runs.'
     type: 'CustomRole'
     permissions: [
       {
         actions: [
+          // Required to obtain a SAS URL for uploading the build context (source code) to ACR's storage
           'Microsoft.ContainerRegistry/registries/listBuildSourceUploadUrl/action'
+          // Required to schedule and execute the actual build operation in ACR
+          'Microsoft.ContainerRegistry/registries/scheduleRun/action'
         ]
         notActions: []
       }
@@ -86,6 +90,10 @@ resource acrBuildUploadRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
 
 // ------------- Modules for role assignments (cross-RG safe) -------------
 // Note: module paths are relative to this file's directory
+
+// Assign standard ACR roles (AcrPush for pushing images, optional AcrPull for kubelet)
+// AcrPush: Allows pushing container images to the registry after they are built
+// AcrPull: Allows AKS kubelet to pull images from the registry during pod creation
 module assignAcr './acr-role-assignment.bicep' = {
   name: '${uai.name}-acr-assignments'
   scope: resourceGroup(acrResourceGroup)
@@ -93,10 +101,29 @@ module assignAcr './acr-role-assignment.bicep' = {
     acrName: acrName
     principalObjectId: uai.properties.principalId
     kubeletIdentityObjectId: aksKubeletIdentityObjectId
-    acrBuildRoleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrBuildUploadRoleGuid)
   }
 }
 
+// Assign the custom ACR Build role for GitHub Actions CI/CD operations
+// This provides minimal permissions needed for 'az acr build' command execution:
+// - listBuildSourceUploadUrl: Get SAS URL to upload source code to ACR's temporary storage
+// - scheduleRun: Schedule and execute the container image build process in ACR
+module assignAcrBuildRole './acr-build-role-assignment.bicep' = {
+  name: '${uai.name}-acr-build-assignment'
+  scope: resourceGroup(acrResourceGroup)
+  params: {
+    acrName: acrName
+    principalObjectId: uai.properties.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrBuildUploadRoleGuid)
+  }
+  dependsOn: [
+    acrBuildUploadRole
+  ]
+}
+
+// Assign AKS RBAC Cluster Admin role for Kubernetes management operations
+// This allows GitHub Actions to deploy applications, update configurations, and manage Kubernetes resources
+// ClusterAdmin provides full administrative access to the AKS cluster via kubectl
 module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   name: '${uai.name}-aks-rbac'
   scope: resourceGroup(aksResourceGroup)
@@ -108,6 +135,9 @@ module assignAks './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   }
 }
 
+// Assign AKS Cluster User role for obtaining kubeconfig credentials
+// This allows GitHub Actions to run 'az aks get-credentials' to authenticate with the AKS cluster
+// Required for any kubectl operations against the cluster
 module assignAksGetCreds './aks-rbac-assignment.bicep' = if (grantAksAccess) {
   name: '${uai.name}-aks-getcreds'
   scope: resourceGroup(aksResourceGroup)
