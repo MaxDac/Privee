@@ -30,9 +30,9 @@ resource cosmosDbPostgreCluster 'Microsoft.DBforPostgreSQL/serverGroupsv2@2023-0
     // Database version
     postgresqlVersion: '16'
     
-    // Coordinator (main node) configuration - Burstable tier for cost optimization
-    coordinatorVCores: 1  // Note: lowercase 'c' as per Portal template
-    coordinatorStorageQuotaInMb: 32768  // 32 GiB
+    // Coordinator (main node) configuration - Upgraded for better performance
+    coordinatorVCores: 2  // Upgraded from 1 to 2 vCores for 40 connection limit
+    coordinatorStorageQuotaInMb: 65536  // 64 GiB (upgraded from 32 GiB)
     coordinatorServerEdition: 'BurstableMemoryOptimized'
     
     // Single node configuration (most cost-effective)
