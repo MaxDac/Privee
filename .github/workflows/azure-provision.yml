@@ -59,6 +59,14 @@ jobs:
       - name: Deploy main infrastructure (subscription + RG-level)
         run: |
           bash ./.azure/deploy.sh
+        
+      # Re-logging in because the deployment may last too long and the token may expire
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CONTRIBUTOR_CLIENT_ID }}
+          tenant-id: ${{ secrets.CONTRIBUTOR_TENANT_ID }}
+          subscription-id: ${{ secrets.CONTRIBUTOR_SUBSCRIPTION_ID }}
 
       - name: Set secrets to Key Vault
         run: |
