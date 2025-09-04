@@ -14,7 +14,11 @@ LOCATION="West Europe"
 SUBSCRIPTION_ID=""
 PARAMETERS_FILE="$SCRIPT_DIR/admin-identity.parameters.json"
 TEMPLATE_FILE="$SCRIPT_DIR/admin-identity.bicep"
+MINIMAL_ROLE_TEMPLATE="$SCRIPT_DIR/minimal-role-assignment-permission.bicep"
+MINIMAL_ROLE_PARAMETERS="$SCRIPT_DIR/minimal-role-assignment-permission.parameters.json"
 DEPLOYMENT_NAME="admin-identity-$(date +%Y%m%d-%H%M%S)"
+MINIMAL_ROLE_DEPLOYMENT_NAME="minimal-role-$(date +%Y%m%d-%H%M%S)"
+CLEANUP_ROLE_ASSIGNMENTS=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -31,6 +35,7 @@ usage() {
     echo "  -l, --location LOCATION     Azure region (default: West Europe)"
     echo "  -p, --parameters FILE       Parameters file path (default: admin-identity.parameters.json)"
     echo "  -n, --deployment-name NAME  Custom deployment name"
+    echo "  -c, --cleanup-roles         Clean up existing role assignments before deployment"
     echo "  -h, --help                  Show this help message"
     echo ""
     echo "Environment Variables (optional):"
@@ -39,10 +44,14 @@ usage() {
     echo "Note: If no subscription is specified via --subscription-id or AZURE_SUBSCRIPTION_ID,"
     echo "      the script will use the currently active Azure CLI subscription."
     echo ""
+    echo "The --cleanup-roles option will remove existing role assignments for the GitHub Actions"
+    echo "identity before redeployment, which helps resolve role assignment update conflicts."
+    echo ""
     echo "Examples:"
     echo "  $0                                                    # Use current subscription"
     echo "  $0 --subscription-id 12345678-1234-1234-1234-123456789012"
     echo "  $0 -s 12345678-1234-1234-1234-123456789012 -l 'East US'"
+    echo "  $0 --cleanup-roles                                   # Clean up role assignments before deployment"
 }
 
 log_info() {
@@ -79,6 +88,10 @@ while [[ $# -gt 0 ]]; do
         -n|--deployment-name)
             DEPLOYMENT_NAME="$2"
             shift 2
+            ;;
+        -c|--cleanup-roles)
+            CLEANUP_ROLE_ASSIGNMENTS=true
+            shift
             ;;
         -h|--help)
             usage
@@ -129,10 +142,24 @@ if [[ ! -f "$TEMPLATE_FILE" ]]; then
     exit 1
 fi
 
+if [[ ! -f "$MINIMAL_ROLE_TEMPLATE" ]]; then
+    log_error "Minimal role template file not found: $MINIMAL_ROLE_TEMPLATE"
+    exit 1
+fi
+
+if [[ ! -f "$MINIMAL_ROLE_PARAMETERS" ]]; then
+    log_error "Minimal role parameters file not found: $MINIMAL_ROLE_PARAMETERS"
+    exit 1
+fi
+
 log_info "Starting base infrastructure deployment..."
+log_info "This will deploy:"
+log_info "1. Custom role with minimal role assignment permissions"
+log_info "2. GitHub Actions managed identity with Contributor + custom role"
 log_info "Subscription: $SUBSCRIPTION_ID"
 log_info "Location: $LOCATION"
-log_info "Parameters: $PARAMETERS_FILE"
+log_info "Admin Identity Parameters: $PARAMETERS_FILE"
+log_info "Minimal Role Parameters: $MINIMAL_ROLE_PARAMETERS"
 log_info "Deployment: $DEPLOYMENT_NAME"
 
 # Check if logged into Azure CLI
@@ -158,38 +185,92 @@ TENANT_ID=$(echo "$CURRENT_SUB_INFO" | jq -r '.tenantId')
 log_info "Active subscription: $SUB_NAME ($SUB_ID)"
 log_info "Tenant: $TENANT_ID"
 
-# Validate template
-log_info "Validating Bicep template..."
+# Validate templates
+log_info "Validating minimal role Bicep template..."
+if ! az deployment sub validate \
+    --location "$LOCATION" \
+    --template-file "$MINIMAL_ROLE_TEMPLATE" \
+    --parameters "@$MINIMAL_ROLE_PARAMETERS" >/dev/null; then
+    log_error "Minimal role template validation failed"
+    exit 1
+fi
+log_success "Minimal role template validation passed"
+
+log_info "Validating admin identity Bicep template..."
 if ! az deployment sub validate \
     --location "$LOCATION" \
     --template-file "$TEMPLATE_FILE" \
     --parameters "@$PARAMETERS_FILE" >/dev/null; then
-    log_error "Template validation failed"
+    log_error "Admin identity template validation failed"
     exit 1
 fi
-log_success "Template validation passed"
+log_success "Admin identity template validation passed"
 
-# Preview deployment (what-if)
-log_info "Generating deployment preview..."
+# Preview deployments (what-if)
+log_info "Generating minimal role deployment preview..."
+if ! az deployment sub what-if \
+    --location "$LOCATION" \
+    --template-file "$MINIMAL_ROLE_TEMPLATE" \
+    --parameters "@$MINIMAL_ROLE_PARAMETERS" \
+    --name "$MINIMAL_ROLE_DEPLOYMENT_NAME"; then
+    log_warning "Minimal role preview generation failed, but continuing..."
+fi
+
+log_info "Generating admin identity deployment preview..."
 if ! az deployment sub what-if \
     --location "$LOCATION" \
     --template-file "$TEMPLATE_FILE" \
     --parameters "@$PARAMETERS_FILE" \
     --name "$DEPLOYMENT_NAME"; then
-    log_warning "Preview generation failed, but continuing..."
+    log_warning "Admin identity preview generation failed, but continuing..."
 fi
 
 # Confirm deployment
 echo ""
-read -p "Do you want to proceed with the deployment? (y/N): " -n 1 -r
+read -p "Do you want to proceed with both deployments (custom role + admin identity)? (y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     log_info "Deployment cancelled by user"
     exit 0
 fi
 
-# Deploy
-log_info "Starting deployment..."
+# Cleanup existing role assignments if requested
+if [[ "$CLEANUP_ROLE_ASSIGNMENTS" == "true" ]]; then
+    log_info "Step 0: Cleaning up existing role assignments..."
+    CLEANUP_SCRIPT="$SCRIPT_DIR/cleanup-role-assignments.sh"
+    if [[ -f "$CLEANUP_SCRIPT" ]]; then
+        if bash "$CLEANUP_SCRIPT" --subscription-id "$SUBSCRIPTION_ID"; then
+            log_success "Role assignment cleanup completed!"
+        else
+            log_warning "Role assignment cleanup failed, but continuing with deployment..."
+        fi
+    else
+        log_warning "Cleanup script not found at $CLEANUP_SCRIPT, skipping cleanup..."
+    fi
+    echo
+fi
+
+# Deploy custom role first
+log_info "Step 1: Deploying custom role with minimal permissions..."
+if az deployment sub create \
+    --location "$LOCATION" \
+    --template-file "$MINIMAL_ROLE_TEMPLATE" \
+    --parameters "@$MINIMAL_ROLE_PARAMETERS" \
+    --name "$MINIMAL_ROLE_DEPLOYMENT_NAME" \
+    --output table; then
+    
+    log_success "Custom role deployment completed successfully!"
+else
+    log_error "Custom role deployment failed!"
+    exit 1
+fi
+
+# Wait for role propagation
+log_info "Waiting 10 seconds for role propagation..."
+sleep 10
+
+# Deploy admin identity
+log_info "Step 2: Deploying admin identity with custom role..."
 if az deployment sub create \
     --location "$LOCATION" \
     --template-file "$TEMPLATE_FILE" \
@@ -197,7 +278,7 @@ if az deployment sub create \
     --name "$DEPLOYMENT_NAME" \
     --output table; then
     
-    log_success "Deployment completed successfully!"
+    log_success "Admin identity deployment completed successfully!"
     
     # Get outputs
     log_info "Retrieving deployment outputs..."
@@ -226,10 +307,17 @@ if az deployment sub create \
         echo "AZURE_SUBSCRIPTION_ID: $SUBSCRIPTION_ID"
         echo "=================================================="
         echo ""
-        log_info "Add these values to your GitHub repository secrets for OIDC authentication"
+        echo "🔐 ROLES ASSIGNED:"
+        echo "=================================================="
+        echo "✅ Contributor (resource management)"
+        echo "✅ Custom: Minimal Role Assigner (Microsoft.Authorization/roleAssignments/write)"
+        echo "=================================================="
+        echo ""
+        log_info "The managed identity now has minimal permissions to fix the role assignment error"
+        log_info "Add the GitHub secrets above to your repository for OIDC authentication"
     fi
     
 else
-    log_error "Deployment failed!"
+    log_error "Admin identity deployment failed!"
     exit 1
 fi
