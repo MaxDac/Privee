@@ -14,7 +14,7 @@ param cosmosSubnetId string
 @description('Private DNS zone resource ID for CosmosDB PostgreSQL')
 param cosmosPrivateDnsZoneId string
 
-// ----------------- CosmosDB for PostgreSQL Cluster (Single Node - Cost Optimized) -----------------
+// ----------------- CosmosDB for PostgreSQL Cluster (Single Node - GeneralPurpose for Multiple App Instances) -----------------
 resource cosmosDbPostgreCluster 'Microsoft.DBforPostgreSQL/serverGroupsv2@2023-03-02-preview' = {
   name: clusterName
   location: location
@@ -30,9 +30,14 @@ resource cosmosDbPostgreCluster 'Microsoft.DBforPostgreSQL/serverGroupsv2@2023-0
     // Database version
     postgresqlVersion: '16'
     
-    // Coordinator (main node) configuration - Upgraded for better performance
-    coordinatorVCores: 2  // Upgraded from 1 to 2 vCores for 40 connection limit
-    coordinatorStorageQuotaInMb: 65536  // 64 GiB (upgraded from 32 GiB)
+    // Coordinator (main node) configuration - GeneralPurpose for better connection handling
+    // coordinatorVCores: 2  // GeneralPurpose supports 2 vCores - provides ~100 max connections
+    // coordinatorStorageQuotaInMb: 65536  // 64 GiB
+    // coordinatorServerEdition: 'GeneralPurpose'  // Better than Burstable for multiple app instances
+
+    // Coordinator (main node) configuration - Burstable tier for cost optimization
+    coordinatorVCores: 1
+    coordinatorStorageQuotaInMb: 32768  // 32 GiB
     coordinatorServerEdition: 'BurstableMemoryOptimized'
     
     // Single node configuration (most cost-effective)
