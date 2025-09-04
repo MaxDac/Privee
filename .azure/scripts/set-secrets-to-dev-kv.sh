@@ -16,14 +16,27 @@ if ! az account show &> /dev/null; then
     exit 1
 fi
 
-# Get current user object ID and grant Key Vault access
-USER_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
-echo "👤 Current user object ID: $USER_OBJECT_ID"
+# Get the current authentication context
+CURRENT_ACCOUNT_TYPE=$(az account show --query "user.type" -o tsv)
+echo "🔍 Current account type: $CURRENT_ACCOUNT_TYPE"
 
-echo "🔑 Granting Key Vault Secrets Officer role to current user..."
+# Get the appropriate object ID based on authentication type
+if [ "$CURRENT_ACCOUNT_TYPE" = "servicePrincipal" ]; then
+    # For service principal (OIDC/CI), get the service principal object ID
+    ASSIGNEE_OBJECT_ID=$(az account show --query "user.name" -o tsv)
+    # The user.name field contains the client ID for service principals, we need to get the object ID
+    ASSIGNEE_OBJECT_ID=$(az ad sp show --id "$ASSIGNEE_OBJECT_ID" --query "id" -o tsv)
+    echo "🤖 Service principal object ID: $ASSIGNEE_OBJECT_ID"
+else
+    # For user authentication, get the signed-in user object ID
+    ASSIGNEE_OBJECT_ID=$(az ad signed-in-user show --query id -o tsv)
+    echo "👤 Current user object ID: $ASSIGNEE_OBJECT_ID"
+fi
+
+echo "🔑 Granting Key Vault Secrets Officer role to current principal..."
 az role assignment create \
     --role "Key Vault Secrets Officer" \
-    --assignee "$USER_OBJECT_ID" \
+    --assignee "$ASSIGNEE_OBJECT_ID" \
     --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/privee-dev-kv-rg/providers/Microsoft.KeyVault/vaults/$VAULT_NAME" \
     --output none || echo "⚠️  Role assignment may already exist"
 
