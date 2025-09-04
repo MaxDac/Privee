@@ -23,9 +23,9 @@ echo "🔍 Current account type: $CURRENT_ACCOUNT_TYPE"
 # Get the appropriate object ID based on authentication type
 if [ "$CURRENT_ACCOUNT_TYPE" = "servicePrincipal" ]; then
     # For service principal (OIDC/CI), get the service principal object ID
-    ASSIGNEE_OBJECT_ID=$(az account show --query "user.name" -o tsv)
+    CLIENT_ID=$(az account show --query "user.name" -o tsv)
     # The user.name field contains the client ID for service principals, we need to get the object ID
-    ASSIGNEE_OBJECT_ID=$(az ad sp show --id "$ASSIGNEE_OBJECT_ID" --query "id" -o tsv)
+    ASSIGNEE_OBJECT_ID=$(az ad sp show --id "$CLIENT_ID" --query "id" -o tsv)
     echo "🤖 Service principal object ID: $ASSIGNEE_OBJECT_ID"
 else
     # For user authentication, get the signed-in user object ID
