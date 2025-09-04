@@ -10,6 +10,29 @@ The base infrastructure creates:
 2. **User Managed Identity** - Azure identity for GitHub Actions authentication
 3. **Federated Identity Credential** - OIDC configuration for GitHub repository
 4. **Contributor Role Assignment** - Subscription-level contributor permissions
+5. **Minimal Role Assignment Permission** - Custom role with only Microsoft.Authorization/roleAssignments/write
+
+## Role Assignment Permission Fix
+
+This setup includes a fix for the error:
+```
+The client does not have permission to perform action 'Microsoft.Authorization/roleAssignments/write'
+```
+
+Instead of granting broad admin roles, we create a **custom role** with only the specific permission mentioned in the error.
+
+### Custom Role Permissions
+
+The custom role `{namePrefix}-minimal-role-assigner-{environment}` grants only:
+- `Microsoft.Authorization/roleAssignments/write` - Create role assignments
+- `Microsoft.Authorization/roleAssignments/read` - Read role assignments  
+- `Microsoft.Authorization/roleDefinitions/read` - Read role definitions
+
+### Result
+
+The GitHub Actions managed identity will have:
+- **Contributor** role (resource management)
+- **Custom minimal role** (only the specific permission from the error)
 
 ## Prerequisites
 
@@ -21,7 +44,9 @@ The base infrastructure creates:
 
 - `admin-identity.bicep` - Main Bicep template (subscription scope)
 - `identity.bicep` - Identity module (resource group scope)  
+- `minimal-role-assignment-permission.bicep` - Custom role with minimal permissions
 - `admin-identity.parameters.json` - Template parameters
+- `minimal-role-assignment-permission.parameters.json` - Custom role parameters
 - `deploy.sh` - Deployment script with validation and preview
 - `README.md` - This documentation
 
@@ -37,10 +62,15 @@ The base infrastructure creates:
    }
    ```
 
-2. **Deploy using the script**:
+2. **Deploy everything with the script**:
    ```bash
    ./deploy.sh --subscription-id YOUR_SUBSCRIPTION_ID
    ```
+   
+   This script will:
+   - Deploy the custom role with minimal permissions
+   - Wait for role propagation
+   - Deploy the admin identity with both Contributor and custom role
 
 3. **Add GitHub Secrets** (values will be displayed after deployment):
    - `AZURE_CLIENT_ID` - User Managed Identity client ID

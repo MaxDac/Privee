@@ -31,6 +31,10 @@ param identityResourceGroupName string = '${namePrefix}-identity-rg'
 // Azure built-in role definition IDs for administrative access
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor role
 
+// Custom role for minimal role assignment permissions
+var minimalRoleAssignerRoleName = '${namePrefix}-minimal-role-assigner-${environment}'
+var minimalRoleAssignerRoleId = guid(subscription().id, minimalRoleAssignerRoleName)
+
 // Identity configuration
 var adminIdentityName = toLower('${namePrefix}-gha-admin-${environment}')
 
@@ -62,12 +66,28 @@ module adminIdentityModule 'identity.bicep' = {
 // ------------- Subscription-level Role Assignments -------------
 // Contributor role assignment for resource management access
 resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(subscription().id, adminIdentityName, contributorRoleId)
+  name: guid(subscription().id, adminIdentityName, contributorRoleId, 'contributor')
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: adminIdentityModule.outputs.principalId
     principalType: 'ServicePrincipal'
     description: 'GitHub Actions resource management for ${githubRepo} - Contributor role'
+  }
+}
+
+// Get the existing custom role definition (it should exist from previous deployment)
+resource existingMinimalRoleAssignerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: minimalRoleAssignerRoleId
+}
+
+// Minimal role assignment permission for creating role assignments
+resource minimalRoleAssignerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(subscription().id, adminIdentityName, minimalRoleAssignerRoleId, 'minimal-role')
+  properties: {
+    roleDefinitionId: existingMinimalRoleAssignerRole.id
+    principalId: adminIdentityModule.outputs.principalId
+    principalType: 'ServicePrincipal'
+    description: 'GitHub Actions minimal role assignment permission for ${githubRepo} - Custom role for Microsoft.Authorization/roleAssignments/write'
   }
 }
 
@@ -92,7 +112,9 @@ output permissionsSummary object = {
   subscription: subscription().subscriptionId
   roles: [
     'Contributor' // Full resource management without access control
+    'Custom: Minimal Role Assigner' // Only Microsoft.Authorization/roleAssignments/write permission
   ]
   scope: 'Subscription'
-  description: 'Resource management access for GitHub Actions deployment (create/delete resources and resource groups)'
+  description: 'Resource management access + minimal role assignment permission to fix Microsoft.Authorization/roleAssignments/write error'
+  customRoleNote: 'Custom role provides only the specific permission mentioned in the error: Microsoft.Authorization/roleAssignments/write'
 }
