@@ -36,7 +36,7 @@ resource cosmosDbPostgreCluster 'Microsoft.DBforPostgreSQL/serverGroupsv2@2023-0
     // coordinatorServerEdition: 'GeneralPurpose'  // Better than Burstable for multiple app instances
 
     // Coordinator (main node) configuration - Burstable tier for cost optimization
-    coordinatorVCores: 1  // Note: lowercase 'c' as per Portal template
+    coordinatorVCores: 1
     coordinatorStorageQuotaInMb: 32768  // 32 GiB
     coordinatorServerEdition: 'BurstableMemoryOptimized'
     
