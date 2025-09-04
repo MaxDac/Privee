@@ -72,6 +72,10 @@ jobs:
         run: |
           bash ./.azure/scripts/set-secrets-to-dev-kv.sh
 
+      - name: Push Azure credentials to GitHub secrets
+        run: |
+          bash ./.azure/scripts/push-info-to-gh-secrets.sh
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
