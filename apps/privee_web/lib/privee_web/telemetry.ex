@@ -20,7 +20,7 @@ defmodule PriveeWeb.Telemetry do
   end
 
   def metrics do
-    [
+    base_metrics = [
       # Phoenix Metrics
       summary("phoenix.endpoint.start.system_time",
         unit: {:native, :millisecond}
@@ -80,6 +80,33 @@ defmodule PriveeWeb.Telemetry do
       summary("vm.total_run_queue_lengths.cpu"),
       summary("vm.total_run_queue_lengths.io")
     ]
+
+    # Add OpenTelemetry metrics only when OTEL is active
+    if System.get_env("OTEL_ACTIVE") == "true" do
+      base_metrics ++ [
+        # OpenTelemetry-style metrics using summary (compatible with Telemetry.Metrics)
+        summary("otel.instrumentation.http.server.requests",
+          tags: [:http_method, :http_status_code],
+          description: "HTTP server request count"
+        ),
+        summary("otel.instrumentation.http.server.duration",
+          tags: [:http_method, :http_status_code],
+          unit: {:native, :millisecond},
+          description: "HTTP server request duration"
+        ),
+        summary("otel.instrumentation.ecto.queries",
+          tags: [:repo, :source],
+          description: "Database query count"
+        ),
+        summary("otel.instrumentation.ecto.query_time",
+          tags: [:repo, :source],
+          unit: {:native, :millisecond},
+          description: "Database query duration"
+        )
+      ]
+    else
+      base_metrics
+    end
   end
 
   defp periodic_measurements do

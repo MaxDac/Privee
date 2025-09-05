@@ -23,7 +23,7 @@ defmodule PriveeWeb.MixProject do
   def application do
     [
       mod: {PriveeWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :opentelemetry, :opentelemetry_exporter]
     ]
   end
 
@@ -59,7 +59,15 @@ defmodule PriveeWeb.MixProject do
       {:jason, "~> 1.4"},
       {:bandit, "~> 1.8"},
       {:libcluster, "~> 3.5"},
-      {:lazy_html, ">= 0.1.0", only: :test}
+      {:lazy_html, ">= 0.1.0", only: :test},
+      # OpenTelemetry
+      {:opentelemetry, "~> 1.4"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_exporter, "~> 1.7"},
+      {:opentelemetry_ecto, "~> 1.2"},
+      {:opentelemetry_phoenix, "~> 1.2"},
+      {:opentelemetry_cowboy, "~> 0.2"}
+      # Note: opentelemetry_bandit removed due to compatibility issues
     ]
   end
 

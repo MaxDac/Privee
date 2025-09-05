@@ -80,3 +80,19 @@ config :swoosh, :api_client, false
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
+
+# OTEL Development Configuration
+if System.get_env("OTEL_ACTIVE") == "true" do
+  config :opentelemetry, :processors,
+    otel_batch_processor: %{
+      exporter: {
+        :otel_exporter_otlp,
+        %{
+          endpoints: ["http://localhost:4317"],
+          compression: :gzip,
+          headers: [],
+          ssl_options: [verify: :verify_none]
+        }
+      }
+    }
+end

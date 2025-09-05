@@ -9,6 +9,14 @@ defmodule PriveeWeb.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize OpenTelemetry (only when OTEL_ACTIVE=true)
+    if System.get_env("OTEL_ACTIVE") == "true" do
+      # Phoenix instrumentation (use default adapter detection)
+      OpentelemetryPhoenix.setup()
+      # Note: OpentelemetryBandit.setup() removed due to compatibility issues
+      # Bandit traces will still be captured through Phoenix instrumentation
+    end
+
     children = [
       PriveeWeb.Telemetry,
       # Start a worker by calling: PriveeWeb.Worker.start_link(arg)

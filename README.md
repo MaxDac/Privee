@@ -51,6 +51,55 @@ mix phx.server
 
 This will start the application, that will listen to the port 4000.
 
+## OpenTelemetry Observability
+
+The application is fully instrumented with OpenTelemetry for comprehensive observability. This includes:
+
+- **🔍 Distributed Tracing**: Request flows through Phoenix and Ecto
+- **📊 Metrics**: HTTP server metrics, database performance, and VM metrics  
+- **📝 Logs**: Application logs with trace correlation
+
+### Quick Start for Local Development
+
+**Without OpenTelemetry (faster startup):**
+```bash
+# Start external PostgreSQL database
+docker run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+
+# Run the application normally
+mix phx.server
+```
+
+**With OpenTelemetry (full observability):**
+```bash
+# Start external PostgreSQL database
+docker run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+
+# Start observability stack (Jaeger + OTEL Collector)
+./otel/start-otel-stack.sh
+
+# Run application with OTEL enabled
+OTEL_ACTIVE=true mix phx.server
+
+# Access Jaeger UI for trace visualization
+open http://localhost:16686
+
+# Stop observability stack when done
+./otel/stop-otel-stack.sh
+```
+
+### Production Setup with Grafana Cloud
+
+1. **Sign up for Grafana Cloud** (free tier available)
+2. **Get OTLP credentials** from your Grafana Cloud stack
+3. **Set up the Kubernetes secret**:
+   ```bash
+   ./otel/setup-grafana-secret.sh
+   ```
+4. **Deploy with OpenTelemetry enabled** (included in deploy script)
+
+For detailed setup instructions, see [OpenTelemetry Setup Guide](otel/opentelemetry-setup.md).
+
 ### Local development with Docker
 
 To start development, run the database in a Docker container with this command:

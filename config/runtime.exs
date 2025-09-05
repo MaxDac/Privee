@@ -49,6 +49,52 @@ if config_env() == :prod do
     secret_key_base: secret_key_base,
     server: true
 
+  # OpenTelemetry runtime configuration for production
+  # Override specific values based on environment variables
+  if System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT") do
+    config :opentelemetry, :processors,
+      otel_batch_processor: %{
+        exporter: {:otel_exporter_otlp, %{
+          protocol: :grpc,
+          endpoints: [System.get_env("OTEL_EXPORTER_OTLP_ENDPOINT")],
+          headers:
+            if System.get_env("GRAFANA_OTEL_TOKEN") do
+              [{"authorization", "Basic #{System.get_env("GRAFANA_OTEL_TOKEN")}"}]
+            else
+              []
+            end
+        }}
+      }
+  end
+
+  # Override service configuration if environment variables are set
+  if System.get_env("OTEL_SERVICE_NAME") || System.get_env("OTEL_SERVICE_VERSION") do
+    config :opentelemetry,
+      resource: [
+        service: %{
+          name: System.get_env("OTEL_SERVICE_NAME", "privee"),
+          version: System.get_env("OTEL_SERVICE_VERSION", "0.1.0")
+        },
+        deployment: %{
+          environment: System.get_env("OTEL_RESOURCE_ATTRIBUTES") |>
+            then(fn attrs ->
+              if attrs do
+                attrs
+                |> String.split(",")
+                |> Enum.find_value(fn attr ->
+                  case String.split(attr, "=") do
+                    ["deployment.environment", env] -> env
+                    _ -> nil
+                  end
+                end) || "production"
+              else
+                "production"
+              end
+            end)
+        }
+      ]
+  end
+
   # ## Using releases
   #
   # If you are doing OTP releases, you need to instruct Phoenix

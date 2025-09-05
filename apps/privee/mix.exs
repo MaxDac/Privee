@@ -23,7 +23,7 @@ defmodule Privee.MixProject do
   def application do
     [
       mod: {Privee.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :opentelemetry, :opentelemetry_exporter]
     ]
   end
 
@@ -43,7 +43,14 @@ defmodule Privee.MixProject do
       {:postgrex, "~> 0.21"},
       {:jason, "~> 1.4"},
       {:swoosh, "~> 1.19"},
-      {:req, "~> 0.5"}
+      {:req, "~> 0.5"},
+      # OpenTelemetry
+      {:opentelemetry, "~> 1.4"},
+      {:opentelemetry_api, "~> 1.3"},
+      {:opentelemetry_exporter, "~> 1.7"},
+      {:opentelemetry_ecto, "~> 1.2"},
+      {:opentelemetry_phoenix, "~> 1.2"},
+      {:opentelemetry_cowboy, "~> 0.2"}
     ]
   end
 

@@ -190,6 +190,19 @@ echo "Applying services..."
 kubectl apply -f "$(dirname "$0")/service.yml"
 kubectl apply -f "$(dirname "$0")/headless-service.yml"
 
+# Deploy Grafana secret (note: requires manual token setup)
+echo "Applying Grafana OpenTelemetry secret..."
+if [ -f "$(dirname "$0")/grafana-secret.yml" ]; then
+    kubectl apply -f "$(dirname "$0")/grafana-secret.yml"
+    echo "Note: Remember to update the GRAFANA_OTEL_TOKEN in the secret with your actual Grafana token"
+else
+    echo "Warning: grafana-secret.yml not found. You'll need to create the grafana-otel-secret manually."
+fi
+
+# Deploy network policy for Grafana access
+echo "Applying network policy for Grafana access..."
+kubectl apply -f "$(dirname "$0")/network-policy.yml"
+
 # Deploy the application
 echo "Applying deployment..."
 envsubst < "$(dirname "$0")/deployment.yml" | kubectl apply -f -

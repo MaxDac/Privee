@@ -7,6 +7,11 @@ defmodule Privee.Application do
 
   @impl true
   def start(_type, _args) do
+    # Initialize OpenTelemetry (only when OTEL_ACTIVE=true)
+    if System.get_env("OTEL_ACTIVE") == "true" do
+      OpentelemetryEcto.setup([:privee, :repo])
+    end
+
     # Run migrations on startup if explicitly requested
     if System.get_env("TRIGGER_STARTUP_MIGRATION") == "true" do
       migrate()

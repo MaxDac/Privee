@@ -22,5 +22,26 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
+# OpenTelemetry configuration for production
+config :opentelemetry, :processors,
+  otel_batch_processor: %{
+    exporter: {:otel_exporter_otlp, %{
+      protocol: :grpc,
+      endpoints: ["https://otlp-gateway-prod-eu-west-2.grafana.net:443"],
+      headers: []
+    }}
+  }
+
+config :opentelemetry,
+  resource: [
+    service: %{
+      name: "privee",
+      version: "0.1.0"
+    },
+    deployment: %{
+      environment: "production"
+    }
+  ]
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.

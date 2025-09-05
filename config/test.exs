@@ -37,3 +37,6 @@ config :swoosh, :api_client, false
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# OpenTelemetry configuration for testing - disable for tests
+config :opentelemetry, traces_exporter: :none
