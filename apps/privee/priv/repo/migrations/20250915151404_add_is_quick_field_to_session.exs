@@ -3,7 +3,7 @@ defmodule Privee.Repo.Migrations.AddIsQuickFieldToSession do
 
   def change do
     alter table(:sessions) do
-      add :is_quick, :boolean, null: true, default: false
+      add :is_quick, :boolean, null: false, default: false
     end
   end
 end

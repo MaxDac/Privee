@@ -16,8 +16,6 @@ defmodule PriveeWeb.SessionController do
   end
 
   defp create(conn, %{"session" => session_params}, info) do
-    IO.inspect(session_params, label: "session params on POST")
-
     if session = get_session_from_params(session_params) do
       conn
       |> put_flash(:info, info)

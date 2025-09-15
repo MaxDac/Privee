@@ -159,6 +159,27 @@ defmodule Privee.Sessions do
     :ok
   end
 
+  @doc """
+  Marks the quick session as already logged, but leave the normal session untouched.
+  """
+  def mark_session_as_logged(session)
+
+  def mark_session_as_logged(%{is_logged: false} = session), do: {:ok, session}
+
+  def mark_session_as_logged(%{id: session_id} = session) do
+    case session |> Session.mark_logged_changeset() |> Repo.update() do
+      {:ok, _} ->
+        {:ok, get_session!(session_id)}
+
+      error ->
+        error
+    end
+  end
+
+  def mark_session_as_logged(_) do
+    {:error, "Invalid session"}
+  end
+
   #
   # Privee form
   #

@@ -13,6 +13,7 @@ defmodule Privee.Sessions.Session do
           hashed_recovery_phrase: String.t(),
           public_key: String.t(),
           is_quick: boolean(),
+          has_logged: boolean(),
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
@@ -23,6 +24,7 @@ defmodule Privee.Sessions.Session do
     field :hashed_recovery_phrase, :string, redact: true
     field :public_key, :string, redact: true
     field :is_quick, :boolean
+    field :has_logged, :boolean
 
     timestamps()
   end
@@ -52,10 +54,17 @@ defmodule Privee.Sessions.Session do
   """
   def registration_changeset(session, attrs, opts \\ []) do
     session
-    |> cast(attrs, [:session_name, :recovery_phrase, :public_key, :is_quick])
+    |> cast(attrs, [:session_name, :recovery_phrase, :public_key, :is_quick, :has_logged])
     |> validate_session_name(opts)
     |> validate_recovery_phrase(opts)
     |> validate_public_key(opts)
+  end
+
+  @doc """
+  A changeset for marking a session as having logged.
+  """
+  def mark_logged_changeset(session) do
+    change(session, %{has_logged: true})
   end
 
   @doc """
