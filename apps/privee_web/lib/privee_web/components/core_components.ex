@@ -352,7 +352,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :type, :string,
     default: "text",
     values: ~w(checkbox color date datetime-local email file hidden month number password
-               range radio search select tel text textarea time url week)
+               range radio search select tel text textarea time url week toggle)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"
@@ -441,6 +441,42 @@ defmodule PriveeWeb.CoreComponents do
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+      <.error :for={msg <- @errors}>{msg}</.error>
+    </div>
+    """
+  end
+
+  def input(%{type: "toggle"} = assigns) do
+    assigns =
+      assign_new(assigns, :checked, fn ->
+        Form.normalize_value("checkbox", assigns[:value])
+      end)
+
+    ~H"""
+    <div phx-feedback-for={@name}>
+      <.label for={@id}>{@label}</.label>
+      <label class="inline-flex items-center cursor-pointer mt-2">
+        <input type="hidden" name={@name} value="false" />
+        <input
+          type="checkbox"
+          id={@id}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class="sr-only peer"
+          {@rest}
+        />
+        <div class={[
+          "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4",
+          "peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700",
+          "peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full",
+          "peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]",
+          "after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full",
+          "after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
+        ]}>
+        </div>
+      </label>
+
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """

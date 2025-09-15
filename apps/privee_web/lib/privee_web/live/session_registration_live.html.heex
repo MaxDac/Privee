@@ -46,6 +46,13 @@
     />
 
     <.input
+      field={@form[:is_quick]}
+      type="toggle"
+      label="Quick session"
+    />
+
+    <.input
+      :if={!@form[:is_quick].value}
       field={@form[:recovery_phrase]}
       type="textarea"
       label="Recovery phrase"
@@ -56,7 +63,9 @@
     />
 
     <:actions>
-      <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+      <.button phx-disable-with="Creating account..." class="w-full" name="action" value="create">
+        Create an account
+      </.button>
     </:actions>
   </.simple_form>
 </div>

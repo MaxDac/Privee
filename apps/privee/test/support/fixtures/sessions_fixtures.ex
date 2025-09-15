@@ -32,4 +32,21 @@ defmodule Privee.SessionsFixtures do
 
     session
   end
+
+  def valid_quick_session_attributes(attrs \\ %{}) do
+    Enum.into(attrs, %{
+      session_name: unique_session_name(),
+      public_key: default_public_key(),
+      is_quick: true
+    })
+  end
+
+  def quick_session_fixture(attrs \\ %{}) do
+    {:ok, session} =
+      attrs
+      |> valid_quick_session_attributes()
+      |> Privee.Sessions.register_session()
+
+    session
+  end
 end

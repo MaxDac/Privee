@@ -12,6 +12,7 @@ defmodule Privee.Sessions.Session do
           recovery_phrase: String.t(),
           hashed_recovery_phrase: String.t(),
           public_key: String.t(),
+          is_quick: boolean(),
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
@@ -21,6 +22,7 @@ defmodule Privee.Sessions.Session do
     field :recovery_phrase, :string, virtual: true, redact: true
     field :hashed_recovery_phrase, :string, redact: true
     field :public_key, :string, redact: true
+    field :is_quick, :boolean
 
     timestamps()
   end
@@ -50,7 +52,7 @@ defmodule Privee.Sessions.Session do
   """
   def registration_changeset(session, attrs, opts \\ []) do
     session
-    |> cast(attrs, [:session_name, :recovery_phrase, :public_key])
+    |> cast(attrs, [:session_name, :recovery_phrase, :public_key, :is_quick])
     |> validate_session_name(opts)
     |> validate_recovery_phrase(opts)
     |> validate_public_key(opts)
@@ -75,6 +77,26 @@ defmodule Privee.Sessions.Session do
   end
 
   defp validate_recovery_phrase(changeset, opts) do
+    is_quick = get_field(changeset, :is_quick) || false
+
+    if is_quick do
+      validate_quick_session_recovery_phrase(changeset, opts)
+    else
+      validate_regular_session_recovery_phrase(changeset, opts)
+    end
+  end
+
+  defp validate_quick_session_recovery_phrase(changeset, _opts) do
+    recovery_phrase = get_field(changeset, :recovery_phrase)
+
+    if recovery_phrase && recovery_phrase != "" do
+      add_error(changeset, :recovery_phrase, "must be empty for quick sessions")
+    else
+      changeset
+    end
+  end
+
+  defp validate_regular_session_recovery_phrase(changeset, opts) do
     changeset
     |> validate_required([:recovery_phrase])
     |> validate_length(:recovery_phrase, min: 24, max: 160)

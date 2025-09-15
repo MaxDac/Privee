@@ -120,6 +120,89 @@ defmodule Privee.SessionsTest do
       assert is_binary(session.session_name)
       assert is_nil(session.recovery_phrase)
     end
+
+    test "registers quick sessions without recovery phrase" do
+      session_name = unique_session_name()
+
+      {:ok, session} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert session.session_name == session_name
+      assert session.is_quick == true
+      assert is_nil(session.recovery_phrase)
+      assert is_nil(session.hashed_recovery_phrase)
+    end
+
+    test "validates that quick sessions have empty recovery phrase" do
+      session_name = unique_session_name()
+
+      {:error, changeset} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          recovery_phrase: "Some recovery phrase here",
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert %{
+               recovery_phrase: ["must be empty for quick sessions"]
+             } = errors_on(changeset)
+    end
+
+    test "validates that non-quick sessions require recovery phrase" do
+      session_name = unique_session_name()
+
+      {:error, changeset} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          public_key: default_public_key(),
+          is_quick: false
+        })
+
+      assert %{
+               recovery_phrase: ["can't be blank"]
+             } = errors_on(changeset)
+    end
+
+    test "retrieves quick sessions by session name" do
+      quick_session = quick_session_fixture()
+      retrieved_session = Sessions.get_session_by_session_name(quick_session.session_name)
+
+      assert retrieved_session.id == quick_session.id
+      assert retrieved_session.is_quick == true
+      assert is_nil(retrieved_session.hashed_recovery_phrase)
+    end
+
+    test "quick sessions cannot be retrieved by recovery phrase" do
+      quick_session = quick_session_fixture()
+
+      # Quick sessions should not be retrievable by recovery phrase since they don't have one
+      refute Sessions.get_session_by_session_name_and_phrase(
+               quick_session.session_name,
+               "any recovery phrase"
+             )
+    end
+
+    test "validates that empty string recovery phrase is allowed for quick sessions" do
+      session_name = unique_session_name()
+
+      {:ok, session} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          recovery_phrase: "",
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert session.session_name == session_name
+      assert session.is_quick == true
+      assert is_nil(session.recovery_phrase)
+      assert is_nil(session.hashed_recovery_phrase)
+    end
   end
 
   describe "change_session_registration/2" do
