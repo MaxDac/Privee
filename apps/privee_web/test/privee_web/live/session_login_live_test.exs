@@ -68,6 +68,81 @@ defmodule PriveeWeb.SessionLoginLiveTest do
     end
   end
 
+  describe "quick session validation" do
+    test "renders login form and shows error for already used quick session", %{conn: conn} do
+      # Create a quick session and mark it as logged
+      quick_session =
+        quick_session_fixture(%{
+          session_name: generate_new_unique_session_name(),
+          has_logged: false
+        })
+
+      {:ok, logged_session} = Privee.Sessions.mark_session_as_logged(quick_session)
+
+      {:ok, lv, _html} = live(conn, ~p"/login")
+
+      # Test that the login form renders properly
+      assert render(lv) =~ "Sign in to existing session"
+      assert render(lv) =~ "Session Name"
+      assert render(lv) =~ "Recovery phrase"
+
+      # Since quick sessions don't have recovery phrases, they would fail through normal login
+      form =
+        form(lv, "#login_form",
+          session: %{
+            session_name: logged_session.session_name,
+            recovery_phrase: ""
+          }
+        )
+
+      conn = submit_form(form, conn)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invalid recovery_phrase or session_name"
+
+      assert redirected_to(conn) == "/"
+    end
+
+    test "validates quick session behavior through POST endpoint", %{conn: conn} do
+      # Create a fresh quick session
+      quick_session =
+        quick_session_fixture(%{
+          session_name: generate_new_unique_session_name(),
+          has_logged: false
+        })
+
+      # Test that fresh quick session can login via POST (bypassing LiveView)
+      conn =
+        post(conn, ~p"/sessions/log_in", %{
+          "session" => %{
+            "session_name" => quick_session.session_name,
+            "is_quick" => "true"
+          }
+        })
+
+      assert redirected_to(conn) == ~p"/privee"
+
+      # Verify session is marked as logged
+      updated_session = Privee.Sessions.get_session!(quick_session.id)
+      assert updated_session.has_logged == true
+
+      # Now test that the same session cannot login again
+      conn =
+        build_conn()
+        |> post(~p"/sessions/log_in", %{
+          "session" => %{
+            "session_name" => updated_session.session_name,
+            "is_quick" => "true"
+          }
+        })
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invalid recovery_phrase or session_name"
+
+      assert redirected_to(conn) == "/"
+    end
+  end
+
   describe "login navigation" do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/login")

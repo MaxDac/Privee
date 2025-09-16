@@ -16,20 +16,16 @@ defmodule PriveeWeb.SessionController do
   end
 
   defp create(conn, %{"session" => session_params}, info) do
-    if session = get_session_from_params(session_params) && Sessions.is_session_valid(session) do
-      case Sessions.mark_session_as_logged(session) do
-        {:ok, session} ->
-          conn
-          |> put_flash(:info, info)
-          |> SessionAuth.log_in_session(session, session_params)
-
-        {:error, _} ->
-          conn
-          |> put_error_flash(session_params)
-      end
-    else
+    with session when not is_nil(session) <- get_session_from_params(session_params),
+         true <- Sessions.is_session_valid(session),
+         {:ok, session} <- Sessions.mark_session_as_logged(session) do
       conn
-      |> put_error_flash(session_params)
+      |> put_flash(:info, info)
+      |> SessionAuth.log_in_session(session, session_params)
+    else
+      _ ->
+        conn
+        |> put_error_flash(session_params)
     end
   end
 

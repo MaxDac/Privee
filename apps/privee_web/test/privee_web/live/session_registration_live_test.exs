@@ -106,6 +106,101 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
     end
   end
 
+  describe "quick session registration" do
+    test "renders form with quick session toggle", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/")
+
+      session_name = generate_new_unique_session_name()
+
+      # Test that the form renders the quick session toggle
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(
+          session: %{
+            "session_name" => session_name,
+            "is_quick" => "true"
+          }
+        )
+
+      # When is_quick is true, recovery phrase field should be hidden
+      refute result =~ "Recovery phrase"
+      # Check for the actual toggle element that should be present
+      assert result =~ "session[is_quick]"
+    end
+
+    test "renders form with recovery phrase when quick session is disabled", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/")
+
+      session_name = generate_new_unique_session_name()
+
+      # Test that the form renders recovery phrase when quick session is disabled
+      result =
+        lv
+        |> element("#registration_form")
+        |> render_change(
+          session: %{
+            "session_name" => session_name,
+            "is_quick" => "false"
+          }
+        )
+
+      # When is_quick is false, recovery phrase field should be visible
+      assert result =~ "Recovery phrase"
+      assert result =~ "session[is_quick]"
+    end
+
+    test "validates that quick session workflow can be completed through LiveView user interaction",
+         %{
+           conn: conn
+         } do
+      {:ok, lv, _html} = live(conn, ~p"/")
+
+      session_name = generate_new_unique_session_name()
+
+      # Simulate user interaction: set session name and enable quick session toggle
+      lv
+      |> element("#registration_form")
+      |> render_change(
+        session: %{
+          "session_name" => session_name,
+          "is_quick" => "true"
+        }
+      )
+
+      # Create form and submit it as a user would
+      form =
+        form(lv, "#registration_form",
+          session: %{
+            "session_name" => session_name,
+            "is_quick" => "true"
+          }
+        )
+
+      # Submit the form with public key (simulating the hidden field behavior)
+      render_submit(form, %{"session" => %{"public_key" => generate_new_unique_public_key()}})
+
+      # Verify the session creation event was triggered
+      assert_push_event(lv, "handle_new_session_registration", %{session_name: ^session_name})
+
+      # Follow the trigger action as the browser would
+      conn = follow_trigger_action(form, conn)
+
+      # Verify successful login redirect
+      assert redirected_to(conn) == ~p"/privee"
+
+      # Verify the session was created with correct properties and marked as logged
+      created_session = Privee.Sessions.get_session_by_session_name(session_name)
+      assert created_session.is_quick == true
+      assert created_session.has_logged == true
+
+      # Verify user can access the protected page
+      conn = get(conn, "/privee")
+      response = html_response(conn, 200)
+      assert response =~ "Session"
+    end
+  end
+
   describe "registration navigation" do
     test "redirects to login page when the Log in button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/")
