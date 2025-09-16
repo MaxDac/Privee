@@ -72,6 +72,7 @@ defmodule PriveeWeb.Router do
   scope "/", PriveeWeb do
     pipe_through [:browser]
 
+    get "/share/:session_name", SessionShareController, :share
     delete "/sessions/log_out", SessionController, :delete
   end
 end

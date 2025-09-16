@@ -31,7 +31,14 @@ const getCopyButtons = () => document.querySelectorAll("[data-session-name]")
  */
 function copyButtonHandler() {
   const sessionName = this.dataset.sessionName
-  return copyTextToClipboard(sessionName)
+  const action = this.dataset.action
+
+  if (action === "copy") {
+    return copyTextToClipboard(sessionName)
+  } else {
+    const sessionUrl = getSessionLoginMarkdownLink(sessionName, "Session link")
+    return copyTextToClipboard(sessionUrl)
+  }
 }
 
 /**
@@ -42,6 +49,27 @@ function copyButtonHandler() {
 const copyTextToClipboard = (text) => navigator.clipboard.writeText(text)
 
 /**
+ * Generates a session login URL for cross-platform compatibility.
+ * Returns a plain URL that works optimally across different platforms:
+ * - Browsers: pastes as clean address
+ * - Text engines: shows just the link
+ * - Teams/Word: auto-detects as clickable hyperlink
+ *
+ * @param {string} code - The session code to include in the share URL.
+ * @param {string} _title - The title parameter (kept for API compatibility, but not used in output).
+ * @returns {string} A plain URL for the session share.
+ *
+ * Example:
+ *   getSessionLoginMarkdownLink('abc123', 'Login Link')
+ *   // Returns: https://current-host/share/abc123
+ */
+const getSessionLoginMarkdownLink = (code, _title) => {
+  const host = window.location.origin
+  const url = `${host}/share/${encodeURIComponent(code)}`
+  return url
+}
+
+/**
  * The event listener for the session name copy event triggered from the back end.
  * It has been moved in this file to keep the `app.js` file clean.
  * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} event The event sent from the back end.
@@ -50,3 +78,12 @@ export const handleSessionNameCopyToClipboardRegistrationEvent = (event) =>
   copySessionNameToClipboardBackEndEventHandler(event)
     .then(() => console.debug("Session name correctly copied to clipboard."))
     .catch((error) => console.debug("Failed to copy session name to clipboard.", error))
+
+/**
+ * These exports are for test purpose only.
+ */
+export const testExports = {
+  getSessionLoginMarkdownLink,
+  copyButtonHandler,
+  getCopyButtons,
+}

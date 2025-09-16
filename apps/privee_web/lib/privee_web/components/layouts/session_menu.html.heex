@@ -6,11 +6,11 @@
     <span class="text-md leading-6 text-zinc-900 dark:text-zinc-100">
       {@current_session.session_name}
     </span>
+
     <.icon_button
+      id="copy-session-code-btn cursor-pointer"
       data-session-name={@current_session.session_name}
-      data-tooltip-target="confirm-copy"
-      data-tooltip-trigger="click"
-      data-tooltip-placement="left"
+      data-action="code"
     >
       <svg
         class="w-6 h-6 text-gray-800 dark:text-white"
@@ -30,14 +30,29 @@
       </svg>
     </.icon_button>
 
-    <div
-      id="confirm-copy"
-      role="tooltip"
-      class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
+    <.icon_button
+      id="copy-session-url-btn cursor-pointer"
+      data-session-name={@current_session.session_name}
+      data-action="url"
     >
-      Session name copied!
-      <div class="tooltip-arrow" data-popper-arrow></div>
-    </div>
+      <svg
+        class="w-6 h-6 text-gray-800 dark:text-white"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13.213 9.787a3.391 3.391 0 0 0-4.795 0l-3.425 3.426a3.39 3.39 0 0 0 4.795 4.794l.321-.304m-.321-4.49a3.39 3.39 0 0 0 4.795 0l3.424-3.426a3.39 3.39 0 0 0-4.794-4.795l-1.028.961"
+        />
+      </svg>
+    </.icon_button>
   </div>
   <ul
     class="py-2 text-sm text-gray-700 dark:text-gray-200"
