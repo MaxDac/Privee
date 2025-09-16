@@ -35,7 +35,9 @@ defmodule Privee.SessionsFixtures do
 
     # Update has_logged if specified (for testing purposes)
     case has_logged_value do
-      nil -> session
+      nil ->
+        session
+
       value when is_boolean(value) ->
         session
         |> Privee.Sessions.Session.update_has_logged_changeset(value)
@@ -62,7 +64,9 @@ defmodule Privee.SessionsFixtures do
 
     # Update has_logged if specified (for testing purposes)
     case has_logged_value do
-      nil -> session
+      nil ->
+        session
+
       value when is_boolean(value) ->
         session
         |> Privee.Sessions.Session.update_has_logged_changeset(value)

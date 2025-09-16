@@ -175,7 +175,6 @@ defmodule Privee.Sessions do
   """
   def mark_session_as_logged(session)
 
-
   def mark_session_as_logged(%{id: session_id} = session) do
     case session |> Session.update_has_logged_changeset(true) |> Repo.update() do
       {:ok, _} ->

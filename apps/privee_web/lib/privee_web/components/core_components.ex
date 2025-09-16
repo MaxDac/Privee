@@ -411,6 +411,7 @@ defmodule PriveeWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
+        corecompo
         class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
@@ -454,8 +455,7 @@ defmodule PriveeWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}>{@label}</.label>
-      <label class="inline-flex items-center cursor-pointer mt-2">
+      <.label class="inline-flex items-center mb-5 cursor-pointer gap-x-4">
         <input type="hidden" name={@name} value="false" />
         <input
           type="checkbox"
@@ -475,8 +475,8 @@ defmodule PriveeWeb.CoreComponents do
           "after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
         ]}>
         </div>
-      </label>
-
+        {@label}
+      </.label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -513,6 +513,8 @@ defmodule PriveeWeb.CoreComponents do
   """
   attr :for, :string, default: nil
   attr :errors, :list, default: []
+  attr :class, :string, default: nil
+
   slot :inner_block, required: true
 
   def label(assigns) do
@@ -520,13 +522,111 @@ defmodule PriveeWeb.CoreComponents do
     <label
       for={@for}
       class={[
-        "block text-sm mb-2 font-semibold leading-6",
+        @class || "block",
+        "text-sm mb-2 font-semibold leading-6",
         @errors == [] && "text-zinc-800 dark:text-white",
         @errors != [] && "text-red-700 dark:text-red-500"
       ]}
     >
       {render_slot(@inner_block)}
     </label>
+    """
+  end
+
+  @doc """
+  Informational icon designed to provide a quick tooltip explanation and to trigger
+  a modal popup with more information.
+  """
+  attr :id, :any, default: nil
+  attr :inline_description, :string, default: nil
+  attr :short_description, :string
+  attr :long_description, :string, default: nil
+
+  def info_icon(assigns) do
+    ~H"""
+    <div class="inline-flex space-x-3 cursor-pointer"
+        data-modal-target={"#{@id}-modal"}
+        data-modal-toggle={"#{@id}-modal"}
+        data-tooltip-target={"#{@id}-tooltip"}
+      >
+      <span class="text-xs mb-2 font-semibold leading-6 dark:text-white">
+        {@inline_description || ""}
+      </span>
+      <svg
+        class="w-6 h-6 text-gray-800 dark:text-white"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+
+      <div
+        id={"#{@id}-tooltip"}
+        role="tooltip"
+        class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700"
+      >
+        {@short_description}
+        <div class="tooltip-arrow" data-popper-arrow></div>
+      </div>
+      
+    <!-- Main modal -->
+      <div
+        id={"#{@id}-modal"}
+        tabindex="-1"
+        aria-hidden="true"
+        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+      >
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+          <!-- Modal content -->
+          <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Info
+              </h3>
+              <button
+                type="button"
+                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                data-modal-hide="default-modal"
+              >
+                <svg
+                  class="w-3 h-3"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 14 14"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+                  />
+                </svg>
+                <span class="sr-only">Close modal</span>
+              </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5 space-y-4">
+              <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                {@long_description || @short_description}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     """
   end
 
