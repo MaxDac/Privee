@@ -20,7 +20,8 @@ defmodule Privee.SessionsFixtures do
     Enum.into(attrs, %{
       session_name: unique_session_name(),
       recovery_phrase: session_recovery_phrase(),
-      public_key: default_public_key()
+      public_key: default_public_key(),
+      has_logged: false
     })
   end
 
@@ -37,7 +38,8 @@ defmodule Privee.SessionsFixtures do
     Enum.into(attrs, %{
       session_name: unique_session_name(),
       public_key: default_public_key(),
-      is_quick: true
+      is_quick: true,
+      has_logged: false
     })
   end
 

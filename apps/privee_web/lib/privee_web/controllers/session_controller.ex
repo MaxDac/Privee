@@ -16,17 +16,29 @@ defmodule PriveeWeb.SessionController do
   end
 
   defp create(conn, %{"session" => session_params}, info) do
-    if session = get_session_from_params(session_params) do
-      conn
-      |> put_flash(:info, info)
-      |> SessionAuth.log_in_session(session, session_params)
+    if session = get_session_from_params(session_params) && Sessions.is_session_valid(session) do
+      case Sessions.mark_session_as_logged(session) do
+        {:ok, session} ->
+          conn
+          |> put_flash(:info, info)
+          |> SessionAuth.log_in_session(session, session_params)
+
+        {:error, _} ->
+          conn
+          |> put_error_flash(session_params)
+      end
     else
-      # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
       conn
-      |> put_flash(:error, "Invalid recovery_phrase or session_name")
-      |> maybe_put_recovery_phrase_flash(session_params)
-      |> redirect(to: ~p"/")
+      |> put_error_flash(session_params)
     end
+  end
+
+  defp put_error_flash(conn, session_params) do
+    # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
+    conn
+    |> put_flash(:error, "Invalid recovery_phrase or session_name")
+    |> maybe_put_recovery_phrase_flash(session_params)
+    |> redirect(to: ~p"/")
   end
 
   defp get_session_from_params(session_params) do

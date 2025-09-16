@@ -159,6 +159,17 @@ defmodule Privee.Sessions do
     :ok
   end
 
+  #
+  # Quick sessions management
+  #
+
+  @doc """
+  Checks whether the session is a quick session, and it has already been logged into.
+  """
+  def is_session_valid(session)
+  def is_session_valid(%{is_quick: true, has_logged: true}), do: false
+  def is_session_valid(_), do: true
+
   @doc """
   Marks the quick session as already logged, but leave the normal session untouched.
   """
