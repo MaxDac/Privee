@@ -6,7 +6,7 @@ defmodule PriveeWeb.SessionController do
 
   def create(conn, %{"_action" => "registered"} = params) do
     create(conn, params, """
-    Session created successfully! 
+    Session created successfully!
     Your session name has been automatically copied to the clipboard.
     """)
   end
@@ -16,18 +16,47 @@ defmodule PriveeWeb.SessionController do
   end
 
   defp create(conn, %{"session" => session_params}, info) do
-    %{"session_name" => session_name, "recovery_phrase" => recovery_phrase} = session_params
-
-    if session = Sessions.get_session_by_session_name_and_phrase(session_name, recovery_phrase) do
+    with session when not is_nil(session) <- get_session_from_params(session_params),
+         true <- Sessions.session_valid?(session),
+         {:ok, session} <- Sessions.mark_session_as_logged(session) do
       conn
       |> put_flash(:info, info)
       |> SessionAuth.log_in_session(session, session_params)
     else
-      # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
-      conn
-      |> put_flash(:error, "Invalid recovery_phrase or session_name")
-      |> put_flash(:recovery_phrase, String.slice(recovery_phrase, 0, 160))
-      |> redirect(to: ~p"/")
+      _ ->
+        conn
+        |> put_error_flash(session_params)
+    end
+  end
+
+  defp put_error_flash(conn, session_params) do
+    # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
+    conn
+    |> put_flash(:error, "Invalid recovery_phrase or session_name")
+    |> maybe_put_recovery_phrase_flash(session_params)
+    |> redirect(to: ~p"/")
+  end
+
+  defp get_session_from_params(session_params) do
+    case session_params do
+      %{"session_name" => session_name, "recovery_phrase" => recovery_phrase} ->
+        Sessions.get_session_by_session_name_and_phrase(session_name, recovery_phrase)
+
+      %{"session_name" => session_name, "is_quick" => "true"} ->
+        Sessions.get_session_by_session_name(session_name)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp maybe_put_recovery_phrase_flash(conn, session_params) do
+    case session_params do
+      %{"recovery_phrase" => recovery_phrase} when not is_nil(recovery_phrase) ->
+        put_flash(conn, :recovery_phrase, String.slice(recovery_phrase, 0, 160))
+
+      _ ->
+        conn
     end
   end
 

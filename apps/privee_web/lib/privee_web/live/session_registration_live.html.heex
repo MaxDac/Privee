@@ -45,7 +45,26 @@
       required
     />
 
+    <div class="inline-flex space-x-10">
+      <.input
+        field={@form[:is_quick]}
+        type="toggle"
+        label="Quick session"
+      />
+
+      <.info_icon
+        inline_description="What's this?"
+        short_description="This allows you to create a session quickly without the recovery phrase"
+        long_description={[
+          "By checking the \"Quick session\" toggle, you will be able to create a session without writing a recovery phrase.",
+          "This means that you will be able to login quickly, but the session will be used only once, and you would not be able",
+          "to login to this session again."
+        ]}
+      />
+    </div>
+
     <.input
+      :if={!quick_session?(@form)}
       field={@form[:recovery_phrase]}
       type="textarea"
       label="Recovery phrase"
@@ -56,7 +75,9 @@
     />
 
     <:actions>
-      <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+      <.button phx-disable-with="Creating account..." class="w-full" name="action" value="create">
+        Create an account
+      </.button>
     </:actions>
   </.simple_form>
 </div>

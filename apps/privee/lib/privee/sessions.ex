@@ -160,6 +160,36 @@ defmodule Privee.Sessions do
   end
 
   #
+  # Quick sessions management
+  #
+
+  @doc """
+  Checks whether the session is a quick session, and it has already been logged into.
+  """
+  def session_valid?(session)
+  def session_valid?(%{is_quick: true, has_logged: true}), do: false
+  def session_valid?(_), do: true
+
+  @doc """
+  Marks the session as already logged.
+  """
+  def mark_session_as_logged(session)
+
+  def mark_session_as_logged(%{id: session_id} = session) do
+    case session |> Session.update_has_logged_changeset(true) |> Repo.update() do
+      {:ok, _} ->
+        {:ok, get_session!(session_id)}
+
+      error ->
+        error
+    end
+  end
+
+  def mark_session_as_logged(_) do
+    {:error, "Invalid session"}
+  end
+
+  #
   # Privee form
   #
 

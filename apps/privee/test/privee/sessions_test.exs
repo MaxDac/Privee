@@ -120,6 +120,89 @@ defmodule Privee.SessionsTest do
       assert is_binary(session.session_name)
       assert is_nil(session.recovery_phrase)
     end
+
+    test "registers quick sessions without recovery phrase" do
+      session_name = unique_session_name()
+
+      {:ok, session} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert session.session_name == session_name
+      assert session.is_quick == true
+      assert is_nil(session.recovery_phrase)
+      assert is_nil(session.hashed_recovery_phrase)
+    end
+
+    test "validates that quick sessions have empty recovery phrase" do
+      session_name = unique_session_name()
+
+      {:error, changeset} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          recovery_phrase: "Some recovery phrase here",
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert %{
+               recovery_phrase: ["must be empty for quick sessions"]
+             } = errors_on(changeset)
+    end
+
+    test "validates that non-quick sessions require recovery phrase" do
+      session_name = unique_session_name()
+
+      {:error, changeset} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          public_key: default_public_key(),
+          is_quick: false
+        })
+
+      assert %{
+               recovery_phrase: ["can't be blank"]
+             } = errors_on(changeset)
+    end
+
+    test "retrieves quick sessions by session name" do
+      quick_session = quick_session_fixture()
+      retrieved_session = Sessions.get_session_by_session_name(quick_session.session_name)
+
+      assert retrieved_session.id == quick_session.id
+      assert retrieved_session.is_quick == true
+      assert is_nil(retrieved_session.hashed_recovery_phrase)
+    end
+
+    test "quick sessions cannot be retrieved by recovery phrase" do
+      quick_session = quick_session_fixture()
+
+      # Quick sessions should not be retrievable by recovery phrase since they don't have one
+      refute Sessions.get_session_by_session_name_and_phrase(
+               quick_session.session_name,
+               "any recovery phrase"
+             )
+    end
+
+    test "validates that empty string recovery phrase is allowed for quick sessions" do
+      session_name = unique_session_name()
+
+      {:ok, session} =
+        Sessions.register_session(%{
+          session_name: session_name,
+          recovery_phrase: "",
+          public_key: default_public_key(),
+          is_quick: true
+        })
+
+      assert session.session_name == session_name
+      assert session.is_quick == true
+      assert is_nil(session.recovery_phrase)
+      assert is_nil(session.hashed_recovery_phrase)
+    end
   end
 
   describe "change_session_registration/2" do
@@ -243,6 +326,144 @@ defmodule Privee.SessionsTest do
       changeset = Sessions.change_privee_form(%PriveeForm{}, %{"session_name" => session_name})
 
       assert changeset.valid?
+    end
+  end
+
+  describe "mark_session_as_logged/1" do
+    test "returns error for session without id" do
+      # Sessions without id cannot be marked as logged
+      session_map = %{is_logged: false, session_name: "test"}
+
+      assert {:error, "Invalid session"} = Sessions.mark_session_as_logged(session_map)
+    end
+
+    test "marks a session as logged when it has an id" do
+      session = session_fixture(%{has_logged: false})
+
+      {:ok, updated_session} = Sessions.mark_session_as_logged(session)
+
+      assert updated_session.has_logged == true
+      assert updated_session.id == session.id
+    end
+
+    test "marks a quick session as logged" do
+      quick_session = quick_session_fixture(%{has_logged: false})
+      assert quick_session.has_logged == false
+      assert quick_session.is_quick == true
+
+      {:ok, updated_session} = Sessions.mark_session_as_logged(quick_session)
+
+      assert updated_session.has_logged == true
+      assert updated_session.is_quick == true
+      assert updated_session.id == quick_session.id
+    end
+
+    test "marks session as logged even when already logged" do
+      session = session_fixture(%{has_logged: true})
+      assert session.has_logged == true
+
+      {:ok, updated_session} = Sessions.mark_session_as_logged(session)
+
+      assert updated_session.has_logged == true
+      assert updated_session.id == session.id
+    end
+
+    test "returns error for nil input" do
+      assert {:error, "Invalid session"} = Sessions.mark_session_as_logged(nil)
+    end
+
+    test "returns error for empty map" do
+      assert {:error, "Invalid session"} = Sessions.mark_session_as_logged(%{})
+    end
+
+    test "returns error for string input" do
+      assert {:error, "Invalid session"} = Sessions.mark_session_as_logged("invalid")
+    end
+
+    test "returns error for map without id and without is_logged field" do
+      session_without_required_fields = %{session_name: "test", has_logged: false}
+
+      assert {:error, "Invalid session"} =
+               Sessions.mark_session_as_logged(session_without_required_fields)
+    end
+
+    test "handles database constraint errors" do
+      # Create a session and then manually delete it from DB to cause update error
+      session = session_fixture()
+      Repo.delete!(session)
+
+      # Should raise StaleEntryError when trying to update non-existent record
+      assert_raise Ecto.StaleEntryError, fn ->
+        Sessions.mark_session_as_logged(session)
+      end
+    end
+  end
+
+  describe "session_valid?/1" do
+    test "returns false for quick session that has already logged" do
+      session = %{is_quick: true, has_logged: true}
+
+      refute Sessions.session_valid?(session)
+    end
+
+    test "returns true for quick session that has not logged" do
+      session = %{is_quick: true, has_logged: false}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for regular session that has logged" do
+      session = %{is_quick: false, has_logged: true}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for regular session that has not logged" do
+      session = %{is_quick: false, has_logged: false}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for session without is_quick field" do
+      session = %{has_logged: true}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for session without has_logged field" do
+      session = %{is_quick: true}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for empty map" do
+      session = %{}
+
+      assert Sessions.session_valid?(session)
+    end
+
+    test "returns true for nil" do
+      assert Sessions.session_valid?(nil)
+    end
+
+    test "full workflow: quick session becomes invalid after being marked as logged" do
+      # Create a new quick session
+      quick_session = quick_session_fixture(%{has_logged: false})
+
+      # Initially the session should be valid
+      assert Sessions.session_valid?(quick_session)
+      assert quick_session.is_quick == true
+      assert quick_session.has_logged == false
+
+      # Mark the session as logged
+      {:ok, updated_session} = Sessions.mark_session_as_logged(quick_session)
+
+      # Verify it was marked as logged
+      assert updated_session.has_logged == true
+      assert updated_session.is_quick == true
+
+      # Now the session should be invalid
+      refute Sessions.session_valid?(updated_session)
     end
   end
 end
