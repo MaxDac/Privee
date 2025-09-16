@@ -33,7 +33,8 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
         |> render_change(
           session: %{
             "recovery_phrase" => "with !@# special characters but long enough",
-            "session_name" => "too_short"
+            "session_name" => "too_short",
+            "is_quick" => "false"
           }
         )
 

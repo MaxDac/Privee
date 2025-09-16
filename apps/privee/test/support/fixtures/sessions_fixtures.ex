@@ -20,35 +20,53 @@ defmodule Privee.SessionsFixtures do
     Enum.into(attrs, %{
       session_name: unique_session_name(),
       recovery_phrase: session_recovery_phrase(),
-      public_key: default_public_key(),
-      has_logged: false
+      public_key: default_public_key()
     })
   end
 
   def session_fixture(attrs \\ %{}) do
+    has_logged_value = Map.get(attrs, :has_logged)
+    attrs_without_has_logged = Map.delete(attrs, :has_logged)
+
     {:ok, session} =
-      attrs
+      attrs_without_has_logged
       |> valid_session_attributes()
       |> Privee.Sessions.register_session()
 
-    session
+    # Update has_logged if specified (for testing purposes)
+    case has_logged_value do
+      nil -> session
+      value when is_boolean(value) ->
+        session
+        |> Privee.Sessions.Session.update_has_logged_changeset(value)
+        |> Privee.Repo.update!()
+    end
   end
 
   def valid_quick_session_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{
       session_name: unique_session_name(),
       public_key: default_public_key(),
-      is_quick: true,
-      has_logged: false
+      is_quick: true
     })
   end
 
   def quick_session_fixture(attrs \\ %{}) do
+    has_logged_value = Map.get(attrs, :has_logged)
+    attrs_without_has_logged = Map.delete(attrs, :has_logged)
+
     {:ok, session} =
-      attrs
+      attrs_without_has_logged
       |> valid_quick_session_attributes()
       |> Privee.Sessions.register_session()
 
-    session
+    # Update has_logged if specified (for testing purposes)
+    case has_logged_value do
+      nil -> session
+      value when is_boolean(value) ->
+        session
+        |> Privee.Sessions.Session.update_has_logged_changeset(value)
+        |> Privee.Repo.update!()
+    end
   end
 end

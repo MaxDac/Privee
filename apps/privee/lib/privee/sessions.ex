@@ -171,14 +171,13 @@ defmodule Privee.Sessions do
   def is_session_valid(_), do: true
 
   @doc """
-  Marks the quick session as already logged, but leave the normal session untouched.
+  Marks the session as already logged.
   """
   def mark_session_as_logged(session)
 
-  def mark_session_as_logged(%{is_logged: false} = session), do: {:ok, session}
 
   def mark_session_as_logged(%{id: session_id} = session) do
-    case session |> Session.mark_logged_changeset() |> Repo.update() do
+    case session |> Session.update_has_logged_changeset(true) |> Repo.update() do
       {:ok, _} ->
         {:ok, get_session!(session_id)}
 

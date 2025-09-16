@@ -66,4 +66,8 @@ defmodule PriveeWeb.SessionRegistrationLive do
       assign(socket, :automatic_session_name, "")
     end
   end
+
+  def is_quick_session(form) do
+    form[:is_quick].value != true and form[:is_quick].value != "true"
+  end
 end

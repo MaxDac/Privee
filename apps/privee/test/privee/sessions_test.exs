@@ -330,11 +330,11 @@ defmodule Privee.SessionsTest do
   end
 
   describe "mark_session_as_logged/1" do
-    test "returns ok tuple for session with is_logged: false (current implementation bug)" do
-      # Note: This tests the current buggy implementation that checks is_logged instead of has_logged
+    test "returns error for session without id" do
+      # Sessions without id cannot be marked as logged
       session_map = %{is_logged: false, session_name: "test"}
 
-      assert {:ok, ^session_map} = Sessions.mark_session_as_logged(session_map)
+      assert {:error, "Invalid session"} = Sessions.mark_session_as_logged(session_map)
     end
 
     test "marks a session as logged when it has an id" do

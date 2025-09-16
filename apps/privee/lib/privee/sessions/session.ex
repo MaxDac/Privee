@@ -23,8 +23,8 @@ defmodule Privee.Sessions.Session do
     field :recovery_phrase, :string, virtual: true, redact: true
     field :hashed_recovery_phrase, :string, redact: true
     field :public_key, :string, redact: true
-    field :is_quick, :boolean
-    field :has_logged, :boolean
+    field :is_quick, :boolean, default: false
+    field :has_logged, :boolean, default: false
 
     timestamps()
   end
@@ -54,17 +54,17 @@ defmodule Privee.Sessions.Session do
   """
   def registration_changeset(session, attrs, opts \\ []) do
     session
-    |> cast(attrs, [:session_name, :recovery_phrase, :public_key, :is_quick, :has_logged])
+    |> cast(attrs, [:session_name, :recovery_phrase, :public_key, :is_quick])
     |> validate_session_name(opts)
     |> validate_recovery_phrase(opts)
     |> validate_public_key(opts)
   end
 
   @doc """
-  A changeset for marking a session as having logged.
+  A changeset for updating the has_logged field (primarily for testing).
   """
-  def mark_logged_changeset(session) do
-    change(session, %{has_logged: true})
+  def update_has_logged_changeset(session, has_logged_value) when is_boolean(has_logged_value) do
+    change(session, %{has_logged: has_logged_value})
   end
 
   @doc """
