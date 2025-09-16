@@ -539,7 +539,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :id, :any, default: nil
   attr :inline_description, :string, default: nil
   attr :short_description, :string
-  attr :long_description, :string, default: nil
+  attr :long_description, :any, default: nil
 
   def info_icon(assigns) do
     ~H"""
