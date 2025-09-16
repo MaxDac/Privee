@@ -67,7 +67,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
     end
   end
 
-  def is_quick_session(form) do
+  def quick_session?(form) do
     form[:is_quick].value != true and form[:is_quick].value != "true"
   end
 end

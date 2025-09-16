@@ -399,51 +399,51 @@ defmodule Privee.SessionsTest do
     end
   end
 
-  describe "is_session_valid/1" do
+  describe "session_valid?/1" do
     test "returns false for quick session that has already logged" do
       session = %{is_quick: true, has_logged: true}
 
-      refute Sessions.is_session_valid(session)
+      refute Sessions.session_valid?(session)
     end
 
     test "returns true for quick session that has not logged" do
       session = %{is_quick: true, has_logged: false}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for regular session that has logged" do
       session = %{is_quick: false, has_logged: true}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for regular session that has not logged" do
       session = %{is_quick: false, has_logged: false}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for session without is_quick field" do
       session = %{has_logged: true}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for session without has_logged field" do
       session = %{is_quick: true}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for empty map" do
       session = %{}
 
-      assert Sessions.is_session_valid(session)
+      assert Sessions.session_valid?(session)
     end
 
     test "returns true for nil" do
-      assert Sessions.is_session_valid(nil)
+      assert Sessions.session_valid?(nil)
     end
 
     test "full workflow: quick session becomes invalid after being marked as logged" do
@@ -451,7 +451,7 @@ defmodule Privee.SessionsTest do
       quick_session = quick_session_fixture(%{has_logged: false})
 
       # Initially the session should be valid
-      assert Sessions.is_session_valid(quick_session)
+      assert Sessions.session_valid?(quick_session)
       assert quick_session.is_quick == true
       assert quick_session.has_logged == false
 
@@ -463,7 +463,7 @@ defmodule Privee.SessionsTest do
       assert updated_session.is_quick == true
 
       # Now the session should be invalid
-      refute Sessions.is_session_valid(updated_session)
+      refute Sessions.session_valid?(updated_session)
     end
   end
 end

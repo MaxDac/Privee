@@ -52,7 +52,7 @@
     />
 
     <.input
-      :if={is_quick_session(@form)}
+      :if={quick_session?(@form)}
       field={@form[:recovery_phrase]}
       type="textarea"
       label="Recovery phrase"

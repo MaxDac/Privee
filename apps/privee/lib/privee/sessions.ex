@@ -166,9 +166,9 @@ defmodule Privee.Sessions do
   @doc """
   Checks whether the session is a quick session, and it has already been logged into.
   """
-  def is_session_valid(session)
-  def is_session_valid(%{is_quick: true, has_logged: true}), do: false
-  def is_session_valid(_), do: true
+  def session_valid?(session)
+  def session_valid?(%{is_quick: true, has_logged: true}), do: false
+  def session_valid?(_), do: true
 
   @doc """
   Marks the session as already logged.

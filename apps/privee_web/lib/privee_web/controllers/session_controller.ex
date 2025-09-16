@@ -17,7 +17,7 @@ defmodule PriveeWeb.SessionController do
 
   defp create(conn, %{"session" => session_params}, info) do
     with session when not is_nil(session) <- get_session_from_params(session_params),
-         true <- Sessions.is_session_valid(session),
+         true <- Sessions.session_valid?(session),
          {:ok, session} <- Sessions.mark_session_as_logged(session) do
       conn
       |> put_flash(:info, info)
