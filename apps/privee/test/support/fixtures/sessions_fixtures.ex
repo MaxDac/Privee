@@ -4,6 +4,8 @@ defmodule Privee.SessionsFixtures do
   entities via the `Privee.Sessions` context.
   """
 
+  alias Privee.Sessions.Session
+
   def unique_session_name, do: "636e6e5a-080a-48b3-8db2-2fd5fde039df"
   def generate_new_unique_session_name, do: Ecto.UUID.generate()
 
@@ -40,7 +42,7 @@ defmodule Privee.SessionsFixtures do
 
       value when is_boolean(value) ->
         session
-        |> Privee.Sessions.Session.update_has_logged_changeset(value)
+        |> Session.update_has_logged_changeset(value)
         |> Privee.Repo.update!()
     end
   end
@@ -69,7 +71,7 @@ defmodule Privee.SessionsFixtures do
 
       value when is_boolean(value) ->
         session
-        |> Privee.Sessions.Session.update_has_logged_changeset(value)
+        |> Session.update_has_logged_changeset(value)
         |> Privee.Repo.update!()
     end
   end

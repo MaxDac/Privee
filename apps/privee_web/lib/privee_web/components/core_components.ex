@@ -543,11 +543,12 @@ defmodule PriveeWeb.CoreComponents do
 
   def info_icon(assigns) do
     ~H"""
-    <div class="inline-flex space-x-3 cursor-pointer"
-        data-modal-target={"#{@id}-modal"}
-        data-modal-toggle={"#{@id}-modal"}
-        data-tooltip-target={"#{@id}-tooltip"}
-      >
+    <div
+      class="inline-flex space-x-3 cursor-pointer"
+      data-modal-target={"#{@id}-modal"}
+      data-modal-toggle={"#{@id}-modal"}
+      data-tooltip-target={"#{@id}-tooltip"}
+    >
       <span class="text-xs mb-2 font-semibold leading-6 dark:text-white">
         {@inline_description || ""}
       </span>
