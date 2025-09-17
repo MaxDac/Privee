@@ -36,7 +36,7 @@ function copyButtonHandler() {
   if (action === "code") {
     return copyTextToClipboard(sessionName)
   } else {
-    const sessionUrl = getSessionLoginMarkdownLink(sessionName, "Session link")
+    const sessionUrl = getSessionLoginMarkdownLink(sessionName)
     return copyTextToClipboard(sessionUrl)
   }
 }
@@ -56,14 +56,13 @@ const copyTextToClipboard = (text) => navigator.clipboard.writeText(text)
  * - Teams/Word: auto-detects as clickable hyperlink
  *
  * @param {string} code - The session code to include in the share URL.
- * @param {string} _title - The title parameter (kept for API compatibility, but not used in output).
  * @returns {string} A plain URL for the session share.
  *
  * Example:
  *   getSessionLoginMarkdownLink('abc123', 'Login Link')
  *   // Returns: https://current-host/share/abc123
  */
-const getSessionLoginMarkdownLink = (code, _title) => {
+const getSessionLoginMarkdownLink = (code) => {
   const host = window.location.origin
   const url = `${host}/share/${encodeURIComponent(code)}`
   return url
