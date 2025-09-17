@@ -32,8 +32,11 @@ defmodule PriveeWeb.SessionController do
 
   defp maybe_set_session_return_to(conn, params) do
     case params["target_session_code"] do
-      nil -> conn
-      target_session_code -> put_session(conn, :session_return_to, ~p"/chat/#{target_session_code}")
+      nil ->
+        conn
+
+      target_session_code ->
+        put_session(conn, :session_return_to, ~p"/chat/#{target_session_code}")
     end
   end
 

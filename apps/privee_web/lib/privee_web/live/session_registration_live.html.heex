@@ -34,7 +34,12 @@
     </.error>
 
     <.input field={@form[:public_key]} type="hidden" id="session-registration-public-key" />
-    <input :if={@target_session_code} type="hidden" name="target_session_code" value={@target_session_code} />
+    <input
+      :if={@target_session_code}
+      type="hidden"
+      name="target_session_code"
+      value={@target_session_code}
+    />
 
     <.input
       field={@form[:session_name]}
