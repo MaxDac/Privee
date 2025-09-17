@@ -52,55 +52,13 @@ defmodule PriveeWeb.SessionShareController do
   defp create_quick_session_and_redirect(conn, target_session_name) do
     case Sessions.get_session_by_session_name(target_session_name) do
       %Sessions.Session{} ->
-        case create_and_login_quick_session(conn, target_session_name) do
-          {:ok, conn} -> conn
-          {:error, conn} -> conn
-        end
+        conn
+        |> redirect(to: ~p"/?code=#{target_session_name}")
 
       nil ->
         conn
         |> put_flash(:error, "The session you're trying to join doesn't exist.")
         |> redirect(to: ~p"/")
     end
-  end
-
-  defp create_and_login_quick_session(conn, target_session_name) do
-    with session_name <- Sessions.generate_new_available_session_name(),
-         {:ok, session} <- create_quick_session(session_name),
-         {:ok, session} <- Sessions.mark_session_as_logged(session) do
-      conn =
-        conn
-        |> put_session(:session_return_to, ~p"/chat/#{target_session_name}")
-        |> SessionAuth.log_in_session(session)
-
-      {:ok, conn}
-    else
-      _ ->
-        conn =
-          conn
-          |> put_flash(:error, "Unable to create a session. Please try again.")
-          |> redirect(to: ~p"/")
-
-        {:error, conn}
-    end
-  end
-
-  defp create_quick_session(session_name) do
-    # Generate a public key for the quick session (simplified for sharing purposes)
-    public_key = generate_public_key()
-
-    Sessions.register_session(%{
-      session_name: session_name,
-      public_key: public_key,
-      is_quick: true
-    })
-  end
-
-  # Generate a simple placeholder public key for quick sessions
-  # In a real application, this would involve proper cryptographic key generation
-  defp generate_public_key do
-    # Using a UUID as a placeholder public key for quick sessions
-    # This is simplified - in production you'd want proper key generation
-    Ecto.UUID.generate()
   end
 end

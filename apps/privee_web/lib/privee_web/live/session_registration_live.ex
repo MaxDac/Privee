@@ -8,14 +8,20 @@ defmodule PriveeWeb.SessionRegistrationLive do
   @handle_new_session_registration "handle_new_session_registration"
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     changeset = Sessions.change_session_registration(%Session{})
+
+    # Check if there's a code parameter to auto-enable quick session
+    is_quick = Map.has_key?(params, "code")
+    target_session_code = Map.get(params, "code")
 
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false)
+      |> assign(target_session_code: target_session_code)
       |> assign_automatic_session_name()
       |> assign_form(changeset)
+      |> maybe_set_quick_session(is_quick)
 
     {:ok, socket, temporary_assigns: [form: nil]}
   end
@@ -66,6 +72,14 @@ defmodule PriveeWeb.SessionRegistrationLive do
       assign(socket, :automatic_session_name, "")
     end
   end
+
+  defp maybe_set_quick_session(socket, is_quick) when is_quick do
+    # When code is present, automatically set is_quick to true
+    changeset = Sessions.change_session_registration(%Session{}, %{"is_quick" => true})
+    assign_form(socket, changeset)
+  end
+
+  defp maybe_set_quick_session(socket, _), do: socket
 
   def quick_session?(form) do
     form[:is_quick].value == true or form[:is_quick].value == "true"

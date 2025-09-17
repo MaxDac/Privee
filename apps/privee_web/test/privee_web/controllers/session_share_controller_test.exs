@@ -35,16 +35,16 @@ defmodule PriveeWeb.SessionShareControllerTest do
   end
 
   describe "GET /share/:session_name when user is not authenticated" do
-    test "creates quick session and redirects to chat when target session exists", %{conn: conn} do
+    test "redirects to registration page with code when target session exists", %{conn: conn} do
       target_session = session_fixture(%{session_name: generate_new_unique_session_name()})
 
       conn = get(conn, ~p"/share/#{target_session.session_name}")
 
-      # Should redirect to the chat page with the target session
-      assert redirected_to(conn) == ~p"/chat/#{target_session.session_name}"
+      # Should redirect to the registration page with the target session code
+      assert redirected_to(conn) == "/?code=#{target_session.session_name}"
 
-      # Should have logged in the user with a session token
-      assert get_session(conn, :session_token)
+      # Should not have logged in the user yet
+      refute get_session(conn, :session_token)
     end
 
     test "redirects to home page when target session doesn't exist", %{conn: conn} do
@@ -66,8 +66,8 @@ defmodule PriveeWeb.SessionShareControllerTest do
 
       conn = get(conn, "/share/#{encoded_session_name}")
 
-      # Should redirect to chat since we decode the session name properly
-      assert redirected_to(conn) == ~p"/chat/#{valid_session_name}"
+      # Should redirect to registration page with code since we decode the session name properly
+      assert redirected_to(conn) == "/?code=#{valid_session_name}"
     end
 
     test "handles empty session name", %{conn: conn} do
