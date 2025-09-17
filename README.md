@@ -68,6 +68,25 @@ docker network connect pgnetwork pgadmin
 docker network connect pgnetwork privee-database
 ```
 
+### Local development with Podman
+
+For those who prefer Podman over Docker, you can use these equivalent commands:
+
+To start the PostgreSQL database with Podman:
+
+```bash
+podman run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+```
+
+To start PGAdmin with Podman:
+
+```bash
+podman run --name pgadmin -e "PGADMIN_DEFAULT_EMAIL=admin@admin.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" --restart=unless-stopped -p 5050:80 -d dpage/pgadmin4
+podman network create pgnetwork
+podman network connect pgnetwork pgadmin
+podman network connect pgnetwork privee-database
+```
+
 ## IDE support
 
 The most natural way of developing in Elixir is to use Visual Studio Code with Elixir-LS extension.

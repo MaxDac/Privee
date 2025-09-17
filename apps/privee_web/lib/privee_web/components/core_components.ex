@@ -274,7 +274,11 @@ defmodule PriveeWeb.CoreComponents do
       <.icon_button {Map.put(assigns, :tooltip, nil)}>
         {render_slot(@inner_block)}
       </.icon_button>
-      <div id={"tooltip-#{@id}"} role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700">
+      <div
+        id={"tooltip-#{@id}"}
+        role="tooltip"
+        class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700"
+      >
         <div class="tooltip-arrow" data-popper-arrow></div>
       </div>
     </div>
@@ -287,12 +291,13 @@ defmodule PriveeWeb.CoreComponents do
       class="inline-flex items-center cursor-pointer"
       data-tooltip-target={"tooltip-#{@id}"}
     >
-      <.icon_button {Map.put(assigns, :tooltip, nil)}>
+      <.icon_button {Map.put(assigns, :text, nil)}>
         {render_slot(@inner_block)}
       </.icon_button>
-      <span 
+      <span
         :if={@text}
-        class="text-xs mb-2 font-semibold leading-6 dark:text-white">
+        class="text-xs mb-2 font-semibold leading-6 dark:text-white"
+      >
         {@text}
       </span>
     </.label>
@@ -614,7 +619,7 @@ defmodule PriveeWeb.CoreComponents do
         {@short_description}
         <div class="tooltip-arrow" data-popper-arrow></div>
       </div>
-
+      
     <!-- Main modal -->
       <div
         id={"#{@id}-modal"}
