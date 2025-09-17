@@ -259,16 +259,51 @@ defmodule PriveeWeb.CoreComponents do
       <.button>Send!</.button>
       <.button phx-click="go" class="ml-2">Send!</.button>
   """
+  attr :id, :string
   attr :type, :string, default: nil
   attr :class, :string, default: nil
+  attr :text, :string, default: nil
+  attr :tooltip, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
 
   slot :inner_block, required: true
+
+  def icon_button(%{tooltip: tooltip} = assigns) when not is_nil(tooltip) and tooltip != "" do
+    ~H"""
+    <div data-tooltip-target={"tooltip-#{@id}"}>
+      <.icon_button {Map.put(assigns, :tooltip, nil)}>
+        {render_slot(@inner_block)}
+      </.icon_button>
+      <div id={"tooltip-#{@id}"} role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700">
+        <div class="tooltip-arrow" data-popper-arrow></div>
+      </div>
+    </div>
+    """
+  end
+
+  def icon_button(%{text: text} = assigns) when not is_nil(text) and text != "" do
+    ~H"""
+    <.label
+      class="inline-flex items-center cursor-pointer"
+      data-tooltip-target={"tooltip-#{@id}"}
+    >
+      <.icon_button {Map.put(assigns, :tooltip, nil)}>
+        {render_slot(@inner_block)}
+      </.icon_button>
+      <span 
+        :if={@text}
+        class="text-xs mb-2 font-semibold leading-6 dark:text-white">
+        {@text}
+      </span>
+    </.label>
+    """
+  end
 
   def icon_button(assigns) do
     ~H"""
     <button
       type={@type}
+      data-tooltip-target={"tooltip-#{@id}"}
       class={[
         "phx-submit-loading:opacity-75 py-2 px-3",
         "text-black focus:ring-4 focus:outline-none ",
@@ -513,6 +548,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :for, :string, default: nil
   attr :errors, :list, default: []
   attr :class, :string, default: nil
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the label tag"
 
   slot :inner_block, required: true
 
@@ -578,7 +614,7 @@ defmodule PriveeWeb.CoreComponents do
         {@short_description}
         <div class="tooltip-arrow" data-popper-arrow></div>
       </div>
-      
+
     <!-- Main modal -->
       <div
         id={"#{@id}-modal"}
