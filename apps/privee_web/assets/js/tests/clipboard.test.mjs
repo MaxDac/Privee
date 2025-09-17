@@ -106,7 +106,7 @@ describe("copyButtonHandler", () => {
     vi.unstubAllGlobals()
   })
 
-  it("copies session name when action is 'copy'", () => {
+  it("copies session name when action is 'code'", () => {
     const sessionName = "test-session"
     let copiedText = null
 
@@ -124,7 +124,7 @@ describe("copyButtonHandler", () => {
     const mockButton = {
       dataset: {
         sessionName: sessionName,
-        action: "copy",
+        action: "code",
       },
     }
 
@@ -133,7 +133,7 @@ describe("copyButtonHandler", () => {
     expect(copiedText).toBe(sessionName)
   })
 
-  it("copies session URL when action is not 'copy'", () => {
+  it("copies session URL when action is not 'code'", () => {
     const sessionName = "test-session"
     let copiedText = null
 
@@ -220,11 +220,11 @@ describe("addSessionNameCopyListener", () => {
     vi.unstubAllGlobals()
   })
 
-  it("the button click with action='copy' results in the session name copy to the clipboard invocation", () => {
+  it("the button click with action='code' results in the session name copy to the clipboard invocation", () => {
     const sessionName = "some-session-name"
 
     const buttonHtml = `
-    <button data-session-name="${sessionName}" data-action="copy">Copy button</button>
+    <button data-session-name="${sessionName}" data-action="code">Copy button</button>
     `
 
     let copiedText = null
@@ -329,7 +329,7 @@ describe("addSessionNameCopyListener - Original Test Behavior", () => {
     const sessionName = "some-session-name"
 
     const buttonHtml = `
-    <button data-session-name="${sessionName}" data-action="copy">Some button</button>
+    <button data-session-name="${sessionName}" data-action="code">Some button</button>
     `
 
     let result = false

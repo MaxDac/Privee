@@ -33,7 +33,7 @@ function copyButtonHandler() {
   const sessionName = this.dataset.sessionName
   const action = this.dataset.action
 
-  if (action === "copy") {
+  if (action === "code") {
     return copyTextToClipboard(sessionName)
   } else {
     const sessionUrl = getSessionLoginMarkdownLink(sessionName, "Session link")
