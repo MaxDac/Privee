@@ -15,17 +15,28 @@ defmodule PriveeWeb.SessionController do
     create(conn, params, "Welcome back!")
   end
 
-  defp create(conn, %{"session" => session_params}, info) do
+  defp create(conn, %{"session" => session_params} = params, info) do
     with session when not is_nil(session) <- get_session_from_params(session_params),
          true <- Sessions.session_valid?(session),
          {:ok, session} <- Sessions.mark_session_as_logged(session) do
       conn
+      |> maybe_set_session_return_to(params)
       |> put_flash(:info, info)
       |> SessionAuth.log_in_session(session, session_params)
     else
       _ ->
         conn
         |> put_error_flash(session_params)
+    end
+  end
+
+  defp maybe_set_session_return_to(conn, params) do
+    case params["target_session_code"] do
+      nil ->
+        conn
+
+      target_session_code ->
+        put_session(conn, :session_return_to, ~p"/chat/#{target_session_code}")
     end
   end
 

@@ -2,48 +2,71 @@
   id="session-menu"
   class="z-10 hidden bg-white divide-y divide-gray-100 rounded-md shadow w-72 sm:w-96 dark:bg-gray-700 dark:divide-gray-600"
 >
-  <div class="flex justify-between items-center px-4 py-3 text-sm text-gray-900 dark:text-white">
-    <span class="text-md leading-6 text-zinc-900 dark:text-zinc-100">
-      {@current_session.session_name}
-    </span>
-    <.icon_button
-      data-session-name={@current_session.session_name}
-      data-tooltip-target="confirm-copy"
-      data-tooltip-trigger="click"
-      data-tooltip-placement="left"
-    >
-      <svg
-        class="w-6 h-6 text-gray-800 dark:text-white"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke="currentColor"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"
-        />
-      </svg>
-    </.icon_button>
-
-    <div
-      id="confirm-copy"
-      role="tooltip"
-      class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700"
-    >
-      Session name copied!
-      <div class="tooltip-arrow" data-popper-arrow></div>
-    </div>
-  </div>
   <ul
     class="py-2 text-sm text-gray-700 dark:text-gray-200"
     aria-labelledby="dropdownInformationButton"
   >
-    <li class="cursor-pointer">
+    <li class="px-4 py-3 text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-600">
+      <span class="text-md leading-6 text-zinc-900 dark:text-zinc-100">
+        {@current_session.session_name}
+      </span>
+    </li>
+    <li class="cursor-pointer border-b border-gray-100 dark:border-gray-600 py-2">
+      <a
+        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+        id="copy-session-code-btn"
+        data-session-name={@current_session.session_name}
+        data-action="code"
+        aria-label="copy-session-name"
+      >
+        <svg
+          class="w-5 h-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"
+          />
+        </svg>
+        <span>Copy session name</span>
+      </a>
+    </li>
+    <li class="cursor-pointer border-b border-gray-100 dark:border-gray-600 py-2">
+      <a
+        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+        id="copy-session-url-btn"
+        data-session-name={@current_session.session_name}
+        data-action="url"
+        aria-label="copy-session-url"
+      >
+        <svg
+          class="w-5 h-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13.213 9.787a3.391 3.391 0 0 0-4.795 0l-3.425 3.426a3.39 3.39 0 0 0 4.795 4.794l-.321-.304m-.321-4.49a3.39 3.39 0 0 0 4.795 0l3.424-3.426a3.39 3.39 0 0 0-4.794-4.795l-1.028.961"
+          />
+        </svg>
+        <span>Copy session URL</span>
+      </a>
+    </li>
+    <li class="cursor-pointer py-2">
       <a
         class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
         id="theme-toggle-dark-icon"
@@ -69,7 +92,7 @@
         id="theme-toggle-light-icon"
         data-theme-toggle="theme-toggle"
         data-theme-selector="light"
-        aria-label="dark-theme-selector"
+        aria-label="light-theme-selector"
       >
         <svg
           data-theme-selector="light"

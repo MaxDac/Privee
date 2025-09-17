@@ -200,6 +200,21 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       response = html_response(conn, 200)
       assert response =~ "Session"
     end
+
+    test "auto-enables quick session toggle when code parameter is present", %{conn: conn} do
+      target_session = session_fixture(%{session_name: generate_new_unique_session_name()})
+
+      {:ok, _lv, html} = live(conn, "/?code=#{target_session.session_name}")
+
+      # The is_quick toggle should be automatically enabled
+      assert html =~ "checked=\"\""
+      # The form should include the target_session_code as a hidden field
+      assert html =~ "name=\"target_session_code\""
+      assert html =~ "value=\"#{target_session.session_name}\""
+
+      # When code is present, recovery phrase field should be hidden
+      refute html =~ "Recovery phrase"
+    end
   end
 
   describe "registration navigation" do

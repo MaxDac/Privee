@@ -252,37 +252,6 @@ defmodule PriveeWeb.CoreComponents do
   end
 
   @doc """
-  Renders an icon button.
-
-  ## Examples
-
-      <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
-  """
-  attr :type, :string, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
-
-  slot :inner_block, required: true
-
-  def icon_button(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 py-2 px-3",
-        "text-black focus:ring-4 focus:outline-none ",
-        "font-medium rounded-lg text-sm text-center me-2 mb-2",
-        @class
-      ]}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
-    </button>
-    """
-  end
-
-  @doc """
   Renders a link with simplified options compared to the Phoenix LiveView default link,
   in the form of a button.
 
@@ -513,6 +482,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :for, :string, default: nil
   attr :errors, :list, default: []
   attr :class, :string, default: nil
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the label tag"
 
   slot :inner_block, required: true
 

@@ -101,6 +101,28 @@ defmodule PriveeWeb.SessionControllerTest do
 
       assert redirected_to(conn) == ~p"/"
     end
+
+    test "redirects to target session chat when target_session_code is provided", %{conn: conn} do
+      # Create a quick session to use as the current session
+      quick_session = quick_session_fixture(%{session_name: generate_new_unique_session_name()})
+      # Create a target session to join
+      target_session = session_fixture(%{session_name: generate_new_unique_session_name()})
+
+      conn =
+        post(conn, ~p"/sessions/log_in", %{
+          "_action" => "registered",
+          "session" => %{
+            "session_name" => quick_session.session_name,
+            "is_quick" => "true"
+          },
+          "target_session_code" => target_session.session_name
+        })
+
+      # Should redirect to the target session chat
+      assert redirected_to(conn) == ~p"/chat/#{target_session.session_name}"
+      # Should be logged in
+      assert get_session(conn, :session_token)
+    end
   end
 
   describe "DELETE /sessions/log_out" do
