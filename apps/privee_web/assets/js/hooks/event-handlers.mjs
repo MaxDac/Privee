@@ -39,6 +39,41 @@ export const addBackEndEventHandlers = () => {
 
   // Adding the crypto keys handling for the chat
   window.addEventListener("phx:sending_keys", handleSendingPublicKey)
+
+  // Close session dropdown when any menu item is clicked
+  document.addEventListener("click", (event) => {
+    const sessionMenu = document.getElementById("session-menu")
+
+    if (!sessionMenu) return
+
+    // Check if the clicked element is inside the session menu
+    const target = event.target
+
+    if (!(target instanceof Node)) return
+
+    const isSessionMenuClick = sessionMenu.contains(target)
+
+    if (!isSessionMenuClick) return
+
+    // Check if the clicked element is a clickable menu item
+    const clickableSelectors = [
+      "#copy-session-code-btn",
+      "#copy-session-url-btn",
+      "a[href='/sessions/log_out']", // Sign out link
+    ]
+
+    // Check if target is an Element and has closest method
+    const isClickableItem =
+      target instanceof Element && clickableSelectors.some((selector) => target.closest(selector))
+
+    if (isClickableItem) {
+      // Hide the dropdown by triggering the toggle button
+      const dropdownToggle = document.querySelector("[data-dropdown-toggle='session-menu']")
+      if (dropdownToggle instanceof HTMLElement && !sessionMenu.classList.contains("hidden")) {
+        dropdownToggle.click()
+      }
+    }
+  })
 }
 
 /**
