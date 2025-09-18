@@ -10,7 +10,7 @@ export function addPriveeSelectorHooks(Hooks) {
     mounted() {
       //@ts-ignore
       const pushEvent = this.pushEvent.bind(this)
-      console.debug("Adding privee selector hooks")
+
       addSessionNameCopyListener(pushFlash(pushEvent))
     },
   }

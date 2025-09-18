@@ -13,7 +13,6 @@ export const copySessionNameToClipboardBackEndEventHandler = (event) => {
  * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
 export const addSessionNameCopyListener = (pushFlash) => {
-  console.debug("Adding session name copy listener")
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
@@ -44,14 +43,12 @@ const createCopyButtonHandler = (pushFlash) =>
     const action = this.dataset.action
 
     if (action === "code") {
-      console.debug("copying")
       return copyTextToClipboard(sessionName).then(() =>
-        pushFlash("Info", "Session copied", "Info"),
+        pushFlash("Info", "Session copied"),
       )
     } else {
-      console.debug("copying -1")
       const sessionUrl = getSessionLoginMarkdownLink(sessionName)
-      return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied", "Info"))
+      return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied"))
     }
   }
 
@@ -90,7 +87,7 @@ const getSessionLoginMarkdownLink = (code) => {
 export const handleSessionNameCopyToClipboardRegistrationEvent = (event) =>
   copySessionNameToClipboardBackEndEventHandler(event)
     .then(() => console.debug("Session name correctly copied to clipboard."))
-    .catch((error) => console.debug("Failed to copy session name to clipboard.", error))
+    .catch((error) => console.error("Failed to copy session name to clipboard.", error))
 
 /**
  * These exports are for test purpose only.

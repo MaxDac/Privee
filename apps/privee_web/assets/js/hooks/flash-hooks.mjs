@@ -34,9 +34,7 @@ const flashEventName = "js_flash"
  */
 export const pushFlash = (pushEvent) => (kind, message, title = null) =>
   new Promise((res, _rej) => {
-    console.debug("Pushing flash", { kind, message, title })
     pushEvent(flashEventName, { kind, message, title }, (reply) => {
-      console.debug("Flash pushed", reply)
       res(reply)
     })
   })
