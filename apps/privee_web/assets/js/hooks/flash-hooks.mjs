@@ -41,8 +41,10 @@ export const pushFlash =
       })
     })
 
+const flashDisappearingTimeout = 3_000
+
 /**
- * Adds a hook that automatically hides the flash message after 5 seconds.
+ * Adds a hook that automatically hides the flash message after 3 seconds.
  * @param {any} Hooks LiveView Hooks
  */
 export const addFlashAutoHideHook = (Hooks) => {
@@ -50,7 +52,7 @@ export const addFlashAutoHideHook = (Hooks) => {
     mounted() {
       setTimeout(() => {
         this.el.style.display = "none"
-      }, 5_000)
+      }, flashDisappearingTimeout)
     },
   }
 }
