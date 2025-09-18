@@ -32,7 +32,6 @@ describe("querySelectorArrayOf", () => {
     const elements = querySelectorArrayOf(selector)
 
     expect(elements.length).toEqual(4)
-    console.log("first element", elements[0])
     expect(elements[0].textContent).toEqual("One")
     expect(elements[1].textContent).toEqual("Two")
     expect(elements[2].textContent).toEqual("Three")

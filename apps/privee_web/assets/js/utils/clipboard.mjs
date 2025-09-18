@@ -10,13 +10,21 @@ export const copySessionNameToClipboardBackEndEventHandler = (event) => {
 
 /**
  * Adds a listener to the copy buttons to copy the session name to the clipboard.
+ * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
-export const addSessionNameCopyListener = () => {
+export const addSessionNameCopyListener = (pushFlash) => {
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
-    button.removeEventListener("click", copyButtonHandler)
-    button.addEventListener("click", copyButtonHandler)
+    // Remove all existing click event listeners
+    button.replaceWith(button.cloneNode(true))
+  })
+
+  // Re-query buttons after replacement and add new handlers
+  const refreshedButtons = getCopyButtons()
+  refreshedButtons.forEach((button) => {
+    const handler = createCopyButtonHandler(pushFlash)
+    button.addEventListener("click", handler)
   })
 }
 
@@ -28,18 +36,20 @@ const getCopyButtons = () => document.querySelectorAll("[data-session-name]")
 
 /**
  * Produces a Handler to the click of the copy button click.
+ * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
-function copyButtonHandler() {
-  const sessionName = this.dataset.sessionName
-  const action = this.dataset.action
+const createCopyButtonHandler = (pushFlash) =>
+  function () {
+    const sessionName = this.dataset.sessionName
+    const action = this.dataset.action
 
-  if (action === "code") {
-    return copyTextToClipboard(sessionName)
-  } else {
-    const sessionUrl = getSessionLoginMarkdownLink(sessionName)
-    return copyTextToClipboard(sessionUrl)
+    if (action === "code") {
+      return copyTextToClipboard(sessionName).then(() => pushFlash("Info", "Session copied"))
+    } else {
+      const sessionUrl = getSessionLoginMarkdownLink(sessionName)
+      return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied"))
+    }
   }
-}
 
 /**
  * Tries to copy the text in input into the user clipboard through the browser API.
@@ -76,13 +86,13 @@ const getSessionLoginMarkdownLink = (code) => {
 export const handleSessionNameCopyToClipboardRegistrationEvent = (event) =>
   copySessionNameToClipboardBackEndEventHandler(event)
     .then(() => console.debug("Session name correctly copied to clipboard."))
-    .catch((error) => console.debug("Failed to copy session name to clipboard.", error))
+    .catch((error) => console.warn("Failed to copy session name to clipboard.", error))
 
 /**
  * These exports are for test purpose only.
  */
 export const testExports = {
   getSessionLoginMarkdownLink,
-  copyButtonHandler,
   getCopyButtons,
+  createCopyButtonHandler,
 }

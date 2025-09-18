@@ -1,9 +1,6 @@
 import topbar from "../../vendor/topbar"
 import { handleSendingPublicKey } from "../utils/chat.mjs"
-import {
-  addSessionNameCopyListener,
-  handleSessionNameCopyToClipboardRegistrationEvent,
-} from "../utils/clipboard.mjs"
+import { handleSessionNameCopyToClipboardRegistrationEvent } from "../utils/clipboard.mjs"
 import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { handleSessionNamePrivateKeyRegistrationEvent } from "../utils/security.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
@@ -27,9 +24,6 @@ export const addBackEndEventHandlers = () => {
 
   // Asking for notification permission to the browser
   askNotificationPermission().then(console.debug).catch(console.error)
-
-  // Adds the copy listeners to the buttons that copy the session name to the clipboard
-  addSessionNameCopyListener()
 
   // Push notifications
   window.addEventListener("phx:trigger_notification", pushBackEndNotification)
