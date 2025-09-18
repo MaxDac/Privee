@@ -132,22 +132,26 @@ defmodule PriveeWeb do
         flash_title = Map.get(params, "title")
         kind_atom = String.to_existing_atom(kind)
 
-        final_message = if flash_title do
-          "#{flash_title} #{message}"
-        else
-          message
-        end
+        final_message =
+          if flash_title do
+            "#{flash_title} #{message}"
+          else
+            message
+          end
 
         {:noreply, put_flash(socket, kind_atom, final_message)}
       rescue
         ArgumentError ->
           # Invalid kind provided, default to info
           flash_title = Map.get(params, "title")
-          final_message = if flash_title do
-            "#{flash_title} #{message}"
-          else
-            message
-          end
+
+          final_message =
+            if flash_title do
+              "#{flash_title} #{message}"
+            else
+              message
+            end
+
           {:noreply, put_flash(socket, :info, final_message)}
       end
     end
