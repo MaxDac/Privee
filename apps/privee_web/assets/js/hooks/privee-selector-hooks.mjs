@@ -8,7 +8,7 @@ import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 export function addPriveeSelectorHooks(Hooks) {
   Hooks.PriveeSelectorScreen = {
     mounted() {
-      //@ts-ignore
+      // @ts-ignore: `this.pushEvent` is provided by the LiveView hook context at runtime and is not known to TypeScript.
       const pushEvent = this.pushEvent.bind(this)
 
       addSessionNameCopyListener(pushFlash(pushEvent))
