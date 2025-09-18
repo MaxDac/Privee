@@ -263,7 +263,7 @@ describe("addSessionNameCopyListener - Original Test Behavior", () => {
 
     addSessionNameCopyListener(mockPushFlash)
 
-    const button = document.querySelector("[data-session-name]")
+    const button = document.querySelector("[data-session-name][data-action]")
     await button.click()
 
     // Wait for any promises to resolve
@@ -303,7 +303,7 @@ describe("addSessionNameCopyListener", () => {
 
     addSessionNameCopyListener(mockPushFlash)
 
-    const button = document.querySelector("[data-session-name]")
+    const button = document.querySelector("[data-session-name][data-action]")
     await button.click()
 
     // Wait for any promises to resolve
@@ -338,7 +338,7 @@ describe("addSessionNameCopyListener", () => {
 
     addSessionNameCopyListener(mockPushFlash)
 
-    const button = document.querySelector("[data-session-name]")
+    const button = document.querySelector("[data-session-name][data-action]")
     await button.click()
 
     // Wait for any promises to resolve
@@ -355,7 +355,7 @@ describe("addSessionNameCopyListener", () => {
     const mockPushFlash = vi.fn()
 
     const buttonHtml = `
-    <button data-session-name="${sessionName}">Some button</button>
+    <button data-session-name="${sessionName}" data-action="">Some button</button>
     `
 
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
@@ -373,7 +373,7 @@ describe("addSessionNameCopyListener", () => {
 
     addSessionNameCopyListener(mockPushFlash)
 
-    const button = document.querySelector("[data-session-name]")
+    const button = document.querySelector("[data-session-name][data-action]")
     await button.click()
 
     // Wait for any promises to resolve
@@ -410,7 +410,7 @@ describe("addSessionNameCopyListener", () => {
 
     addSessionNameCopyListener(mockPushFlash)
 
-    const buttons = document.querySelectorAll("[data-session-name]")
+    const buttons = document.querySelectorAll("[data-session-name][data-action]")
 
     // Click first button (code action)
     await buttons[0].click()
@@ -455,7 +455,7 @@ describe("addSessionNameCopyListener", () => {
     addSessionNameCopyListener(mockPushFlash)
     addSessionNameCopyListener(mockPushFlash)
 
-    const button = document.querySelector("[data-session-name]")
+    const button = document.querySelector("[data-session-name][data-action]")
     await button.click()
 
     // Wait for any promises to resolve
