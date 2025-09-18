@@ -12,7 +12,7 @@
  * A function that pushes an event to the back end.
  *
  * @callback PushEvent
- * @param {string} eventName - The even name.
+ * @param {string} eventName - The event name.
  * @param {object} attrs - The event attribute.
  * @param {(reply: any) => void} callback - The event callback.
  * @returns {void}
