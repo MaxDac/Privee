@@ -32,11 +32,13 @@ import { addChatHooks } from "./hooks/chat-hooks.mjs"
 import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
 import { exportDebugFunctions } from "./utils/debug.mjs"
 import { addBackEndEventHandlers } from "./hooks/event-handlers.mjs"
+import { addPriveeSelectorHooks } from "./hooks/privee-selector-hooks.mjs"
 
 // Setting up LiveView hooks
 const Hooks = {}
 addRegistrationHooks(Hooks)
 addChatHooks(Hooks)
+addPriveeSelectorHooks(Hooks)
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
