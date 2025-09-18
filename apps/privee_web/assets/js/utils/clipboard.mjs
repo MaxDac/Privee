@@ -17,8 +17,14 @@ export const addSessionNameCopyListener = (pushFlash) => {
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
-    button.removeEventListener("click", createCopyButtonHandler(pushFlash))
-    button.addEventListener("click", createCopyButtonHandler(pushFlash))
+    // Remove previous handler if present
+    if (button._copyHandler) {
+      button.removeEventListener("click", button._copyHandler);
+    }
+    // Create and store new handler
+    const handler = createCopyButtonHandler(pushFlash);
+    button._copyHandler = handler;
+    button.addEventListener("click", handler);
   })
 }
 
