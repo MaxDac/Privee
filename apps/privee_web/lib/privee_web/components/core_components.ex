@@ -87,7 +87,6 @@ defmodule PriveeWeb.CoreComponents do
                     fill="none"
                     viewBox="0 0 24 24"
                   >
-                    <span class="h-5 w-5 text-center">×</span>
                     <path
                       stroke="currentColor"
                       stroke-linecap="round"
