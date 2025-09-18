@@ -36,7 +36,7 @@ export const addSessionNameCopyListener = (pushFlash) => {
  * Returns all the copy buttons in the page.
  * @returns {NodeListOf<HTMLButtonElement>} The copy buttons.
  */
-const getCopyButtons = () => document.querySelectorAll("[data-session-name]")
+const getCopyButtons = () => document.querySelectorAll("[data-session-name][data-action]")
 
 /**
  * Produces a Handler to the click of the copy button click.
