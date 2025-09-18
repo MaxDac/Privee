@@ -93,17 +93,19 @@ defmodule PriveeWeb.CoreComponents do
   end
 
   @doc """
-  Renders flash notices.
+  Renders flash notices using Flowbite toast styling.
 
   ## Examples
 
       <.flash kind={:info} flash={@flash} />
+      <.flash kind={:error} flash={@flash} />
+      <.flash kind={:warning} flash={@flash} />
       <.flash kind={:info} phx-mounted={show("#flash")}>Welcome Back!</.flash>
   """
   attr :id, :string, doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :error, :warning], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -117,28 +119,90 @@ defmodule PriveeWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class={[
-        "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
-        @kind == :info && "bg-emerald-50 text-emerald-800 ring-emerald-500 fill-cyan-900",
-        @kind == :error && "bg-rose-50 text-rose-900 shadow-md ring-rose-500 fill-rose-900"
-      ]}
+      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800"
       {@rest}
     >
-      <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-        {@title}
-      </p>
-      <p class="mt-2 text-sm leading-5">{msg}</p>
-      <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+      <!-- Icon container -->
+      <div class={[
+        "inline-flex items-center justify-center shrink-0 w-8 h-8 rounded-lg",
+        @kind == :info && "text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200",
+        @kind == :error && "text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200",
+        @kind == :warning && "text-orange-500 bg-orange-100 dark:bg-orange-700 dark:text-orange-200"
+      ]}>
+        <!-- Success/Info icon -->
+        <svg
+          :if={@kind == :info}
+          class="w-5 h-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+        </svg>
+        <span :if={@kind == :info} class="sr-only">Check icon</span>
+
+        <!-- Error icon -->
+        <svg
+          :if={@kind == :error}
+          class="w-5 h-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z" />
+        </svg>
+        <span :if={@kind == :error} class="sr-only">Error icon</span>
+
+        <!-- Warning icon -->
+        <svg
+          :if={@kind == :warning}
+          class="w-5 h-5"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z" />
+        </svg>
+        <span :if={@kind == :warning} class="sr-only">Warning icon</span>
+      </div>
+
+      <!-- Message content -->
+      <div class="ms-3 text-sm font-normal">
+        <span :if={@title} class="font-semibold">{@title} </span>{msg}
+      </div>
+
+      <!-- Close button -->
+      <button
+        type="button"
+        class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
+        aria-label={gettext("close")}
+      >
+        <span class="sr-only">Close</span>
+        <svg
+          class="w-3 h-3"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 14 14"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+          />
+        </svg>
       </button>
     </div>
     """
   end
 
   @doc """
-  Shows the flash group with standard titles and content.
+  Shows the flash group with standard titles and content using Flowbite toast styling.
 
   ## Examples
 
@@ -149,9 +213,10 @@ defmodule PriveeWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id}>
+    <div id={@id} class="fixed bottom-4 right-4 z-50 space-y-2">
       <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
       <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
+      <.flash kind={:warning} title={gettext("Warning!")} flash={@flash} />
       <.flash
         id="client-error"
         kind={:error}
@@ -548,7 +613,7 @@ defmodule PriveeWeb.CoreComponents do
         {@short_description}
         <div class="tooltip-arrow" data-popper-arrow></div>
       </div>
-      
+
     <!-- Main modal -->
       <div
         id={"#{@id}-modal"}

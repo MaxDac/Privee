@@ -55,6 +55,7 @@ defmodule PriveeWeb do
         layout: {PriveeWeb.Layouts, :app}
 
       unquote(html_helpers())
+      unquote(js_flash_helpers())
     end
   end
 
@@ -64,6 +65,7 @@ defmodule PriveeWeb do
         layout: {PriveeWeb.Layouts, :chat_layout}
 
       unquote(html_helpers())
+      unquote(js_flash_helpers())
     end
   end
 
@@ -114,6 +116,40 @@ defmodule PriveeWeb do
       def assign_changeset_action(changeset, action \\ :insert)
       def assign_changeset_action(%{valid?: true} = changeset, _), do: changeset
       def assign_changeset_action(changeset, action), do: %{changeset | action: action}
+    end
+  end
+
+  defp js_flash_helpers do
+    quote do
+      @doc """
+      Handles JavaScript-triggered flash messages.
+
+      This function is automatically included in all LiveViews to handle
+      flash messages sent from client-side JavaScript using the existing
+      server-side flash system.
+      """
+      def handle_event("js_flash", %{"kind" => kind, "message" => message} = params, socket) do
+        flash_title = Map.get(params, "title")
+        kind_atom = String.to_existing_atom(kind)
+
+        final_message = if flash_title do
+          "#{flash_title} #{message}"
+        else
+          message
+        end
+
+        {:noreply, put_flash(socket, kind_atom, final_message)}
+      rescue
+        ArgumentError ->
+          # Invalid kind provided, default to info
+          flash_title = Map.get(params, "title")
+          final_message = if flash_title do
+            "#{flash_title} #{message}"
+          else
+            message
+          end
+          {:noreply, put_flash(socket, :info, final_message)}
+      end
     end
   end
 

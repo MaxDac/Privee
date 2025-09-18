@@ -1,3 +1,5 @@
+import { pushFlash } from "../hooks/flash-hooks.mjs"
+
 /**
  * Copies the given text into the user clipboard.
  * @param {import("./push-notifications.mjs").PhoenixEvent} [event] The event sent by the back-end.
@@ -34,10 +36,12 @@ function copyButtonHandler() {
   const action = this.dataset.action
 
   if (action === "code") {
-    return copyTextToClipboard(sessionName)
+    console.log("copying")
+    return copyTextToClipboard(sessionName).then(() => pushFlash("info", "Session copied", "Info"))
   } else {
+    console.log("copying 2")
     const sessionUrl = getSessionLoginMarkdownLink(sessionName)
-    return copyTextToClipboard(sessionUrl)
+    return copyTextToClipboard(sessionUrl).then(() => pushFlash("info", "Url copied", "Info"))
   }
 }
 
