@@ -117,7 +117,7 @@ always with **libcluster**.
 #### Login to Azure
 
 To login to Azure, a User-defined Managed Identity has been created with a federated identity, and OpenID Connect
-authentication type has been selected; the reason Managed Identity has not been used as an authentication type 
+authentication type has been selected; the reason Managed Identity has not been used as an authentication type
 is that it required a **self-hosted** environment, i.e. a VM on Azure.
 
 For more information on how to setup the GitHub Action to work with Azure resources using User-defined Managed Identities,
@@ -159,7 +159,7 @@ For Azure Kubernetes Service deployment:
    ```bash
    # Build the image
    docker build -t privee.azurecr.io/privee:latest .
-   
+
    # Push to Azure Container Registry
    docker push privee.azurecr.io/privee:latest
    ```
@@ -171,7 +171,7 @@ For Azure Kubernetes Service deployment:
      --from-literal=POSTGRES_USER=your_user \
      --from-literal=POSTGRES_PASSWORD=your_password \
      --from-literal=POSTGRES_DB=your_database
-   
+
    # Create application secret
    kubectl create secret generic privee-app-secret \
      --from-literal=SECRET_KEY_BASE=$(mix phx.gen.secret)
@@ -208,7 +208,7 @@ For Azure Kubernetes Service deployment:
 The application automatically detects the deployment environment:
 
 - **Fly.io**: Detected by `FLY_APP_NAME` environment variable
-- **Azure AKS**: Detected by `KUBERNETES_SERVICE_HOST` environment variable  
+- **Azure AKS**: Detected by `KUBERNETES_SERVICE_HOST` environment variable
 - **Local/Default**: Used when neither of the above are present
 
 Each environment uses appropriate clustering and networking configurations:

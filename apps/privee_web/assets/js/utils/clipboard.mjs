@@ -1,5 +1,3 @@
-import { pushFlash } from "../hooks/flash-hooks.mjs"
-
 /**
  * Copies the given text into the user clipboard.
  * @param {import("./push-notifications.mjs").PhoenixEvent} [event] The event sent by the back-end.
@@ -12,13 +10,15 @@ export const copySessionNameToClipboardBackEndEventHandler = (event) => {
 
 /**
  * Adds a listener to the copy buttons to copy the session name to the clipboard.
+ * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
-export const addSessionNameCopyListener = () => {
+export const addSessionNameCopyListener = (pushFlash) => {
+  console.debug("Adding session name copy listener")
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
-    button.removeEventListener("click", copyButtonHandler)
-    button.addEventListener("click", copyButtonHandler)
+    button.removeEventListener("click", createCopyButtonHandler(pushFlash))
+    button.addEventListener("click", createCopyButtonHandler(pushFlash))
   })
 }
 
@@ -30,20 +30,24 @@ const getCopyButtons = () => document.querySelectorAll("[data-session-name]")
 
 /**
  * Produces a Handler to the click of the copy button click.
+ * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
-function copyButtonHandler() {
-  const sessionName = this.dataset.sessionName
-  const action = this.dataset.action
+const createCopyButtonHandler = (pushFlash) =>
+  function () {
+    const sessionName = this.dataset.sessionName
+    const action = this.dataset.action
 
-  if (action === "code") {
-    console.log("copying")
-    return copyTextToClipboard(sessionName).then(() => pushFlash("info", "Session copied", "Info"))
-  } else {
-    console.log("copying 2")
-    const sessionUrl = getSessionLoginMarkdownLink(sessionName)
-    return copyTextToClipboard(sessionUrl).then(() => pushFlash("info", "Url copied", "Info"))
+    if (action === "code") {
+      console.debug("copying")
+      return copyTextToClipboard(sessionName).then(() =>
+        pushFlash("Info", "Session copied", "Info"),
+      )
+    } else {
+      console.debug("copying -1")
+      const sessionUrl = getSessionLoginMarkdownLink(sessionName)
+      return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied", "Info"))
+    }
   }
-}
 
 /**
  * Tries to copy the text in input into the user clipboard through the browser API.
@@ -87,6 +91,6 @@ export const handleSessionNameCopyToClipboardRegistrationEvent = (event) =>
  */
 export const testExports = {
   getSessionLoginMarkdownLink,
-  copyButtonHandler,
   getCopyButtons,
+  createCopyButtonHandler,
 }

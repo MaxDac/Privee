@@ -1,50 +1,42 @@
 /**
+ * A function that pushes a notification/event to the back end.
+ *
+ * @callback PushFlash
+ * @param {"Info"|"Warning"|"Error"} kind - The kind of notification.
+ * @param {string} message - The message to push.
+ * @param {string?} [title] - Optional title for the notification.
+ * @returns {Promise<void>} Resolves when the push operation completes.
+ */
+
+/**
+ * A function that pushes an event to the back end.
+ *
+ * @callback PushEvent
+ * @param {string} eventName - The even name.
+ * @param {object} attrs - The event attribute.
+ * @param {(reply: any) => void} callback - The event callback.
+ * @returns {void}
+ */
+
+/**
  * Simple JavaScript flash message utilities
  *
  * These functions allow triggering server-side flash messages from JavaScript.
  * The flash messages will appear in the existing flash_group component.
  */
 
+const flashEventName = "js_flash"
+
 /**
  * Push a flash message to the server that will appear in the regular flash container
- * @param {"info" | "error" | "warning"} kind - The flash message type: 'info', 'error', or 'warning'
- * @param {string} message - The flash message content
- * @param {string} [title] - Optional title for the flash message
+ * @param {PushEvent} pushEvent - The push event from the hook.
+ * @returns {PushFlash} The function which triggers the flash on the back end.
  */
-export const pushFlash = (kind, message, title) => {
-  console.debug("Pushing flash")
-  // @ts-ignore
-  if (window.liveSocket) {
-    // Find any LiveView element to push the event to
-    const liveElements = document.querySelectorAll("[data-phx-main]")
-    if (liveElements.length > 0) {
-      // Get the LiveView from the element and push the event
-      const liveElement = liveElements[0]
-      // @ts-ignore
-      console.debug("LiveSocket object:", window.liveSocket)
-      console.debug("Found LiveView element:", liveElement)
-      // @ts-ignore
-      const liveView = window.liveSocket.getViewByEl(liveElement)
-      console.debug("Retrieved LiveView:", liveView)
-      if (liveView) {
-        liveView.pushEvent("js_flash", {
-          attributes: {
-            kind: kind,
-            message: message,
-            title: title,
-          },
-        })
-      } else {
-        console.warn("LiveView not found on element. Flash message not sent:", {
-          kind,
-          message,
-          title,
-        })
-      }
-    } else {
-      console.warn("No LiveView found. Flash message not sent:", { kind, message, title })
-    }
-  } else {
-    console.warn("LiveSocket not available. Flash message not sent:", { kind, message, title })
-  }
-}
+export const pushFlash = (pushEvent) => (kind, message, title) =>
+  new Promise((res, _rej) => {
+    console.debug("Pushing flash", { kind, message, title })
+    pushEvent(flashEventName, { kind, message, title }, (reply) => {
+      console.debug("Flash pushed", reply)
+      res(reply)
+    })
+  })

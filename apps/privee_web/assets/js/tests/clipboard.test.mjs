@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
+
+// Mock the flash-hooks module to avoid phoenix_live_view dependency
+vi.mock("../hooks/flash-hooks.mjs", () => ({
+  pushFlash: vi.fn(),
+}))
+
 import {
   addSessionNameCopyListener,
   copySessionNameToClipboardBackEndEventHandler,
@@ -101,23 +107,21 @@ describe("getSessionLoginMarkdownLink", () => {
   })
 })
 
-describe("copyButtonHandler", () => {
+describe("createCopyButtonHandler", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
 
-  it("copies session name when action is 'code'", () => {
+  it("copies session name when action is 'code'", async () => {
     const sessionName = "test-session"
-    let copiedText = null
+    const mockPushFlash = vi.fn().mockResolvedValue(undefined)
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
-        writeText: (text) => {
-          copiedText = text
-          return Promise.resolve()
-        },
+        writeText: mockWriteText,
       },
     })
 
@@ -128,23 +132,25 @@ describe("copyButtonHandler", () => {
       },
     }
 
-    testExports.copyButtonHandler.call(mockButton)
+    const handler = testExports.createCopyButtonHandler(mockPushFlash)
+    await handler.call(mockButton)
 
-    expect(copiedText).toBe(sessionName)
+    expect(mockWriteText).toHaveBeenCalledWith(sessionName)
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
-  it("copies session URL when action is not 'code'", () => {
+  it("copies session URL when action is not 'code'", async () => {
     const sessionName = "test-session"
-    let copiedText = null
+    const mockPushFlash = vi.fn().mockResolvedValue(undefined)
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
-        writeText: (text) => {
-          copiedText = text
-          return Promise.resolve()
-        },
+        writeText: mockWriteText,
       },
     })
 
@@ -155,23 +161,25 @@ describe("copyButtonHandler", () => {
       },
     }
 
-    testExports.copyButtonHandler.call(mockButton)
+    const handler = testExports.createCopyButtonHandler(mockPushFlash)
+    await handler.call(mockButton)
 
-    expect(copiedText).toBe("https://example.com/share/test-session")
+    expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
-  it("copies session URL when no action is specified", () => {
+  it("copies session URL when no action is specified", async () => {
     const sessionName = "test-session"
-    let copiedText = null
+    const mockPushFlash = vi.fn().mockResolvedValue(undefined)
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
-        writeText: (text) => {
-          copiedText = text
-          return Promise.resolve()
-        },
+        writeText: mockWriteText,
       },
     })
 
@@ -182,23 +190,25 @@ describe("copyButtonHandler", () => {
       },
     }
 
-    testExports.copyButtonHandler.call(mockButton)
+    const handler = testExports.createCopyButtonHandler(mockPushFlash)
+    await handler.call(mockButton)
 
-    expect(copiedText).toBe("https://example.com/share/test-session")
+    expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
-  it("copies session URL when action is undefined", () => {
+  it("copies session URL when action is undefined", async () => {
     const sessionName = "test-session"
-    let copiedText = null
+    const mockPushFlash = vi.fn().mockResolvedValue(undefined)
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
-        writeText: (text) => {
-          copiedText = text
-          return Promise.resolve()
-        },
+        writeText: mockWriteText,
       },
     })
 
@@ -209,114 +219,13 @@ describe("copyButtonHandler", () => {
       },
     }
 
-    testExports.copyButtonHandler.call(mockButton)
+    const handler = testExports.createCopyButtonHandler(mockPushFlash)
+    await handler.call(mockButton)
 
-    expect(copiedText).toBe("https://example.com/share/test-session")
-  })
-})
-
-describe("addSessionNameCopyListener", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it("the button click with action='code' results in the session name copy to the clipboard invocation", () => {
-    const sessionName = "some-session-name"
-
-    const buttonHtml = `
-    <button data-session-name="${sessionName}" data-action="code">Copy button</button>
-    `
-
-    let copiedText = null
-
-    const copyHandler = (text) => {
-      copiedText = text
-      return Promise.resolve()
-    }
-
-    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
-
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("window", dom.window)
-    vi.stubGlobal("navigator", {
-      ...dom.window.navigator,
-      clipboard: {
-        writeText: copyHandler,
-      },
-    })
-
-    addSessionNameCopyListener()
-
-    const button = document.querySelector("[data-session-name]")
-    button.click()
-
-    expect(copiedText).toBe(sessionName)
-  })
-
-  it("the button click with action='url' results in the session URL copy to the clipboard invocation", () => {
-    const sessionName = "some-session-name"
-
-    const buttonHtml = `
-    <button data-session-name="${sessionName}" data-action="url">URL button</button>
-    `
-
-    let copiedText = null
-
-    const copyHandler = (text) => {
-      copiedText = text
-      return Promise.resolve()
-    }
-
-    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
-
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("window", dom.window)
-    vi.stubGlobal("navigator", {
-      ...dom.window.navigator,
-      clipboard: {
-        writeText: copyHandler,
-      },
-    })
-
-    addSessionNameCopyListener()
-
-    const button = document.querySelector("[data-session-name]")
-    button.click()
-
-    expect(copiedText).toBe("https://example.com/share/some-session-name")
-  })
-
-  it("the button click without action defaults to URL copy to the clipboard invocation", () => {
-    const sessionName = "some-session-name"
-
-    const buttonHtml = `
-    <button data-session-name="${sessionName}">Some button</button>
-    `
-
-    let copiedText = null
-
-    const copyHandler = (text) => {
-      copiedText = text
-      return Promise.resolve()
-    }
-
-    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
-
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("window", dom.window)
-    vi.stubGlobal("navigator", {
-      ...dom.window.navigator,
-      clipboard: {
-        writeText: copyHandler,
-      },
-    })
-
-    addSessionNameCopyListener()
-
-    const button = document.querySelector("[data-session-name]")
-    button.click()
-
-    expect(copiedText).toBe("https://example.com/share/some-session-name")
+    expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -325,42 +234,198 @@ describe("addSessionNameCopyListener - Original Test Behavior", () => {
     vi.unstubAllGlobals()
   })
 
-  it("the button click results in the session name copy to the clipboard invocation", () => {
+  it("the button click results in the session name copy to the clipboard invocation", async () => {
     const sessionName = "some-session-name"
+    const mockPushFlash = vi.fn().mockResolvedValue(undefined)
 
     const buttonHtml = `
     <button data-session-name="${sessionName}" data-action="code">Some button</button>
     `
 
-    let result = false
-
-    const copyHandler = (text) => {
+    const mockWriteText = vi.fn((text) => {
       if (text === sessionName) {
-        result = true
         return Promise.resolve()
       } else {
         return Promise.reject("The text is not what was expected.")
       }
-    }
+    })
 
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
-    vi.stubGlobal("dom", dom)
     vi.stubGlobal("document", dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
       clipboard: {
-        writeText: copyHandler,
+        writeText: mockWriteText,
       },
     })
 
-    addSessionNameCopyListener()
+    addSessionNameCopyListener(mockPushFlash)
 
     const button = document.querySelector("[data-session-name]")
-    // @ts-ignore
-    button.click()
+    await button.click()
 
-    expect(result).toBe(true)
+    // Wait for any promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(mockWriteText).toHaveBeenCalledWith(sessionName)
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("addSessionNameCopyListener", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("the button click with action='code' results in the session name copy to the clipboard invocation", async () => {
+    const sessionName = "some-session-name"
+    const mockPushFlash = vi.fn()
+
+    const buttonHtml = `
+    <button data-session-name="${sessionName}" data-action="code">Copy button</button>
+    `
+
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
+
+    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
+
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("navigator", {
+      ...dom.window.navigator,
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    })
+
+    addSessionNameCopyListener(mockPushFlash)
+
+    const button = document.querySelector("[data-session-name]")
+    await button.click()
+
+    // Wait for any promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(mockWriteText).toHaveBeenCalledWith(sessionName)
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
+  })
+
+  it("the button click with action='url' results in the session URL copy to the clipboard invocation", async () => {
+    const sessionName = "some-session-name"
+    const mockPushFlash = vi.fn()
+
+    const buttonHtml = `
+    <button data-session-name="${sessionName}" data-action="url">URL button</button>
+    `
+
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
+
+    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
+
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("navigator", {
+      ...dom.window.navigator,
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    })
+
+    addSessionNameCopyListener(mockPushFlash)
+
+    const button = document.querySelector("[data-session-name]")
+    await button.click()
+
+    // Wait for any promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/some-session-name")
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
+  })
+
+  it("the button click without action defaults to URL copy to the clipboard invocation", async () => {
+    const sessionName = "some-session-name"
+    const mockPushFlash = vi.fn()
+
+    const buttonHtml = `
+    <button data-session-name="${sessionName}">Some button</button>
+    `
+
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
+
+    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
+
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("navigator", {
+      ...dom.window.navigator,
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    })
+
+    addSessionNameCopyListener(mockPushFlash)
+
+    const button = document.querySelector("[data-session-name]")
+    await button.click()
+
+    // Wait for any promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/some-session-name")
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
+  })
+
+  it("multiple buttons can be clicked and each triggers the appropriate action", async () => {
+    const sessionName1 = "session-one"
+    const sessionName2 = "session-two"
+    const mockPushFlash = vi.fn()
+
+    const buttonHtml = `
+    <button data-session-name="${sessionName1}" data-action="code">Copy Code</button>
+    <button data-session-name="${sessionName2}" data-action="url">Copy URL</button>
+    `
+
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
+
+    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
+
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("navigator", {
+      ...dom.window.navigator,
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    })
+
+    addSessionNameCopyListener(mockPushFlash)
+
+    const buttons = document.querySelectorAll("[data-session-name]")
+
+    // Click first button (code action)
+    await buttons[0].click()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Click second button (url action)
+    await buttons[1].click()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(mockWriteText).toHaveBeenCalledTimes(2)
+    expect(mockWriteText).toHaveBeenNthCalledWith(1, sessionName1)
+    expect(mockWriteText).toHaveBeenNthCalledWith(2, "https://example.com/share/session-two")
+
+    expect(mockPushFlash).toHaveBeenCalledTimes(2)
+    expect(mockPushFlash).toHaveBeenNthCalledWith(1, "Info", "Session copied", "Info")
+    expect(mockPushFlash).toHaveBeenNthCalledWith(2, "Info", "Url copied", "Info")
   })
 })
