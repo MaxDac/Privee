@@ -16,14 +16,15 @@ export const addSessionNameCopyListener = (pushFlash) => {
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
-    // Remove previous handler if present
-    if (button._copyHandler) {
-      button.removeEventListener("click", button._copyHandler);
-    }
-    // Create and store new handler
-    const handler = createCopyButtonHandler(pushFlash);
-    button._copyHandler = handler;
-    button.addEventListener("click", handler);
+    // Remove all existing click event listeners
+    button.replaceWith(button.cloneNode(true))
+  })
+
+  // Re-query buttons after replacement and add new handlers
+  const refreshedButtons = getCopyButtons()
+  refreshedButtons.forEach((button) => {
+    const handler = createCopyButtonHandler(pushFlash)
+    button.addEventListener("click", handler)
   })
 }
 
@@ -43,9 +44,7 @@ const createCopyButtonHandler = (pushFlash) =>
     const action = this.dataset.action
 
     if (action === "code") {
-      return copyTextToClipboard(sessionName).then(() =>
-        pushFlash("Info", "Session copied"),
-      )
+      return copyTextToClipboard(sessionName).then(() => pushFlash("Info", "Session copied"))
     } else {
       const sessionUrl = getSessionLoginMarkdownLink(sessionName)
       return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied"))

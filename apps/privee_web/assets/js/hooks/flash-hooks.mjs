@@ -32,12 +32,14 @@ const flashEventName = "js_flash"
  * @param {PushEvent} pushEvent - The push event from the hook.
  * @returns {PushFlash} The function which triggers the flash on the back end.
  */
-export const pushFlash = (pushEvent) => (kind, message, title = null) =>
-  new Promise((res, _rej) => {
-    pushEvent(flashEventName, { kind, message, title }, (reply) => {
-      res(reply)
+export const pushFlash =
+  (pushEvent) =>
+  (kind, message, title = null) =>
+    new Promise((res, _rej) => {
+      pushEvent(flashEventName, { kind, message, title }, (reply) => {
+        res(reply)
+      })
     })
-  })
 
 /**
  * Adds a hook that automatically hides the flash message after 5 seconds.

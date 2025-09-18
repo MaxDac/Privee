@@ -137,7 +137,7 @@ describe("createCopyButtonHandler", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith(sessionName)
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -166,7 +166,7 @@ describe("createCopyButtonHandler", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -195,7 +195,7 @@ describe("createCopyButtonHandler", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -224,7 +224,7 @@ describe("createCopyButtonHandler", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/test-session")
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 })
@@ -311,7 +311,7 @@ describe("addSessionNameCopyListener", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith(sessionName)
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -346,7 +346,7 @@ describe("addSessionNameCopyListener", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/some-session-name")
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -381,7 +381,7 @@ describe("addSessionNameCopyListener", () => {
 
     expect(mockWriteText).toHaveBeenCalledWith("https://example.com/share/some-session-name")
     expect(mockWriteText).toHaveBeenCalledTimes(1)
-    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Url copied")
     expect(mockPushFlash).toHaveBeenCalledTimes(1)
   })
 
@@ -425,7 +425,7 @@ describe("addSessionNameCopyListener", () => {
     expect(mockWriteText).toHaveBeenNthCalledWith(2, "https://example.com/share/session-two")
 
     expect(mockPushFlash).toHaveBeenCalledTimes(2)
-    expect(mockPushFlash).toHaveBeenNthCalledWith(1, "Info", "Session copied", "Info")
-    expect(mockPushFlash).toHaveBeenNthCalledWith(2, "Info", "Url copied", "Info")
+    expect(mockPushFlash).toHaveBeenNthCalledWith(1, "Info", "Session copied")
+    expect(mockPushFlash).toHaveBeenNthCalledWith(2, "Info", "Url copied")
   })
 })
