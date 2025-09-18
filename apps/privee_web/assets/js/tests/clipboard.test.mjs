@@ -428,4 +428,43 @@ describe("addSessionNameCopyListener", () => {
     expect(mockPushFlash).toHaveBeenNthCalledWith(1, "Info", "Session copied")
     expect(mockPushFlash).toHaveBeenNthCalledWith(2, "Info", "Url copied")
   })
+
+  it("properly cleans up event listeners when called multiple times", async () => {
+    const sessionName = "test-session"
+    const mockPushFlash = vi.fn()
+
+    const buttonHtml = `
+    <button data-session-name="${sessionName}" data-action="code">Copy button</button>
+    `
+
+    const mockWriteText = vi.fn().mockResolvedValue(undefined)
+
+    const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
+
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("navigator", {
+      ...dom.window.navigator,
+      clipboard: {
+        writeText: mockWriteText,
+      },
+    })
+
+    // Call addSessionNameCopyListener multiple times
+    addSessionNameCopyListener(mockPushFlash)
+    addSessionNameCopyListener(mockPushFlash)
+    addSessionNameCopyListener(mockPushFlash)
+
+    const button = document.querySelector("[data-session-name]")
+    await button.click()
+
+    // Wait for any promises to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Should only be called once despite multiple listener additions
+    expect(mockWriteText).toHaveBeenCalledWith(sessionName)
+    expect(mockWriteText).toHaveBeenCalledTimes(1)
+    expect(mockPushFlash).toHaveBeenCalledWith("Info", "Session copied")
+    expect(mockPushFlash).toHaveBeenCalledTimes(1)
+  })
 })

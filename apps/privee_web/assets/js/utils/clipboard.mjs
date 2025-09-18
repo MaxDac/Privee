@@ -8,6 +8,9 @@ export const copySessionNameToClipboardBackEndEventHandler = (event) => {
   return copyTextToClipboard(sessionName)
 }
 
+// Store handlers for each button to manage event listeners
+const buttonHandlers = new WeakMap()
+
 /**
  * Adds a listener to the copy buttons to copy the session name to the clipboard.
  * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
@@ -16,14 +19,15 @@ export const addSessionNameCopyListener = (pushFlash) => {
   const copyButtons = getCopyButtons()
 
   copyButtons.forEach((button) => {
-    // Remove all existing click event listeners
-    button.replaceWith(button.cloneNode(true))
-  })
+    // Remove previous handler if it exists
+    const existingHandler = buttonHandlers.get(button)
+    if (existingHandler) {
+      button.removeEventListener("click", existingHandler)
+    }
 
-  // Re-query buttons after replacement and add new handlers
-  const refreshedButtons = getCopyButtons()
-  refreshedButtons.forEach((button) => {
+    // Create and store new handler
     const handler = createCopyButtonHandler(pushFlash)
+    buttonHandlers.set(button, handler)
     button.addEventListener("click", handler)
   })
 }
