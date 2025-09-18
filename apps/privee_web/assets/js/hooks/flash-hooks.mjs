@@ -32,7 +32,7 @@ const flashEventName = "js_flash"
  * @param {PushEvent} pushEvent - The push event from the hook.
  * @returns {PushFlash} The function which triggers the flash on the back end.
  */
-export const pushFlash = (pushEvent) => (kind, message, title) =>
+export const pushFlash = (pushEvent) => (kind, message, title = null) =>
   new Promise((res, _rej) => {
     console.debug("Pushing flash", { kind, message, title })
     pushEvent(flashEventName, { kind, message, title }, (reply) => {
