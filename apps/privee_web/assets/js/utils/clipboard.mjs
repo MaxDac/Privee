@@ -86,7 +86,7 @@ const getSessionLoginMarkdownLink = (code) => {
 export const handleSessionNameCopyToClipboardRegistrationEvent = (event) =>
   copySessionNameToClipboardBackEndEventHandler(event)
     .then(() => console.debug("Session name correctly copied to clipboard."))
-    .catch((error) => console.error("Failed to copy session name to clipboard.", error))
+    .catch((error) => console.warn("Failed to copy session name to clipboard.", error))
 
 /**
  * These exports are for test purpose only.
