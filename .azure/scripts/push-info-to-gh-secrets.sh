@@ -50,7 +50,7 @@ if ! command -v gh &> /dev/null; then
   exit 1
 fi
 
-if [[ "$CI_MODE" == "false" ]]; then
+if ! $CI_MODE; then
   if ! gh auth status > /dev/null 2>&1; then
     echo "ERROR: You are not authenticated with GitHub CLI. Please run 'gh auth login'."
     exit 1
