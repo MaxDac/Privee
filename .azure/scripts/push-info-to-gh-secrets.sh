@@ -7,6 +7,27 @@ set -euo pipefail
 # deployed managed identity and sets them as GitHub repository secrets.
 # -----------------------------------------------------------------------------
 
+# --- Parse command line arguments ---
+CI_MODE=false
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --ci)
+      CI_MODE=true
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [--ci]"
+      echo "  --ci    Skip GitHub CLI authentication check (for CI/CD environments)"
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      echo "Use --help for usage information"
+      exit 1
+      ;;
+  esac
+done
+
 # --- Configuration (update these to match your setup) ---
 GITHUB_OWNER="MaxDac"
 GITHUB_REPO="Privee"
@@ -29,9 +50,13 @@ if ! command -v gh &> /dev/null; then
   exit 1
 fi
 
-if ! gh auth status > /dev/null 2>&1; then
-  echo "ERROR: You are not authenticated with GitHub CLI. Please run 'gh auth login'."
-  exit 1
+if ! $CI_MODE; then
+  if ! gh auth status > /dev/null 2>&1; then
+    echo "ERROR: You are not authenticated with GitHub CLI. Please run 'gh auth login'."
+    exit 1
+  fi
+else
+  echo "✓ Running in CI mode - skipping GitHub CLI authentication check"
 fi
 
 echo "✓ Prerequisites met"
