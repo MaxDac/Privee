@@ -1,124 +1,96 @@
-<div
-  id="session-menu"
-  class="z-10 hidden bg-white divide-y divide-gray-100 rounded-md shadow w-72 sm:w-96 dark:bg-gray-700 dark:divide-gray-600"
+<ul
+  tabindex="0"
+  class="dropdown-content menu bg-base-100 rounded-box z-[1] w-72 sm:w-96 p-2 shadow-lg border"
 >
-  <ul
-    class="py-2 text-sm text-gray-700 dark:text-gray-200"
-    aria-labelledby="dropdownInformationButton"
-  >
-    <li class="px-4 py-3 text-sm text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-600">
-      <span class="text-md leading-6 text-zinc-900 dark:text-zinc-100">
-        {@current_session.session_name}
-      </span>
-    </li>
-    <li class="cursor-pointer border-b border-gray-100 dark:border-gray-600 py-2">
-      <a
-        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-        id="copy-session-code-btn"
-        data-session-name={@current_session.session_name}
-        data-action="code"
-        aria-label="copy-session-name"
+  <li class="menu-title">
+    <span class="text-base font-medium text-base-content">
+      {@current_session.session_name}
+    </span>
+  </li>
+  
+  <li>
+    <a
+      id="copy-session-code-btn"
+      data-session-name={@current_session.session_name}
+      data-action="code"
+      aria-label="copy-session-name"
+      class="flex items-center gap-2"
+    >
+      <svg
+        class="w-5 h-5"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
       >
-        <svg
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke="currentColor"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"
-          />
-        </svg>
-        <span>Copy session name</span>
-      </a>
-    </li>
-    <li class="cursor-pointer border-b border-gray-100 dark:border-gray-600 py-2">
-      <a
-        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-        id="copy-session-url-btn"
-        data-session-name={@current_session.session_name}
-        data-action="url"
-        aria-label="copy-session-url"
+        <path
+          stroke="currentColor"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h2m4-3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1V8Z"
+        />
+      </svg>
+      Copy session code
+    </a>
+  </li>
+
+  <li>
+    <a
+      id="copy-session-url-btn"
+      data-session-name={@current_session.session_name}
+      data-action="url"
+      aria-label="copy-session-url"
+      class="flex items-center gap-2"
+    >
+      <svg
+        class="w-5 h-5"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
       >
-        <svg
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13.213 9.787a3.391 3.391 0 0 0-4.795 0l-3.425 3.426a3.39 3.39 0 0 0 4.795 4.794l-.321-.304m-.321-4.49a3.39 3.39 0 0 0 4.795 0l3.424-3.426a3.39 3.39 0 0 0-4.794-4.795l-1.028.961"
-          />
-        </svg>
-        <span>Copy session URL</span>
-      </a>
-    </li>
-    <li class="cursor-pointer py-2">
-      <a
-        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-        id="theme-toggle-dark-icon"
-        data-theme-toggle="theme-toggle"
-        data-theme-selector="dark"
-        aria-label="dark-theme-selector"
-      >
-        <svg
-          data-theme-selector="dark"
-          class="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-        </svg>
-        <span>Theme Dark</span>
-      </a>
-    </li>
-    <li class="cursor-pointer">
-      <a
-        class="flex px-4 py-2 space-x-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-        id="theme-toggle-light-icon"
-        data-theme-toggle="theme-toggle"
-        data-theme-selector="light"
-        aria-label="light-theme-selector"
-      >
-        <svg
-          data-theme-selector="light"
-          class="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-          >
-          </path>
-        </svg>
-        <span>Theme Light</span>
-      </a>
-    </li>
-  </ul>
-  <div class="py-2">
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13.213 9.787a3.391 3.391 0 0 0-4.795 0l-3.425 3.426a3.39 3.39 0 0 0 4.795 4.794l.321-.304m-.321-4.49a3.39 3.39 0 0 0 4.795 0l3.424-3.426a3.39 3.39 0 0 0-4.794-4.795l-1.028.961"
+        />
+      </svg>
+      Copy session URL
+    </a>
+  </li>
+
+  <div class="divider"></div>
+
+  <li>
     <.link
-      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
       href={~p"/sessions/log_out"}
       method="delete"
+      class="flex items-center gap-2 text-error"
     >
+      <svg
+        class="w-5 h-5"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"
+        />
+      </svg>
       Sign out
     </.link>
-  </div>
-</div>
+  </li>
+</ul>

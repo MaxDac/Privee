@@ -51,65 +51,59 @@ defmodule PriveeWeb.CoreComponents do
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
+      class="modal modal-open hidden"
     >
-      <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
+      <div id={"#{@id}-bg"} class="modal-backdrop bg-base-300/80" aria-hidden="true" />
       <div
-        class="fixed inset-0 overflow-y-auto"
+        class="modal-box relative w-full max-w-3xl"
         aria-labelledby={"#{@id}-title"}
         aria-describedby={"#{@id}-description"}
         role="dialog"
         aria-modal="true"
         tabindex="0"
       >
-        <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
-            <.focus_wrap
-              id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
-              phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
+        <.focus_wrap
+          id={"#{@id}-container"}
+          phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
+          phx-key="escape"
+          phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
+          class="relative"
+        >
+          <button
+            phx-click={JS.exec("data-cancel", to: "##{@id}")}
+            type="button"
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            aria-label={gettext("close")}
+          >
+            <svg
+              class="w-6 h-6"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              fill="none"
+              viewBox="0 0 24 24"
             >
-              <div class="absolute top-6 right-5">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
-                >
-                  <svg
-                    class="w-6 h-6 text-gray-800 dark:text-white"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div id={"#{@id}-content"}>
-                {render_slot(@inner_block)}
-              </div>
-            </.focus_wrap>
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+          </button>
+          <div id={"#{@id}-content"} class="py-4">
+            {render_slot(@inner_block)}
           </div>
-        </div>
+        </.focus_wrap>
       </div>
     </div>
     """
   end
 
   @doc """
-  Renders flash notices using Flowbite toast styling.
+  Renders flash notices using DaisyUI alert styling.
 
   ## Examples
 
@@ -136,70 +130,58 @@ defmodule PriveeWeb.CoreComponents do
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
       phx-hook="FlashAutoHide"
-      class="flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-sm dark:text-gray-400 dark:bg-gray-800"
+      class={[
+        "alert max-w-xs mb-4 shadow-lg",
+        @kind == :info && "alert-success",
+        @kind == :error && "alert-error",
+        @kind == :warning && "alert-warning"
+      ]}
       {@rest}
     >
-      <!-- Icon container -->
-      <div class={[
-        "inline-flex items-center justify-center shrink-0 w-8 h-8 rounded-lg",
-        @kind == :info && "text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200",
-        @kind == :error && "text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200",
-        @kind == :warning && "text-orange-500 bg-orange-100 dark:bg-orange-700 dark:text-orange-200"
-      ]}>
-        <!-- Success/Info icon -->
-        <svg
-          :if={@kind == :info}
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
-        </svg>
-        <span :if={@kind == :info} class="sr-only">Check icon</span>
-        
-    <!-- Error icon -->
-        <svg
-          :if={@kind == :error}
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z" />
-        </svg>
-        <span :if={@kind == :error} class="sr-only">Error icon</span>
-        
-    <!-- Warning icon -->
-        <svg
-          :if={@kind == :warning}
-          class="w-5 h-5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z" />
-        </svg>
-        <span :if={@kind == :warning} class="sr-only">Warning icon</span>
-      </div>
-      
-    <!-- Message content -->
-      <div class="ms-3 text-sm font-normal">
+      <!-- Icon -->
+      <svg
+        :if={@kind == :info}
+        xmlns="http://www.w3.org/2000/svg"
+        class="stroke-current shrink-0 h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+
+      <svg
+        :if={@kind == :error}
+        xmlns="http://www.w3.org/2000/svg"
+        class="stroke-current shrink-0 h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+
+      <svg
+        :if={@kind == :warning}
+        xmlns="http://www.w3.org/2000/svg"
+        class="stroke-current shrink-0 h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+
+      <!-- Message content -->
+      <div class="text-sm">
         <span :if={@title} class="font-semibold">{@title} </span>{msg}
       </div>
-      
-    <!-- Close button -->
+
+      <!-- Close button -->
       <button
         type="button"
-        class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
+        class="btn btn-sm btn-circle btn-ghost ml-auto"
         aria-label={gettext("close")}
       >
-        <span class="sr-only">Close</span>
         <svg
-          class="w-3 h-3"
+          class="w-4 h-4"
           aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -219,7 +201,7 @@ defmodule PriveeWeb.CoreComponents do
   end
 
   @doc """
-  Shows the flash group with standard titles and content using Flowbite toast styling.
+  Shows the flash group with standard titles and content using DaisyUI alert styling.
 
   ## Examples
 
@@ -350,12 +332,8 @@ defmodule PriveeWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 py-2 px-3",
-        "text-green-700 hover:text-white border border-green-700",
-        "hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300",
-        "font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2",
-        "dark:border-green-500 dark:text-green-500 dark:hover:text-white",
-        "dark:hover:bg-green-600 dark:focus:ring-green-800 cursor-pointer",
+        "btn btn-primary",
+        "phx-submit-loading:opacity-75",
         @class
       ]}
       {@rest}
@@ -387,12 +365,8 @@ defmodule PriveeWeb.CoreComponents do
     ~H"""
     <.link
       class={[
-        "phx-submit-loading:opacity-75 py-2 px-3",
-        "text-green-700 hover:text-white border border-green-700",
-        "hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300",
-        "font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2",
-        "dark:border-green-500 dark:text-green-500 dark:hover:text-white",
-        "dark:hover:bg-green-600 dark:focus:ring-green-800",
+        "btn btn-primary",
+        "phx-submit-loading:opacity-75",
         @class
       ]}
       {@rest}
@@ -469,7 +443,7 @@ defmodule PriveeWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name}>
-      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
+      <label class="flex items-center gap-4 text-sm leading-6 cursor-pointer">
         <input type="hidden" name={@name} value="false" />
         <input
           type="checkbox"
@@ -477,10 +451,10 @@ defmodule PriveeWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class="checkbox checkbox-primary"
           {@rest}
         />
-        {@label}
+        <span class="label-text">{@label}</span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
@@ -494,7 +468,10 @@ defmodule PriveeWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class={[
+          "select select-bordered w-full mt-2",
+          @errors != [] && "select-error"
+        ]}
         multiple={@multiple}
         {@rest}
       >
@@ -514,13 +491,8 @@ defmodule PriveeWeb.CoreComponents do
         id={@id}
         name={@name}
         class={[
-          "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
-          @errors == [] &&
-            "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
-          @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
-          @errors != [] &&
-            "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
-          @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
+          "textarea textarea-bordered w-full mt-2",
+          @errors != [] && "textarea-error"
         ]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
@@ -537,7 +509,7 @@ defmodule PriveeWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label class="inline-flex items-center mb-5 cursor-pointer gap-x-4">
+      <label class="label cursor-pointer inline-flex items-center gap-4">
         <input type="hidden" name={@name} value="false" />
         <input
           type="checkbox"
@@ -545,20 +517,11 @@ defmodule PriveeWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="sr-only peer"
+          class="toggle toggle-primary"
           {@rest}
         />
-        <div class={[
-          "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4",
-          "peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700",
-          "peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full",
-          "peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px]",
-          "after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full",
-          "after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"
-        ]}>
-        </div>
-        {@label}
-      </.label>
+        <span class="label-text">{@label}</span>
+      </label>
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -575,13 +538,8 @@ defmodule PriveeWeb.CoreComponents do
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "g-gray-50 border  text-sm rounded-lg block w-full p-2.5",
-          @errors == [] &&
-            "dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500",
-          @errors == [] && "border-zinc-300 focus:ring-green-500 focus:border-green-500",
-          @errors != [] &&
-            "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 dark:bg-gray-700 focus:border-red-500",
-          @errors != [] && "dark:text-red-500 dark:placeholder-red-500 dark:border-red-500"
+          "input input-bordered w-full mt-2",
+          @errors != [] && "input-error"
         ]}
         {@rest}
       />
@@ -605,13 +563,14 @@ defmodule PriveeWeb.CoreComponents do
     <label
       for={@for}
       class={[
-        @class || "block",
-        "text-sm mb-2 font-semibold leading-6",
-        @errors == [] && "text-zinc-800 dark:text-white",
-        @errors != [] && "text-red-700 dark:text-red-500"
+        @class || "label",
+        @errors != [] && "text-error"
       ]}
+      {@rest}
     >
-      {render_slot(@inner_block)}
+      <span class="label-text font-semibold text-base-content">
+        {render_slot(@inner_block)}
+      </span>
     </label>
     """
   end
@@ -627,88 +586,55 @@ defmodule PriveeWeb.CoreComponents do
 
   def info_icon(assigns) do
     ~H"""
-    <div
-      class="inline-flex space-x-3 cursor-pointer"
-      data-modal-target={"#{@id}-modal"}
-      data-modal-toggle={"#{@id}-modal"}
-      data-tooltip-target={"#{@id}-tooltip"}
-    >
-      <span class="text-xs mb-2 font-semibold leading-6 dark:text-white">
-        {@inline_description || ""}
+    <div class="inline-flex items-center gap-3">
+      <span :if={@inline_description} class="text-sm font-semibold">
+        {@inline_description}
       </span>
-      <svg
-        class="w-6 h-6 text-gray-800 dark:text-white"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-        />
-      </svg>
 
       <div
-        id={"#{@id}-tooltip"}
-        role="tooltip"
-        class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-xs opacity-0 tooltip dark:bg-gray-700"
+        class="tooltip"
+        data-tip={@short_description}
+        phx-click={show_modal("#{@id}-modal")}
       >
-        {@short_description}
-        <div class="tooltip-arrow" data-popper-arrow></div>
+        <button type="button" class="btn btn-circle btn-ghost btn-sm">
+          <svg
+            class="w-5 h-5"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+            />
+          </svg>
+        </button>
       </div>
-      
-    <!-- Main modal -->
-      <div
-        id={"#{@id}-modal"}
-        tabindex="-1"
-        aria-hidden="true"
-        class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
-      >
-        <div class="relative p-4 w-full max-w-2xl max-h-full">
-          <!-- Modal content -->
-          <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
-            <!-- Modal header -->
-            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                Info
-              </h3>
-              <button
-                type="button"
-                class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                data-modal-hide="default-modal"
-              >
-                <svg
-                  class="w-3 h-3"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 14 14"
-                >
-                  <path
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
-                  />
-                </svg>
-                <span class="sr-only">Close modal</span>
-              </button>
-            </div>
-            <!-- Modal body -->
-            <div class="p-4 md:p-5 space-y-4">
-              <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-                {@long_description || @short_description}
-              </p>
-            </div>
+
+      <!-- DaisyUI Modal -->
+      <div id={"#{@id}-modal"} class="modal">
+        <div class="modal-box">
+          <h3 class="font-bold text-lg mb-4">Information</h3>
+          <p class="py-4">
+            {@long_description || @short_description}
+          </p>
+          <div class="modal-action">
+            <button
+              type="button"
+              class="btn"
+              phx-click={hide_modal("#{@id}-modal")}
+            >
+              Close
+            </button>
           </div>
         </div>
+        <div class="modal-backdrop" phx-click={hide_modal("#{@id}-modal")}></div>
       </div>
     </div>
     """
@@ -758,15 +684,15 @@ defmodule PriveeWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800 dark:text-zinc-50">
+        <h1 class="text-lg font-semibold leading-8 text-base-content">
           {render_slot(@inner_block)}
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-base-content opacity-80">
           {render_slot(@subtitle)}
         </p>
         <p
           :if={@description != []}
-          class="text-left mt-2 text-xs leading-6 text-zinc-600 dark:text-zinc-400"
+          class="text-left mt-2 text-xs leading-6 text-base-content opacity-70"
         >
           {render_slot(@description)}
         </p>
@@ -808,12 +734,12 @@ defmodule PriveeWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
-      <table class="w-[40rem] mt-11 sm:w-full">
-        <thead class="text-sm text-left leading-6 text-zinc-500">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
           <tr>
-            <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
-            <th :if={@action != []} class="relative p-0 pb-4">
+            <th :for={col <- @col} class="font-semibold">{col[:label]}</th>
+            <th :if={@action != []} class="text-right">
               <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
@@ -821,28 +747,22 @@ defmodule PriveeWeb.CoreComponents do
         <tbody
           id={@id}
           phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
-          class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
         >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
+          <tr
+            :for={row <- @rows}
+            id={@row_id && @row_id.(row)}
+            class={["hover", @row_click && "cursor-pointer"]}
+          >
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
+              class={i == 0 && "font-semibold"}
             >
-              <div class="block py-4 pr-6">
-                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
-                <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
-                  {render_slot(col, @row_item.(row))}
-                </span>
-              </div>
+              {render_slot(col, @row_item.(row))}
             </td>
-            <td :if={@action != []} class="relative w-14 p-0">
-              <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
-                <span
-                  :for={action <- @action}
-                  class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
-                >
+            <td :if={@action != []} class="text-right">
+              <div class="flex justify-end gap-2">
+                <span :for={action <- @action} class="link link-primary">
                   {render_slot(action, @row_item.(row))}
                 </span>
               </div>

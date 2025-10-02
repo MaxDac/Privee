@@ -1,28 +1,143 @@
 @import "tailwindcss";
 
 @plugin "@tailwindcss/forms";
-@plugin "flowbite/plugin";
-@plugin "flowbite-typography";
+@plugin "daisyui";
 
 @source "../js/**/*.js";
-@source "../../lib/privee_web.ex";
-@source "../../lib/privee_web/**/*.*ex";
-@source "../node_modules/flowbite";
+@source "../../lib/**/*.ex";
+@source "../../lib/**/*.heex";
 
 @theme {
-  --colors-brand: #08875d;
-  --colors-brand-dark: #0d9c6c;
+  --colors-brand: #12a50d;
+  --colors-brand-dark: #0f8a0a;
 }
 
-@custom-variant phx-no-feedback ([".phx-no-feedback&", ".phx-no-feedback &"]);
-@custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
-@custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
-@custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
+/* DaisyUI theme configuration - Light mode (default) */
+[data-theme="privee"] {
+  --p: 107 87% 35%; /* primary: #12a50d */
+  --pc: 0 0% 100%; /* primary-content: white */
+  --s: 107 77% 25%; /* secondary: darker green */
+  --sc: 0 0% 100%; /* secondary-content: white */
+  --a: 142 76% 55%; /* accent: #22c55e */
+  --ac: 0 0% 100%; /* accent-content: white */
+  --n: 0 0% 85%; /* neutral: light gray */
+  --nc: 0 0% 15%; /* neutral-content: dark text */
+  --b1: 0 0% 100%; /* base-100: white background */
+  --b2: 0 0% 97%; /* base-200: very light gray */
+  --b3: 0 0% 95%; /* base-300: light gray */
+  --bc: 0 0% 15%; /* base-content: dark text */
+  --in: 198 93% 60%; /* info: #3abff8 */
+  --inc: 0 0% 100%; /* info-content: white */
+  --su: 158 64% 52%; /* success: #36d399 */
+  --suc: 0 0% 100%; /* success-content: white */
+  --wa: 43 96% 56%; /* warning: #fbbd23 */
+  --wac: 0 0% 100%; /* warning-content: white */
+  --er: 0 91% 71%; /* error: #f87272 */
+  --erc: 0 0% 100%; /* error-content: white */
+}
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* DaisyUI theme configuration - Dark mode */
+html.dark[data-theme="privee"] {
+  --p: 107 87% 35%; /* primary: #12a50d - keep same green */
+  --pc: 0 0% 100%; /* primary-content: white */
+  --s: 107 77% 25%; /* secondary: darker green */
+  --sc: 0 0% 100%; /* secondary-content: white */
+  --a: 142 76% 55%; /* accent: #22c55e */
+  --ac: 0 0% 100%; /* accent-content: white */
+  --n: 0 0% 15%; /* neutral: dark gray */
+  --nc: 0 0% 85%; /* neutral-content: light text */
+  --b1: 0 0% 12%; /* base-100: dark background */
+  --b2: 0 0% 10%; /* base-200: darker */
+  --b3: 0 0% 8%; /* base-300: darkest */
+  --bc: 0 0% 85%; /* base-content: light text */
+  --in: 198 93% 60%; /* info: #3abff8 */
+  --inc: 0 0% 100%; /* info-content: white */
+  --su: 158 64% 52%; /* success: #36d399 */
+  --suc: 0 0% 100%; /* success-content: white */
+  --wa: 43 96% 56%; /* warning: #fbbd23 */
+  --wac: 0 0% 100%; /* warning-content: white */
+  --er: 0 91% 71%; /* error: #f87272 */
+  --erc: 0 0% 100%; /* error-content: white */
+}
 
 /* This file is for your main application CSS */
 
-.dark {
-  background-color: #191919;
+/* Let the dark/light theme system work naturally with DaisyUI */
+html[data-theme="privee"] {
+  color-scheme: light;
+}
+
+/* When dark class is applied, switch to dark color scheme */
+html.dark[data-theme="privee"] {
+  color-scheme: dark;
+}
+
+/* Ensure theme colors are applied properly */
+[data-theme="privee"] body {
+  background-color: hsl(var(--b1));
+  color: hsl(var(--bc));
+}
+
+/* Ensure theme colors are applied properly */
+[data-theme="privee"] {
+  color-scheme: light;
+}
+
+[data-theme="privee"] body {
+  background-color: hsl(var(--b1));
+  color: hsl(var(--bc));
+}
+
+/* Ensure buttons use the correct primary color */
+[data-theme="privee"] .btn-primary {
+  background-color: hsl(var(--p));
+  border-color: hsl(var(--p));
+  color: hsl(var(--pc));
+}
+
+[data-theme="privee"] .btn-primary:hover {
+  background-color: hsl(var(--p) / 0.8);
+  border-color: hsl(var(--p) / 0.8);
+}
+
+/* Improve text contrast */
+[data-theme="privee"] .text-base-content {
+  color: hsl(var(--bc)) !important;
+}
+
+/* Ensure primary color is the correct green */
+[data-theme="privee"] {
+  --primary: #12a50d;
+  --primary-focus: #0f8a0a;
+}
+
+/* Force primary button styling */
+[data-theme="privee"] .btn-primary {
+  --tw-bg-opacity: 1;
+  background-color: #12a50d !important;
+  border-color: #12a50d !important;
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity)) !important;
+}
+
+[data-theme="privee"] .btn-primary:hover {
+  background-color: #0f8a0a !important;
+  border-color: #0f8a0a !important;
+}
+
+.phx-no-feedback.show-errors .invalid-feedback,
+.phx-no-feedback.show-errors .invalid {
+  display: block;
+}
+
+.phx-click-loading {
+  opacity: 0.75;
+}
+
+.phx-submit-loading {
+  opacity: 0.75;
+}
+
+.phx-change-loading {
+  opacity: 0.75;
 }

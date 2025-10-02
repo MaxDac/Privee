@@ -16,14 +16,12 @@
   </div>
   <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
     <%= if @current_session do %>
-      <.button
-        id="session-menu-button"
-        data-dropdown-toggle="session-menu"
-        type="button"
-      >
-        Session
-      </.button>
-      <.session_menu current_session={@current_session} />
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-primary">
+          Session
+        </div>
+        <.session_menu current_session={@current_session} />
+      </div>
     <% else %>
       <.button_link navigate={~p"/"}>
         Create

@@ -8,7 +8,8 @@
     "test:watch": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest --silent=false"
   },
   "dependencies": {
-    "flowbite": "~3.1.2"
+    "daisyui": "^5.0.0",
+    "@tailwindcss/forms": "^0.5.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -21,7 +22,6 @@
     "eslint-plugin-jsdoc": "~54.1.0",
     "eslint-plugin-prettier": "~5.5.4",
     "fake-indexeddb": "~6.1.0",
-    "flowbite-typography": "~1.0.5",
     "globals": "^16.3.0",
     "jsdom": "~26.1.0",
     "prettier": "~3.6.2",

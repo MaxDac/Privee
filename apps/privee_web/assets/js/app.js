@@ -24,9 +24,6 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
-// Importing Flowbite
-import "flowbite/dist/flowbite.phoenix.js"
-
 // Importing utility functions
 import { addChatHooks } from "./hooks/chat-hooks.mjs"
 import { addRegistrationHooks } from "./hooks/registration-hooks.mjs"
