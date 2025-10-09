@@ -1,0 +1,10 @@
+{# Adding `phx-update` tag to ignore back end updates when already converted}
+<div id="chat-screen-container" phx-update="stream">
+  <div :for={{dom_id, message} <- @streams.messages} id={dom_id}>
+    <.chat_entry
+      message={message}
+      current_session={@current_session}
+      selected_session={@selected_session}
+    />
+  </div>
+</div>

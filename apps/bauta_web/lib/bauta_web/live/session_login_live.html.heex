@@ -1,0 +1,46 @@
+<div class="mx-auto sm:max-w-sm md:max-w-md">
+  <.header class="text-center">
+    Sign in to existing session
+    <:subtitle>
+      Don't have a session?
+      <.link
+        navigate={~p"/"}
+        class="font-semibold text-brand dark:text-brand-dark hover:underline"
+      >
+        Create a new one
+      </.link>
+      now.
+    </:subtitle>
+  </.header>
+
+  <.simple_form for={@form} id="login_form" action={~p"/sessions/log_in"} phx-update="ignore">
+    <.input
+      field={@form[:session_name]}
+      type="text"
+      label="Session Name"
+      placeholder="Write your session name."
+      phx-debounce="500"
+      required
+    />
+
+    <.input
+      field={@form[:recovery_phrase]}
+      type="textarea"
+      label="Recovery phrase"
+      placeholder="Your citation."
+      rows="5"
+      phx-debounce="1000"
+      required
+    />
+
+    <:actions>
+      <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
+    </:actions>
+
+    <:actions>
+      <.button phx-disable-with="Signing in..." class="w-full">
+        Sign in <span aria-hidden="true">→</span>
+      </.button>
+    </:actions>
+  </.simple_form>
+</div>
