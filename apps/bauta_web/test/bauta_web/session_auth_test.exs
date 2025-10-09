@@ -1,9 +1,10 @@
 defmodule BautaWeb.SessionAuthTest do
   use BautaWeb.ConnCase, async: true
 
-  alias Phoenix.LiveView
   alias Bauta.Sessions
   alias BautaWeb.SessionAuth
+  alias Phoenix.LiveView
+
   import Bauta.SessionsFixtures
 
   @remember_me_cookie "_bauta_web_session_remember_me"

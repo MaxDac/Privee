@@ -9,7 +9,7 @@ defmodule Bauta.Sessions do
 
   alias Bauta.Repo
   alias Bauta.Sessions.BautaForm
-  alias Bauta.Sessions.{Message, BautaForm, Session, SessionToken}
+  alias Bauta.Sessions.{BautaForm, Message, Session, SessionToken}
 
   @doc """
   Gets a session by the recovery phrase and the password.

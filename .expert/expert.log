@@ -819,3 +819,82 @@ Type: :worker
 14:48:14.436 [debug] sent notification server -> client $/progress
 14:48:14.516 [debug] sent notification server -> client $/progress
 14:48:14.517 [info] Compiled bauta in 87 ms
+14:52:40.157 [info] ################### opened file:///home/mdacunzo/Projects/Bauta/apps/bauta_web/lib/bauta_web.ex
+14:52:40.157 [debug] handled notification client -> server textDocument/didOpen in 884µs
+14:52:53.750 [debug] handled notification client -> server textDocument/didChange in 7ms
+14:52:53.866 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:52:54.138 [debug] handled notification client -> server textDocument/didChange in 5ms
+14:52:54.271 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:52:55.381 [debug] handled notification client -> server textDocument/didChange in 2ms
+14:52:55.493 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:52:56.055 [debug] handled notification client -> server textDocument/didChange in 5ms
+14:52:56.222 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:52:57.506 [debug] handled notification client -> server textDocument/didSave in 1ms
+14:52:57.559 [debug] sent request server -> client window/workDoneProgress/create
+14:52:57.561 [debug] sent notification server -> client $/progress
+14:52:57.641 [debug] sent notification server -> client $/progress
+14:52:57.644 [info] Compiled bauta in 86 ms
+14:52:57.644 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:04.049 [info] ################### opened file:///home/mdacunzo/Projects/Bauta/apps/bauta/lib/bauta/sessions/session.ex
+14:53:04.049 [debug] handled notification client -> server textDocument/didOpen in 1ms
+14:53:08.441 [info] ################### opened file:///home/mdacunzo/Projects/Bauta/apps/bauta/lib/bauta/sessions.ex
+14:53:08.441 [debug] handled notification client -> server textDocument/didOpen in 1ms
+14:53:25.800 [debug] handled notification client -> server textDocument/didChange in 4ms
+14:53:25.859 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:25.859 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:26.145 [debug] handled notification client -> server textDocument/didChange in 4ms
+14:53:26.201 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:26.201 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:26.296 [debug] handled notification client -> server textDocument/didChange in 7ms
+14:53:26.316 [info] Completion for XpPos<<12, 32>>
+14:53:26.355 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:26.355 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:26.609 [info] Local completions are: [module: (Message)   ]
+14:53:26.613 [info] Emitting Completions: [9:Message ]
+14:53:26.614 [debug] handled request client -> server textDocument/completion in 323ms
+14:53:27.285 [debug] handled notification client -> server textDocument/didChange in 3ms
+14:53:27.359 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:27.359 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:27.823 [debug] handled notification client -> server textDocument/didChange in 3ms
+14:53:27.881 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:27.881 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:27.971 [debug] handled notification client -> server textDocument/didChange in 2ms
+14:53:28.030 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:28.030 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:29.189 [debug] handled notification client -> server textDocument/didSave in 1ms
+14:53:29.240 [debug] sent request server -> client window/workDoneProgress/create
+14:53:29.241 [debug] sent notification server -> client $/progress
+14:53:29.297 [debug] sent notification server -> client $/progress
+14:53:29.297 [info] Compiled bauta in 57 ms
+14:53:29.297 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:29.297 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:35.807 [info] ################### opened file:///home/mdacunzo/Projects/Bauta/apps/bauta_web/test/bauta_web/session_auth_test.exs
+14:53:35.807 [debug] handled notification client -> server textDocument/didOpen in 1ms
+14:53:40.919 [debug] handled notification client -> server textDocument/didChange in 2ms
+14:53:40.974 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:40.974 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:40.989 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.274 [debug] handled notification client -> server textDocument/didChange in 3ms
+14:53:41.331 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.331 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.343 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.445 [debug] handled notification client -> server textDocument/didChange in 24ms
+14:53:41.498 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.498 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:41.515 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.077 [debug] handled notification client -> server textDocument/didChange in 5ms
+14:53:44.138 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.140 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.159 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.435 [debug] handled notification client -> server textDocument/didChange in 3ms
+14:53:44.496 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.496 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:44.506 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:45.370 [debug] handled notification client -> server textDocument/didSave in 1ms
+14:53:45.423 [debug] sent request server -> client window/workDoneProgress/create
+14:53:45.425 [debug] sent notification server -> client $/progress
+14:53:45.485 [debug] sent notification server -> client $/progress
+14:53:45.486 [info] Compiled bauta in 63 ms
+14:53:45.486 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:45.486 [debug] sent notification server -> client textDocument/publishDiagnostics
+14:53:45.486 [debug] sent notification server -> client textDocument/publishDiagnostics

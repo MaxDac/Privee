@@ -14,8 +14,7 @@ defmodule Bauta.Application do
 
     children = [
       Bauta.Repo,
-      {DNSCluster,
-       query: Application.get_env(:bauta, :dns_cluster_query) || :ignore, log: :info},
+      {DNSCluster, query: Application.get_env(:bauta, :dns_cluster_query) || :ignore, log: :info},
       {Phoenix.PubSub, name: Bauta.PubSub}
       # Start a worker by calling: Bauta.Worker.start_link(arg)
       # {Bauta.Worker, arg}
