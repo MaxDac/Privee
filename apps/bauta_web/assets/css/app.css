@@ -12,7 +12,7 @@
 
 /* A Tailwind plugin that makes "hero-#{ICON}" classes available.
    The heroicons installation itself is managed by your mix.exs */
-@plugin "../vendor/heroicons";
+/* @plugin "../vendor/heroicons"; */
 
 /* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
    curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
@@ -105,7 +105,10 @@
 @custom-variant dark (&:where(.dark, .dark *, [data-theme=dark], [data-theme=dark] *));
 
 /* Make LiveView wrapper divs transparent for layout (old behavior preserved) */
-[data-phx-session], [data-phx-teleported-src] { display: contents }
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}
 
 /* This file is for your main application CSS and was added from the initial configuration */
 
@@ -114,10 +117,10 @@
 @theme {
   --colors-brand: #08875d;
   --colors-brand-dark: #0d9c6c;
-  
+
   /* Custom z-index values for modals and tooltips */
   --z-50: 50;
-  
+
   /* Custom animation values */
   --transition-fast: 0.15s ease-in-out;
   --transition-base: 0.2s ease-in-out;
@@ -138,7 +141,9 @@
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 .alert-success {
@@ -189,7 +194,9 @@
   position: relative;
   background-color: white;
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
   padding: 1.5rem;
   max-width: 42rem;
   width: 100%;
@@ -401,7 +408,9 @@
   background-color: white;
   border: 1px solid rgb(209 213 219);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
   color: rgb(17 24 39);
   display: none;
   will-change: transform, opacity;
@@ -460,7 +469,9 @@ details.dropdown > summary::-webkit-details-marker {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(-8px);
-  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
   pointer-events: none;
 }
 

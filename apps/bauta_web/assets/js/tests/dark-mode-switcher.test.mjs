@@ -69,28 +69,28 @@ describe("setStartupTheme", () => {
     const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
     // prettier-ignore
     const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-    const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // no longer relying on html classes for theme; check data-theme attribute instead
 
-    expect(localStorage.getItem("color-theme")).toBe("light")
+    expect(localStorage.getItem("phx:theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
-    expect(htmlElementClassList.contains("light"))
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light")
   })
 
   it("automatically select light theme when it's configured in local storage", () => {
-    localStorage.setItem("color-theme", "dark")
+    localStorage.setItem("phx:theme", "dark")
     setStartupTheme()
 
     // prettier-ignore
     const lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
     // prettier-ignore
     const darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-    const htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // no longer relying on html classes for theme; check data-theme attribute instead
 
-    expect(localStorage.getItem("color-theme")).toBe("dark")
+    expect(localStorage.getItem("phx:theme")).toBe("dark")
     expect(!lightElementClassList.contains("hidden"))
     expect(darkElementClassList.contains("hidden"))
-    expect(htmlElementClassList.contains("dark"))
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark")
   })
 
   it("toggle to dark mode when button is pressed", () => {
@@ -102,12 +102,12 @@ describe("setStartupTheme", () => {
     let lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
     // prettier-ignore
     let darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-    let htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // no longer relying on html classes for theme; check data-theme attribute instead
 
-    expect(localStorage.getItem("color-theme")).toBe("light")
+    expect(localStorage.getItem("phx:theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
-    expect(htmlElementClassList.contains("light"))
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light")
 
     // Clicking the item should toggle the theme
     getToggleButton().click()
@@ -116,12 +116,12 @@ describe("setStartupTheme", () => {
     lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
     // prettier-ignore
     darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-    htmlElementClassList = document.getElementsByTagName("html").item(0).classList
+    // no longer relying on html classes for theme; check data-theme attribute instead
 
-    expect(localStorage.getItem("color-theme")).toBe("dark")
+    expect(localStorage.getItem("phx:theme")).toBe("dark")
     expect(!lightElementClassList.contains("hidden"))
     expect(darkElementClassList.contains("hidden"))
-    expect(htmlElementClassList.contains("dark"))
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark")
 
     // Clicking the item should toggle the theme back
     getToggleButton().click()
@@ -130,11 +130,10 @@ describe("setStartupTheme", () => {
     lightElementClassList = document.querySelector("[data-theme-selector=\"light\"]").classList
     // prettier-ignore
     darkElementClassList = document.querySelector("[data-theme-selector=\"dark\"]").classList
-    htmlElementClassList = document.getElementsByTagName("html").item(0).classList
-
-    expect(localStorage.getItem("color-theme")).toBe("light")
+    // no longer relying on html classes for theme; check data-theme attribute instead
+    expect(localStorage.getItem("phx:theme")).toBe("light")
     expect(lightElementClassList.contains("hidden"))
     expect(!darkElementClassList.contains("hidden"))
-    expect(htmlElementClassList.contains("light"))
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light")
   })
 })

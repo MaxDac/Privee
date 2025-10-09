@@ -42,7 +42,7 @@ defmodule BautaWeb.ChatLiveTest do
         |> render_click()
         |> follow_redirect(conn, ~p"/bauta")
 
-      assert html =~ "Create a new Privée"
+      assert html =~ "Create a new Bauta"
     end
 
     test "redirects to the register view when the user is not logged in", %{conn: conn} do
@@ -70,7 +70,7 @@ defmodule BautaWeb.ChatLiveTest do
         |> live(~p"/chat/#{selected_session_name}")
         |> follow_redirect(conn, ~p"/bauta")
 
-      assert html =~ "Create a new Privée"
+      assert html =~ "Create a new Bauta"
     end
 
     test "renders a chat message", %{conn: conn} do

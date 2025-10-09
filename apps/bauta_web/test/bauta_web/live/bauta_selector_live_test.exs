@@ -15,7 +15,7 @@ defmodule BautaWeb.BautaSelectorLiveTest do
         |> log_in_session(session_fixture())
         |> live(~p"/bauta")
 
-      assert html =~ "Create a new Privée"
+      assert html =~ "Create a new Bauta"
     end
 
     test " redirects to the login when the user is not logged in", %{conn: conn} do

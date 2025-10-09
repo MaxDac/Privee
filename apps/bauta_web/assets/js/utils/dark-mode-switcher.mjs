@@ -1,4 +1,4 @@
-const localStorageDarkModeKey = "color-theme"
+const localStorageDarkModeKey = "phx:theme"
 const darkModeLabel = "dark"
 const lightModelLabel = "light"
 
@@ -23,11 +23,13 @@ const isLocalStorageAvailable = () =>
  */
 const getDarkThemeSettingFromLocalStorage = () => {
   if (isLocalStorageAvailable()) {
-    return (
-      localStorage.getItem(localStorageDarkModeKey) === darkModeLabel ||
-      (!(localStorageDarkModeKey in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    )
+    const value = localStorage.getItem(localStorageDarkModeKey)
+
+    if (value === darkModeLabel) return true
+    if (value === lightModelLabel) return false
+
+    // If not explicitly set, use system preference
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
   } else {
     return false
   }
@@ -37,15 +39,7 @@ const getDarkThemeSettingFromLocalStorage = () => {
  * Determines whether the dark mode is enabled for the application or not.
  * @returns {boolean} `True` if the dark mode is enabled, `False` otherwise.
  */
-const isDarkModeEnabled = () => {
-  const settingValue = getDarkThemeSettingFromLocalStorage()
-
-  if (settingValue == null) {
-    return true
-  }
-
-  return settingValue
-}
+const isDarkModeEnabled = () => getDarkThemeSettingFromLocalStorage()
 
 /**
  * Removes all the items from the document.
@@ -61,11 +55,15 @@ const reAddItems = (items) => items.forEach((item) => item.classList.remove("hid
 
 /**
  * Tries to set the theme for the page.
- * @param {"dark"|"light"} theme The selected theme.
+ * @param {"dark"|"light"|"system"} theme The selected theme.
  */
 const trySetTheme = (theme) => {
   if (isLocalStorageAvailable()) {
-    localStorage.setItem(localStorageDarkModeKey, theme)
+    if (theme === "system") {
+      localStorage.removeItem(localStorageDarkModeKey)
+    } else {
+      localStorage.setItem(localStorageDarkModeKey, theme)
+    }
   }
 
   const themeToggleDarkSelectors = document.querySelectorAll(darkIndicatorDataSelector)
@@ -75,14 +73,19 @@ const trySetTheme = (theme) => {
     removeItems(themeToggleDarkSelectors)
     reAddItems(themeToggleLightSelectors)
 
-    document.documentElement.classList.remove(lightModelLabel)
-    document.documentElement.classList.add(darkModeLabel)
-  } else {
+    // Set the phx standard data-theme attribute
+    document.documentElement.setAttribute("data-theme", darkModeLabel)
+  } else if (theme === lightModelLabel) {
     removeItems(themeToggleLightSelectors)
     reAddItems(themeToggleDarkSelectors)
 
-    document.documentElement.classList.remove(darkModeLabel)
-    document.documentElement.classList.add(lightModelLabel)
+    document.documentElement.setAttribute("data-theme", lightModelLabel)
+  } else {
+    // system: remove explicit theme attribute
+    removeItems(themeToggleLightSelectors)
+    reAddItems(themeToggleDarkSelectors)
+
+    document.documentElement.removeAttribute("data-theme")
   }
 }
 

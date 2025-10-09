@@ -25,7 +25,7 @@ import { Socket } from "phoenix"
 // @ts-ignore
 import { LiveSocket } from "phoenix_live_view"
 // @ts-ignore
-import {hooks as colocatedHooks} from "phoenix-colocated/bauta_web"
+import { hooks as colocatedHooks } from "phoenix-colocated/bauta_web"
 import topbar from "../vendor/topbar"
 
 // Import only the core functionality that's needed on every page
@@ -38,7 +38,7 @@ import {
 } from "./utils/lazy-hooks.mjs"
 
 // Setting up LiveView hooks
-const Hooks = {...colocatedHooks}
+const Hooks = { ...colocatedHooks }
 
 // Flash hook is used on all pages - load immediately
 addFlashAutoHideHook(Hooks)
@@ -57,8 +57,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
-window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
-window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300))
+window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
@@ -83,7 +83,8 @@ window.liveSocket = liveSocket
 //     2. click on elements to jump to their definitions in your code editor
 //
 if (process.env.NODE_ENV === "development") {
-  window.addEventListener("phx:live_reload:attached", ({detail: reloader}) => {
+  // @ts-ignore - runtime provides a CustomEvent with detail
+  window.addEventListener("phx:live_reload:attached", ({ detail: reloader }) => {
     // Enable server log streaming to client.
     // Disable with reloader.disableServerLogs()
     reloader.enableServerLogs()
@@ -93,21 +94,28 @@ if (process.env.NODE_ENV === "development") {
     //   * click with "c" key pressed to open at caller location
     //   * click with "d" key pressed to open at function component definition location
     let keyDown
-    window.addEventListener("keydown", e => keyDown = e.key)
-    window.addEventListener("keyup", e => keyDown = null)
-    window.addEventListener("click", e => {
-      if(keyDown === "c"){
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        reloader.openEditorAtCaller(e.target)
-      } else if(keyDown === "d"){
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        reloader.openEditorAtDef(e.target)
-      }
-    }, true)
-
-    window.liveReloader = reloader
+    window.addEventListener("keydown", (ev) => (keyDown = ev.key))
+    window.addEventListener("keyup", () => (keyDown = null))
+    window.addEventListener(
+      "click",
+      (e) => {
+        if (keyDown === "c") {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          reloader.openEditorAtCaller(e.target)
+        } else if (keyDown === "d") {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          reloader.openEditorAtDef(e.target)
+        }
+      },
+      true,
+    )
+    // Assign asynchronously to avoid parsing issues in TS tooling
+    // @ts-ignore - adding property to window for dev tooling
+    setTimeout(() => {
+      // @ts-ignore - adding property to window for dev tooling
+      window.liveReloader = reloader
+    }, 0)
   })
 }
-
