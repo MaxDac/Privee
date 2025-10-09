@@ -22,6 +22,9 @@ config :bauta,
 # at the `config/runtime.exs`.
 config :bauta, Bauta.Mailer, adapter: Swoosh.Adapters.Local
 
+# Selecting the session name provider implementation
+config :bauta, :session_name_provider, Bauta.SessionNameProvider.Impl
+
 config :bauta_web,
   ecto_repos: [Bauta.Repo],
   generators: [context_app: :bauta]
@@ -42,7 +45,7 @@ config :esbuild,
   version: "0.25.4",
   bauta_web: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/* --alias:@=. --tree-shaking=true),
     cd: Path.expand("../apps/bauta_web/assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
@@ -53,7 +56,7 @@ config :tailwind,
   bauta_web: [
     args: ~w(
       --input=assets/css/app.css
-      --output=priv/static/assets/css/app.css
+      --output=priv/static/assets/app.css
     ),
     cd: Path.expand("../apps/bauta_web", __DIR__)
   ]

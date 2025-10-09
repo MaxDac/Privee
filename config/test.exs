@@ -1,5 +1,8 @@
 import Config
 
+# Only in tests, remove the complexity from the password hashing algorithm
+config :bcrypt_elixir, :log_rounds, 1
+
 # Configure your database
 #
 # The MIX_TEST_PARTITION environment variable can be used
@@ -13,6 +16,9 @@ config :bauta, Bauta.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
+# Selecting the session name provider implementation
+config :bauta, :session_name_provider, Bauta.SessionNameProvider.Test
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :bauta_web, BautaWeb.Endpoint,
@@ -23,10 +29,10 @@ config :bauta_web, BautaWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warning
 
-# In test we don't send emails
+# In test we don't send emails.
 config :bauta, Bauta.Mailer, adapter: Swoosh.Adapters.Test
 
-# Disable swoosh api client as it is only required for production adapters
+# Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
 # Initialize plugs at runtime for faster test compilation
