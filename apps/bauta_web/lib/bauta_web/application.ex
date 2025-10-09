@@ -5,6 +5,8 @@ defmodule BautaWeb.Application do
 
   use Application
 
+  alias Bauta.Chats
+
   @impl true
   def start(_type, _args) do
     children = [
@@ -12,7 +14,9 @@ defmodule BautaWeb.Application do
       # Start a worker by calling: BautaWeb.Worker.start_link(arg)
       # {BautaWeb.Worker, arg},
       # Start to serve requests, typically the last entry
-      BautaWeb.Endpoint
+      # ,
+      BautaWeb.Endpoint,
+      Chats
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -20,30 +20,60 @@
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
-import {Socket} from "phoenix"
-import {LiveSocket} from "phoenix_live_view"
+// @ts-ignore
+import { Socket } from "phoenix"
+// @ts-ignore
+import { LiveSocket } from "phoenix_live_view"
+// @ts-ignore
 import {hooks as colocatedHooks} from "phoenix-colocated/bauta_web"
 import topbar from "../vendor/topbar"
+
+// Import only the core functionality that's needed on every page
+import { addBackEndEventHandlers } from "./hooks/event-handlers.mjs"
+import { addFlashAutoHideHook } from "./hooks/flash-hooks.mjs"
+import {
+  createLazyChatScreenHook,
+  createLazyRegistrationScreenHook,
+  createLazyBautaSelectorScreenHook,
+} from "./utils/lazy-hooks.mjs"
+
+// Setting up LiveView hooks
+const Hooks = {...colocatedHooks}
+
+// Flash hook is used on all pages - load immediately
+addFlashAutoHideHook(Hooks)
+
+// Lazy-load page-specific hooks (loaded only when their pages are visited)
+Hooks.ChatScreen = createLazyChatScreenHook()
+Hooks.RegistrationScreen = createLazyRegistrationScreenHook()
+Hooks.BautaSelectorScreen = createLazyBautaSelectorScreenHook()
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  params: { _csrf_token: csrfToken },
+  hooks: Hooks,
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
+topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 
+// Adds all the event handlers
+addBackEndEventHandlers()
+
+// Only activate this in debug mode
+// exportDebugFunctions()
+
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
+// @ts-ignore
 window.liveSocket = liveSocket
 
 // The lines below enable quality of life phoenix_live_reload

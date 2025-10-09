@@ -36,12 +36,13 @@ defmodule Bauta.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:dns_cluster, "~> 0.2.0"},
+      {:bcrypt_elixir, "~> 3.3"},
+      {:dns_cluster, "~> 0.2"},
       {:phoenix_pubsub, "~> 2.1"},
       {:ecto_sql, "~> 3.13"},
-      {:postgrex, ">= 0.0.0"},
-      {:jason, "~> 1.2"},
-      {:swoosh, "~> 1.16"},
+      {:postgrex, "~> 0.21"},
+      {:jason, "~> 1.4"},
+      {:swoosh, "~> 1.19"},
       {:req, "~> 0.5"}
     ]
   end

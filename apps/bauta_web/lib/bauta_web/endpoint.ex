@@ -24,6 +24,7 @@ defmodule BautaWeb.Endpoint do
     at: "/",
     from: :bauta_web,
     gzip: not code_reloading?,
+    cache_control_for_etags: "public, max-age=31536000, immutable",
     only: BautaWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
@@ -41,6 +42,9 @@ defmodule BautaWeb.Endpoint do
 
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+
+  # Security headers
+  plug BautaWeb.Plugs.SecurityHeaders
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
