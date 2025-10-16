@@ -27,71 +27,71 @@
   on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
-  default: false;
+  default: true;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: oklch(30.33% 0.016 252.42);
-  --color-base-200: oklch(25.26% 0.014 253.1);
-  --color-base-300: oklch(20.15% 0.012 254.09);
-  --color-base-content: oklch(97.807% 0.029 256.847);
-  --color-primary: oklch(58% 0.233 277.117);
-  --color-primary-content: oklch(96% 0.018 272.314);
-  --color-secondary: oklch(58% 0.233 277.117);
-  --color-secondary-content: oklch(96% 0.018 272.314);
-  --color-accent: oklch(60% 0.25 292.717);
-  --color-accent-content: oklch(96% 0.016 293.756);
-  --color-neutral: oklch(37% 0.044 257.287);
+  --color-base-100: oklch(12% 0.042 264.695);
+  --color-base-200: oklch(20% 0.042 265.755);
+  --color-base-300: oklch(27% 0.041 260.031);
+  --color-base-content: oklch(96% 0.007 247.896);
+  --color-primary: rgb(0, 238, 0);
+  --color-primary-content: oklch(26% 0.051 172.552);
+  --color-secondary: oklch(81% 0.111 293.571);
+  --color-secondary-content: oklch(28% 0.141 291.089);
+  --color-accent: oklch(39% 0.07 227.392);
+  --color-accent-content: oklch(25% 0.092 26.042);
+  --color-neutral: oklch(27% 0.041 260.031);
   --color-neutral-content: oklch(98% 0.003 247.858);
-  --color-info: oklch(58% 0.158 241.966);
-  --color-info-content: oklch(97% 0.013 236.62);
-  --color-success: oklch(60% 0.118 184.704);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
+  --color-info: oklch(84% 0.238 128.85);
+  --color-info-content: oklch(98% 0.019 200.873);
+  --color-success: oklch(69% 0.17 162.48);
+  --color-success-content: oklch(97% 0.021 166.113);
+  --color-warning: oklch(85% 0.199 91.936);
+  --color-warning-content: oklch(98% 0.026 102.212);
+  --color-error: oklch(57% 0.245 27.325);
+  --color-error-content: oklch(97% 0.014 343.198);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
   --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1.5px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 @plugin "../vendor/daisyui-theme" {
   name: "light";
-  default: true;
+  default: false;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: oklch(98% 0 0);
-  --color-base-200: oklch(96% 0.001 286.375);
-  --color-base-300: oklch(92% 0.004 286.32);
-  --color-base-content: oklch(21% 0.006 285.885);
-  --color-primary: oklch(70% 0.213 47.604);
-  --color-primary-content: oklch(98% 0.016 73.684);
-  --color-secondary: oklch(55% 0.027 264.364);
-  --color-secondary-content: oklch(98% 0.002 247.839);
-  --color-accent: oklch(0% 0 0);
-  --color-accent-content: oklch(100% 0 0);
-  --color-neutral: oklch(44% 0.017 285.786);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(62% 0.214 259.815);
-  --color-info-content: oklch(97% 0.014 254.604);
-  --color-success: oklch(70% 0.14 182.503);
-  --color-success-content: oklch(98% 0.014 180.72);
-  --color-warning: oklch(66% 0.179 58.318);
-  --color-warning-content: oklch(98% 0.022 95.277);
-  --color-error: oklch(58% 0.253 17.585);
-  --color-error-content: oklch(96% 0.015 12.422);
-  --radius-selector: 0.25rem;
+  --color-base-100: oklch(95.127% 0.007 260.731);
+  --color-base-200: oklch(93.299% 0.01 261.788);
+  --color-base-300: oklch(89.925% 0.016 262.749);
+  --color-base-content: oklch(32.437% 0.022 264.182);
+  --color-primary: oklch(59.435% 0.077 254.027);
+  --color-primary-content: oklch(11.887% 0.015 254.027);
+  --color-secondary: oklch(69.651% 0.059 248.687);
+  --color-secondary-content: oklch(13.93% 0.011 248.687);
+  --color-accent: oklch(77.464% 0.062 217.469);
+  --color-accent-content: oklch(15.492% 0.012 217.469);
+  --color-neutral: oklch(45.229% 0.035 264.131);
+  --color-neutral-content: oklch(89.925% 0.016 262.749);
+  --color-info: oklch(69.207% 0.062 332.664);
+  --color-info-content: oklch(13.841% 0.012 332.664);
+  --color-success: oklch(76.827% 0.074 131.063);
+  --color-success-content: oklch(15.365% 0.014 131.063);
+  --color-warning: oklch(85.486% 0.089 84.093);
+  --color-warning-content: oklch(17.097% 0.017 84.093);
+  --color-error: oklch(60.61% 0.12 15.341);
+  --color-error-content: oklch(12.122% 0.024 15.341);
+  --radius-selector: 1rem;
   --radius-field: 0.25rem;
   --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1.5px;
-  --depth: 1;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
   --noise: 0;
 }
 
@@ -110,382 +110,3 @@
   display: contents;
 }
 
-/* This file is for your main application CSS and was added from the initial configuration */
-
-/* Custom brand theme variables merged in so they are available globally.
-   These are your additions (brand colors); keep them together with DaisyUI theme vars. */
-@theme {
-  --colors-brand: #08875d;
-  --colors-brand-dark: #0d9c6c;
-
-  /* Custom z-index values for modals and tooltips */
-  --z-50: 50;
-
-  /* Custom animation values */
-  --transition-fast: 0.15s ease-in-out;
-  --transition-base: 0.2s ease-in-out;
-}
-
-.dark {
-  background-color: #191919;
-}
-
-/* Custom component styles with green theme - using native CSS for Tailwind 4 compatibility */
-
-/* Alert/Toast components */
-.alert {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 20rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
-
-.alert-success {
-  background-color: rgb(220 252 231);
-  color: rgb(22 101 52);
-}
-
-.dark .alert-success {
-  background-color: rgb(22 101 52);
-  color: rgb(220 252 231);
-}
-
-.alert-error {
-  background-color: rgb(254 226 226);
-  color: rgb(153 27 27);
-}
-
-.dark .alert-error {
-  background-color: rgb(153 27 27);
-  color: rgb(254 226 226);
-}
-
-.alert-warning {
-  background-color: rgb(254 243 199);
-  color: rgb(154 52 18);
-}
-
-.dark .alert-warning {
-  background-color: rgb(154 52 18);
-  color: rgb(254 243 199);
-}
-
-/* Modal components */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: none;
-}
-
-.modal-open {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-box {
-  position: relative;
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1);
-  padding: 1.5rem;
-  max-width: 42rem;
-  width: 100%;
-  margin: 1rem;
-  color: rgb(17 24 39);
-  contain: layout style paint;
-}
-
-.dark .modal-box {
-  background-color: rgb(31 41 55);
-  color: rgb(243 244 246);
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgb(0 0 0 / 0.5);
-}
-
-.modal-toggle {
-  display: none;
-}
-
-.modal-toggle:checked ~ .modal {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Button components */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  border-radius: 0.5rem;
-  background-color: rgb(22 163 74);
-  color: white;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn:hover {
-  background-color: rgb(21 128 61);
-}
-
-.btn:active {
-  background-color: rgb(20 83 45);
-}
-
-.dark .btn {
-  background-color: rgb(21 128 61);
-}
-
-.dark .btn:hover {
-  background-color: rgb(22 163 74);
-}
-
-.dark .btn:active {
-  background-color: rgb(34 197 94);
-}
-
-.btn-sm {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
-
-.btn-circle {
-  border-radius: 9999px;
-  padding: 0.5rem;
-  width: 2rem;
-  height: 2rem;
-}
-
-.btn-ghost {
-  background-color: transparent;
-  color: rgb(55 65 81);
-}
-
-.btn-ghost:hover {
-  background-color: rgb(243 244 246);
-}
-
-.dark .btn-ghost {
-  color: rgb(209 213 219);
-}
-
-.dark .btn-ghost:hover {
-  background-color: rgb(55 65 81);
-}
-
-.btn-primary {
-  background-color: rgb(22 163 74);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: rgb(21 128 61);
-}
-
-.btn-primary:active {
-  background-color: rgb(20 83 45);
-}
-
-.dark .btn-primary {
-  background-color: rgb(21 128 61);
-}
-
-.dark .btn-primary:hover {
-  background-color: rgb(22 163 74);
-}
-
-.dark .btn-primary:active {
-  background-color: rgb(34 197 94);
-}
-
-/* Menu/Dropdown components */
-.menu {
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-}
-
-.menu li {
-  list-style: none;
-}
-
-.menu li > a,
-.menu li > button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  color: rgb(17 24 39);
-  transition: background-color 0.15s ease-in-out;
-}
-
-.menu li > a:hover,
-.menu li > button:hover {
-  background-color: rgb(243 244 246);
-}
-
-.dark .menu li > a,
-.dark .menu li > button {
-  color: rgb(243 244 246);
-}
-
-.dark .menu li > a:hover,
-.dark .menu li > button:hover {
-  background-color: rgb(55 65 81);
-}
-
-.menu-title {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 600;
-  color: rgb(55 65 81);
-}
-
-.dark .menu-title {
-  color: rgb(209 213 219);
-}
-
-.menu-title span {
-  color: rgb(17 24 39);
-  font-weight: 700;
-}
-
-.dark .menu-title span {
-  color: rgb(243 244 246);
-}
-
-.divider {
-  margin: 0.5rem 0;
-  height: 1px;
-  background-color: rgb(229 231 235);
-}
-
-.dark .divider {
-  background-color: rgb(75 85 99);
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown[open] > .dropdown-content,
-.dropdown[open] > ul.dropdown-content {
-  display: block;
-}
-
-.dropdown-end > .dropdown-content,
-.dropdown-end > ul.dropdown-content,
-.dropdown-end .dropdown-content {
-  right: 0;
-  left: auto;
-}
-
-.dropdown-content {
-  position: absolute;
-  margin-top: 0.5rem;
-  left: 0;
-  background-color: white;
-  border: 1px solid rgb(209 213 219);
-  border-radius: 0.5rem;
-  box-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1);
-  color: rgb(17 24 39);
-  display: none;
-  will-change: transform, opacity;
-  transform: translateZ(0);
-}
-
-.dark .dropdown-content {
-  background-color: rgb(31 41 55);
-  border-color: rgb(75 85 99);
-  color: rgb(243 244 246);
-}
-
-details.dropdown[open] > ul {
-  display: block;
-}
-
-details.dropdown > summary {
-  list-style: none;
-  cursor: pointer;
-}
-
-details.dropdown > summary::-webkit-details-marker {
-  display: none;
-}
-
-.bg-base-100 {
-  background-color: white;
-}
-
-.dark .bg-base-100 {
-  background-color: rgb(31 41 55);
-}
-
-.rounded-box {
-  border-radius: 0.5rem;
-}
-
-/* Tooltip */
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip::before {
-  content: attr(data-tip);
-  position: absolute;
-  opacity: 0;
-  background-color: rgb(17 24 39);
-  color: white;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  white-space: nowrap;
-  z-index: 50;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  transition:
-    opacity 0.2s ease-in-out,
-    transform 0.2s ease-in-out;
-  pointer-events: none;
-}
-
-.dark .tooltip::before {
-  background-color: rgb(55 65 81);
-}
-
-.tooltip:hover::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-12px);
-}
-
-.tooltip-right::before {
-  bottom: 50%;
-  left: 100%;
-  transform: translateX(8px) translateY(50%);
-}
