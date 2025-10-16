@@ -33,7 +33,7 @@ module.exports = defineConfig([
       prettier,
     },
 
-    extends: compat.extends("eslint:recommended", "plugin:prettier/recommended", "plugin:lit/recommended"),
+    extends: compat.extends("eslint:recommended", "plugin:prettier/recommended"),
 
     rules: {
       "prettier/prettier": ["error"],

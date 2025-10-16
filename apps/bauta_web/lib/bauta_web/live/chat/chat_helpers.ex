@@ -7,8 +7,8 @@ defmodule BautaWeb.Chat.ChatHelpers do
   Parses the messages, adding a field that would tell the chat template whether
   the message is part of a thread of messages from the same user or not.
 
-  The message with the same user will have the field `in_thread` equal to `true`,
-  `false` otherwise.
+  The stack of message with the same user will have the field `in_thread` equal 
+  to `true`, `false` otherwise.
 
   The return value is a tuple containing the last message and the parsed messages.
   """

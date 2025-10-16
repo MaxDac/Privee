@@ -10,6 +10,18 @@ defmodule Bauta.Sessions.Message do
 
   alias Bauta.Sessions.Message
 
+  @doc """
+  Represents a message session.
+
+  Fields:
+    * `text_from` - The original text of the message.
+    * `text_to` - The translated or target text of the message.
+    * `from` - The sender's identifier (non-negative integer).
+    * `to` - The recipient's identifier or name (string).
+    * `in_thread` - Indicates if the message is part of a thread, i.e. if the 
+    *   sender/receiver is the same for all the messages (boolean).
+    * `sender_session_name` - The name of the sender's session (string).
+  """
   @type t :: %__MODULE__{
           text_from: String.t(),
           text_to: String.t(),
