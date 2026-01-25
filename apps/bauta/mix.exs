@@ -38,11 +38,11 @@ defmodule Bauta.MixProject do
     [
       {:bcrypt_elixir, "~> 3.3"},
       {:dns_cluster, "~> 0.2"},
-      {:phoenix_pubsub, "~> 2.1"},
+      {:phoenix_pubsub, "~> 2.2"},
       {:ecto_sql, "~> 3.13"},
-      {:postgrex, "~> 0.21"},
+      {:postgrex, "~> 0.22"},
       {:jason, "~> 1.4"},
-      {:swoosh, "~> 1.19"},
+      {:swoosh, "~> 1.21"},
       {:req, "~> 0.5"}
     ]
   end

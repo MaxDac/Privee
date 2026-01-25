@@ -38,21 +38,21 @@ defmodule BautaWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.8.1"},
-      {:phoenix_ecto, "~> 4.6"},
-      {:phoenix_html, "~> 4.2"},
-      {:phoenix_live_reload, "~> 1.6", only: :dev},
+      {:phoenix, "~> 1.8.3"},
+      {:phoenix_ecto, "~> 4.7"},
+      {:phoenix_html, "~> 4.3"},
+      {:phoenix_live_reload, "~> 1.6.2", only: :dev},
       {:phoenix_live_view, "~> 1.1"},
-      {:lazy_html, ">= 0.1.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
+      {:lazy_html, "~> 0.1.8", only: :test},
+      {:phoenix_live_dashboard, "~> 0.8.7"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.4.1", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 1.1"},
       {:telemetry_poller, "~> 1.3"},
-      {:gettext, "~> 0.26"},
+      {:gettext, "~> 1.0"},
       {:bauta, in_umbrella: true},
       {:jason, "~> 1.4"},
-      {:bandit, "~> 1.8"}
+      {:bandit, "~> 1.10"}
     ]
   end
 
