@@ -13,6 +13,7 @@ const addRequiredMockedMethod = (window) => ({
 describe("askNotificationPermission", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it("asks for permission, browser does not support notifications, reports the right result", async () => {
@@ -71,6 +72,7 @@ describe("askNotificationPermission", () => {
 describe("pushBackEndNotification", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it("checking focus, does not trigger notification if the document is visible", async () => {
