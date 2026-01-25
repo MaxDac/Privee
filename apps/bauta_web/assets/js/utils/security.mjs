@@ -137,7 +137,7 @@ const handleSessionNamePrivateKeyRegistrationEventInternal = async (event) => {
   }
 }
 
-var keyDictionary = new Map()
+const keyDictionary = new Map()
 
 /**
  * Gets the private key for the session whose name is passed in input.
@@ -145,7 +145,7 @@ var keyDictionary = new Map()
  * @returns {Promise<?CryptoKey>} The session private key.
  */
 export const getPrivateKey = async (sessionName) => {
-  const cache = keyDictionary[sessionName]
+  const cache = keyDictionary.get(sessionName)
 
   if (cache && cache.lastUpdated > Date.now() - privateKeyCacheInvalidationTime) {
     return cache.key
@@ -157,12 +157,13 @@ export const getPrivateKey = async (sessionName) => {
     return null
   }
 
-  keyDictionary[sessionName] = {
+  keyDictionary.set(sessionName, {
     lastUpdated: Date.now(),
     key,
-  }
+  })
 
-  return getPrivateKey(sessionName)
+  const cached = keyDictionary.get(sessionName)
+  return cached ? cached.key : null
 }
 
 /**
