@@ -1,4 +1,4 @@
-<div class="flex items-center justify-between border-b border-zinc-400 dark:border-zinc-600 py-3 text-sm">
+<div class="navbar bg-base-300 flex items-center justify-between">
   <div class="flex items-center gap-4">
     <.link id="logo-button" navigate={@navigate_to}>
       <div class="flex space-x-3">
@@ -15,52 +15,159 @@
     </.link>
   </div>
   <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+    <.button
+      id="theme-toggle"
+      data-theme-toggle="theme-toggle"
+      aria-label="dark-theme-selector"
+      class="cursor-pointer"
+    >
+      <svg
+        id="theme-toggle-dark-icon"
+        data-theme-selector="dark"
+        class="w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+      </svg>
+      <svg
+        id="theme-toggle-light-icon"
+        data-theme-selector="light"
+        class="w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+    </.button>
     <%= if @current_session do %>
-      <details class="dropdown dropdown-end">
-        <summary class="btn btn-primary" id="session-menu-button">
-          Session
-        </summary>
-        <.session_menu current_session={@current_session} />
-      </details>
-    <% else %>
-      <.button_link navigate={~p"/"}>
-        Create
-      </.button_link>
-      <.button_link navigate={~p"/login"}>
-        Log in
-      </.button_link>
-      <.button
-        id="theme-toggle"
-        data-theme-toggle="theme-toggle"
-        aria-label="dark-theme-selector"
-        class="cursor-pointer"
+      <.button_link
+        id="copy-session-code-btn"
+        data-session-name={@current_session.session_name}
+        data-action="code"
+        aria-label="copy-session-name"
+        legend="Copy session name"
       >
         <svg
-          id="theme-toggle-dark-icon"
-          data-theme-selector="dark"
-          class="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          class="w-6 h-6"
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-        </svg>
-        <svg
-          id="theme-toggle-light-icon"
-          data-theme-selector="light"
-          class="w-5 h-5"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
         >
           <path
-            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-          >
-          </path>
+            stroke="currentColor"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"
+          />
         </svg>
-      </.button>
+      </.button_link>
+      <.button_link
+        id="copy-session-url-btn"
+        data-session-name={@current_session.session_name}
+        data-action="url"
+        aria-label="copy-session-url"
+        legend="Copy link"
+      >
+        <svg
+          class="w-6 h-6"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13.213 9.787a3.391 3.391 0 0 0-4.795 0l-3.425 3.426a3.39 3.39 0 0 0 4.795 4.794l.321-.304m-.321-4.49a3.39 3.39 0 0 0 4.795 0l3.424-3.426a3.39 3.39 0 0 0-4.794-4.795l-1.028.961"
+          />
+        </svg>
+      </.button_link>
+      <.button_link
+        href={~p"/sessions/log_out"}
+        method="delete"
+        class="cursor-pointer"
+        legend="Log Out"
+      >
+        <svg
+          class="w-6 h-6"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"
+          />
+        </svg>
+      </.button_link>
+    <% else %>
+      <.button_link
+        navigate={~p"/"}
+        class="cursor-pointer"
+        legend="Create"
+      >
+        <svg
+          class="w-6 h-6"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 12h14m-7 7V5"
+          />
+        </svg>
+      </.button_link>
+      <.button_link
+        navigate={~p"/login"}
+        class="cursor-pointer"
+        legend="log in"
+      >
+        <svg
+          class="w-6 h-6"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 12H4m12 0-4 4m4-4-4-4m3-4h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-2"
+          />
+        </svg>
+      </.button_link>
     <% end %>
   </div>
 </div>

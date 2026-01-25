@@ -22,4 +22,8 @@ erl_crash.dump
 # Temporary files, for example, from tests.
 /tmp/
 
+# LSPs
+/.expert/
 
+# Node modules
+*/node_modules

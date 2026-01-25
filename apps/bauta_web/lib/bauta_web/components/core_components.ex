@@ -320,11 +320,7 @@ defmodule BautaWeb.CoreComponents do
       type={@type}
       class={[
         "phx-submit-loading:opacity-75 py-2 px-3",
-        "text-green-700 hover:text-white border border-green-700",
-        "hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300",
-        "font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2",
-        "dark:border-green-500 dark:text-green-500 dark:hover:text-white",
-        "dark:hover:bg-green-600 dark:focus:ring-green-800 cursor-pointer",
+        "btn btn-outline btn-primary",
         @class
       ]}
       {@rest}
@@ -345,6 +341,7 @@ defmodule BautaWeb.CoreComponents do
       <.button_link hreh="to">Send!</.button>
   """
   attr :class, :string, default: nil
+  attr :legend, :string, default: nil
 
   attr :rest, :global,
     include:
@@ -357,16 +354,15 @@ defmodule BautaWeb.CoreComponents do
     <.link
       class={[
         "phx-submit-loading:opacity-75 py-2 px-3",
-        "text-green-700 hover:text-white border border-green-700",
-        "hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300",
-        "font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2",
-        "dark:border-green-500 dark:text-green-500 dark:hover:text-white",
-        "dark:hover:bg-green-600 dark:focus:ring-green-800",
+        "btn btn-outline btn-primary",
         @class
       ]}
       {@rest}
     >
       {render_slot(@inner_block)}
+      <span class={["hidden md:inline", !@legend && "md:hidden"]}>
+        {@legend}
+      </span>
     </.link>
     """
   end

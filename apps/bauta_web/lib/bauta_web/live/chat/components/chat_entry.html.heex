@@ -1,35 +1,45 @@
-<div dir={[
-  if @message.from == @current_session.id do
-    "rtl"
-  else
-    "ltr"
-  end
-]}>
-  <div class="px-3 py-0.5">
-    <div class={[
-      "flex flex-col w-max min-w-[100px] sm:max-w-[500px] leading-1.5 px-5 py-3 border-gray-200",
-      if @message.in_thread do
-        "rounded-e-2xl"
-      else
-        "rounded-e-2xl rounded-ss-2xl"
-      end,
-      if @message.from == @current_session.id do
-        "bg-gradient-to-r from-green-800 via-green-900 to-green-900 hover:bg-gradient-to-br"
-      else
-        "bg-gradient-to-l from-gray-800 via-gray-800 to-gray-700 hover:bg-gradient-to-tl"
-      end
-    ]}>
-      {# Adding &lrm; at the end to circumvent punctuation rtl direction}
-      <p
-        data-message={if @message.from == @current_session.id, do: "from", else: "to"}
-        data-converted="false"
-        id={"chat-message-#{@message.id}"}
-        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50 hidden"
-      >
-        {if @message.from == @current_session.id,
-          do: @message.text_from,
-          else: @message.text_to}&lrm;
-      </p>
-    </div>
+<div
+  class={[
+    "chat",
+    case {@message.in_thread, @message.from == @current_session.id} do
+      {true, true} -> "mr-3"
+      {true, _} -> "ml-3"
+      {_, true} -> "chat-end"
+      {_, _} -> "chat-start"
+    end
+  ]}
+  dir={[
+    if @message.from == @current_session.id && @message.in_thread do
+      "rtl"
+    else
+      "ltr"
+    end
+  ]}
+>
+  <div class={[
+    "chat-bubble",
+    if @message.from == @current_session.id do
+      "chat-bubble-neutral"
+    else
+      "chat-bubble-primary"
+    end
+  ]}>
+    <p
+      data-message={if @message.from == @current_session.id, do: "from", else: "to"}
+      data-converted="false"
+      id={"chat-message-#{@message.id}"}
+      class={[
+        "text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal hidden",
+        if @message.from == @current_session.id do
+          "text-zinc-50"
+        else
+          "text-zinc-900"
+        end
+      ]}
+    >
+      {if @message.from == @current_session.id,
+        do: @message.text_from,
+        else: @message.text_to}&lrm;
+    </p>
   </div>
 </div>
