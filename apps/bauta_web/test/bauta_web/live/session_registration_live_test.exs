@@ -8,10 +8,11 @@ defmodule BautaWeb.SessionRegistrationLiveTest do
 
   describe "Registration page" do
     test "renders registration page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, lv, _html} = live(conn, ~p"/")
 
-      assert html =~ "Create"
-      assert html =~ "Log in"
+      assert has_element?(lv, "#registration_form")
+      assert has_element?(lv, "a[href='/login']")
+      assert render(lv) =~ "Create a new session"
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -225,9 +226,9 @@ defmodule BautaWeb.SessionRegistrationLiveTest do
         lv
         |> element("main a", "Sign in")
         |> render_click()
-        |> follow_redirect(conn, ~p"/")
+        |> follow_redirect(conn, ~p"/login")
 
-      assert login_html =~ "Log in"
+      assert login_html =~ "login_form"
     end
   end
 end

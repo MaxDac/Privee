@@ -6,10 +6,11 @@ defmodule BautaWeb.SessionLoginLiveTest do
 
   describe "Log in page" do
     test "renders log in page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/login")
+      {:ok, lv, _html} = live(conn, ~p"/login")
 
-      assert html =~ "Log in"
-      assert html =~ "Create"
+      assert has_element?(lv, "#login_form")
+      assert has_element?(lv, "a[href='/']")
+      assert render(lv) =~ "Sign in to existing session"
     end
 
     test "redirects if already logged in", %{conn: conn} do
