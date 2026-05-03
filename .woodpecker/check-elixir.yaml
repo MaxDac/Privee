@@ -1,0 +1,53 @@
+when:
+  - event: pull_request
+  - event: push
+    branch: main
+
+variables:
+  - &elixir_image "hexpm/elixir:1.18.4-erlang-28.0.1-debian-bookworm-20250610-slim"
+  - &mix_env "test"
+
+steps:
+  - name: restore-deps
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix local.hex --force
+      - mix local.rebar --force
+      - mix deps.get
+
+  - name: check-unused-deps
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix deps.unlock --check-unused
+
+  - name: compile
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix compile --warnings-as-errors
+
+  - name: format
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix format --check-formatted
+
+  - name: credo
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix credo --strict
+
+  - name: test
+    image: *elixir_image
+    environment:
+      MIX_ENV: *mix_env
+    commands:
+      - mix test
