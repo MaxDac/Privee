@@ -81,7 +81,9 @@ defmodule PriveeWeb.Chat.ChatLive do
     }
 
     Privee.PreKeyStore.register_bundle(session_id, bundle)
-    {:noreply, socket}
+
+    # After registering our bundle, send the peer's bundle for session establishment
+    {:noreply, send_prekey_bundle(socket)}
   end
 
   @impl true

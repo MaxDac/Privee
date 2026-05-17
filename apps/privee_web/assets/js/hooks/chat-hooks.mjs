@@ -2,6 +2,7 @@ import { addChatInputHandler, decryptChatEntriesText, handlePreKeyBundle } from 
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
 import { pushFlash } from "../hooks/flash-hooks.mjs"
+import { getPreKeyBundle } from "../utils/signal-store.mjs"
 
 /**
  * @typedef {object} ChatScreenHook
@@ -36,6 +37,9 @@ export const addChatHooks = (Hooks) => {
       this.handleEvent("prekey_bundle", (/** @type {any} */ data) => {
         handlePreKeyBundle(/** @type {any} */ ({ detail: data }))
       })
+
+      // Upload our own prekey bundle to the server so peers can establish sessions
+      uploadOwnPreKeyBundle(pushEvent)
 
       this.handleChat()
     },
@@ -73,3 +77,33 @@ export const addChatHooks = (Hooks) => {
  * @param {HTMLElement} element The element to scroll.
  */
 const scrollElementToEnd = (element) => (element.scrollTop = element.scrollHeight)
+
+/**
+ * Loads the stored prekey bundle from IndexedDB and uploads it to the server.
+ * @param {Function} pushEvent - LiveView pushEvent function
+ */
+const uploadOwnPreKeyBundle = async (pushEvent) => {
+  try {
+    const bundle = await getPreKeyBundle()
+    if (!bundle) {
+      console.warn("No prekey bundle found in IndexedDB - registration may be incomplete")
+      return
+    }
+
+    pushEvent("register_prekeys", {
+      identity_key: bundle.identityKey,
+      registration_id: bundle.registrationId,
+      signed_prekey: {
+        key_id: bundle.signedPreKey.keyId,
+        public_key: bundle.signedPreKey.publicKey,
+        signature: bundle.signedPreKey.signature,
+      },
+      one_time_prekeys: bundle.oneTimePreKeys.map((pk) => ({
+        key_id: pk.keyId,
+        public_key: pk.publicKey,
+      })),
+    })
+  } catch (e) {
+    console.error("Failed to upload prekey bundle:", e)
+  }
+}

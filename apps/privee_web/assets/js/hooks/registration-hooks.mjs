@@ -4,6 +4,7 @@ import {
   storeRegistrationId,
   storeSignedPreKey,
   storeOneTimePreKey,
+  storePreKeyBundle,
 } from "../utils/signal-store.mjs"
 
 /** @type {import("../utils/signal-protocol.mjs").PreKeyBundle | null} */
@@ -44,6 +45,8 @@ const generateAndStoreKeys = async () => {
 
     // Export the public prekey bundle for uploading to server
     pendingPreKeyBundle = await exportPreKeyBundle(keys)
+    // Persist the bundle so ChatScreen can re-upload it on mount
+    await storePreKeyBundle(pendingPreKeyBundle)
     console.debug("Signal keys generated and stored")
   } catch (e) {
     console.error("Failed to generate Signal keys:", e)

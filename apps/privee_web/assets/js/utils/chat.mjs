@@ -39,6 +39,8 @@ export const handlePreKeyBundle = async (e) => {
 
   if (!peer_session_id) {
     console.warn("No prekey bundle available for peer")
+    currentSession = null
+    currentPeerSessionId = null
     return
   }
 

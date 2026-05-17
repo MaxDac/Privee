@@ -166,3 +166,21 @@ export const getSession = async (peerSessionId) => {
 export const removeSession = async (peerSessionId) => {
   await deleteObject(DB_NAME, SESSIONS_TABLE, `${KEY_SESSION_PREFIX}${peerSessionId}`)
 }
+
+const KEY_PREKEY_BUNDLE = "prekey_bundle"
+
+/**
+ * Stores the exported public prekey bundle (for re-uploading to server on chat mount).
+ * @param {import("./signal-protocol.mjs").PreKeyBundle} bundle
+ */
+export const storePreKeyBundle = async (bundle) => {
+  await storeObject(DB_NAME, KEYS_TABLE, KEY_PREKEY_BUNDLE, bundle)
+}
+
+/**
+ * Retrieves the stored public prekey bundle.
+ * @returns {Promise<import("./signal-protocol.mjs").PreKeyBundle|null>}
+ */
+export const getPreKeyBundle = async () => {
+  return await getObject(DB_NAME, KEYS_TABLE, KEY_PREKEY_BUNDLE)
+}
