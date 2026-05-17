@@ -138,9 +138,7 @@ defmodule PriveeWeb.Chat.ChatLive do
     assign(socket, :form, form)
   end
 
-  defp send_prekey_bundle(
-         %{assigns: %{selected_session: selected_session}} = socket
-       ) do
+  defp send_prekey_bundle(%{assigns: %{selected_session: selected_session}} = socket) do
     case Privee.PreKeyStore.get_bundle(selected_session.id) do
       {:ok, bundle} ->
         push_event(socket, @prekey_bundle_event, %{
