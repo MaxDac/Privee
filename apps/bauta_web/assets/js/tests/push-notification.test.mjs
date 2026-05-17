@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
-import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
+import {
+  askNotificationPermission,
+  pushBackEndNotification,
+  setNotificationCoordinator,
+} from "../utils/push-notifications.mjs"
 import { generateNewKeyPair } from "../utils/security.mjs"
 import { encryptMessage } from "../utils/message-encryption.mjs"
 import * as security from "../utils/security.mjs"
@@ -9,6 +13,18 @@ const addRequiredMockedMethod = (window) => ({
   ...window,
   open: (_url, _target, _features) => window,
 })
+
+// Coordinator that always allows notifications (single-tab behaviour)
+const alwaysAllowCoordinator = {
+  shouldShowNotification: () => Promise.resolve(true),
+  destroy: () => {},
+}
+
+// Coordinator that always suppresses notifications
+const alwaysSuppressCoordinator = {
+  shouldShowNotification: () => Promise.resolve(false),
+  destroy: () => {},
+}
 
 describe("askNotificationPermission", () => {
   afterEach(() => {
@@ -73,6 +89,7 @@ describe("pushBackEndNotification", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()
+    setNotificationCoordinator(alwaysAllowCoordinator)
   })
 
   it("checking focus, does not trigger notification if the document is visible", async () => {
@@ -94,6 +111,7 @@ describe("pushBackEndNotification", () => {
   })
 
   it("checking focus, does trigger notification if the document is not visible", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
     const dom = getDom()
 
     vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
@@ -141,6 +159,7 @@ describe("pushBackEndNotification", () => {
   })
 
   it("not checking focus, does trigger notification independent of the document visibility", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
     const dom = getDom()
 
     vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
@@ -188,6 +207,7 @@ describe("pushBackEndNotification", () => {
   })
 
   it("The browser did not store the private key, text is empty", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
     const dom = getDom()
 
     vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
@@ -229,6 +249,7 @@ describe("pushBackEndNotification", () => {
   })
 
   it("The browser does not receive the receiver session id, text is empty", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
     const dom = getDom()
 
     vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
@@ -267,5 +288,57 @@ describe("pushBackEndNotification", () => {
     expect(getPrivateKeyMock).toHaveBeenCalledTimes(0)
     expect(notification.body).toBeFalsy()
     expect(notification.icon).toBe("/favicon.ico")
+  })
+
+  it("opens or focuses chat window with session-specific name", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
+    const dom = getDom()
+
+    const focus = vi.fn()
+    const open = vi.fn(() => ({ focus }))
+
+    vi.stubGlobal("window", { ...dom.window, open })
+    vi.stubGlobal("document", {
+      ...dom.window.document,
+      hidden: false,
+      visibilityState: "visible",
+      addEventListener: (type, callback) => {
+        if (type === "visibilitychange") {
+          callback()
+        }
+      },
+    })
+    vi.stubGlobal("Notification", NotificationMock)
+
+    await pushBackEndNotification({
+      detail: {
+        check_focus: false,
+        session_name: "session-xyz",
+      },
+    })
+
+    expect(open).toHaveBeenCalledWith("/chat/session-xyz", "bauta-chat-session-xyz")
+    expect(focus).toHaveBeenCalled()
+  })
+
+  it("suppresses notification when coordinator rejects", async () => {
+    setNotificationCoordinator(alwaysSuppressCoordinator)
+    const dom = getDom()
+
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
+      ...dom.window.document,
+      hidden: false,
+    })
+    vi.stubGlobal("Notification", NotificationMock)
+
+    const notification = await pushBackEndNotification({
+      detail: {
+        check_focus: false,
+        session_name: "session-xyz",
+      },
+    })
+
+    expect(notification).toBeUndefined()
   })
 })

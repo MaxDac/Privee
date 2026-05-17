@@ -87,7 +87,7 @@ export const getObject = async (dbName, tableName, key) => {
     const openedDb = await openDb(dbName, tableName)
     return await dbRequestToPromise(openedDb, (keyStore) => keyStore.get(key))
   } catch {
-    return undefined
+    return null
   }
 }
 
@@ -96,7 +96,7 @@ export const getObject = async (dbName, tableName, key) => {
  * @param {string} dbName The name of the database.
  * @param {string} tableName The name of the table.
  * @param {string} key The object key.
- * @returns {Promise<Event>} The deletion result.
+ * @returns {Promise<void>} The deletion result.
  */
 export const deleteObject = async (dbName, tableName, key) => {
   const openedDb = await openDb(dbName, tableName)
@@ -107,7 +107,7 @@ export const deleteObject = async (dbName, tableName, key) => {
  * Purges the database, removing all the data stored in the IndexedDB.
  * @param {string} dbName The name of the database.
  * @param {string} tableName The name of the table.
- * @returns {Promise<Event>} The result of the deletion operation.
+ * @returns {Promise<void>} The result of the deletion operation.
  */
 export const purgeDatabase = async (dbName, tableName) => {
   const openedDb = await openDb(dbName, tableName)

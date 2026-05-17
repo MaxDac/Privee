@@ -18,14 +18,13 @@
 // To load it, simply add a second `<link>` to your `root.html.heex` file.
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
+// @ts-ignore - resolved by esbuild/Phoenix at runtime, not by tsc
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 // @ts-ignore
 import { Socket } from "phoenix"
 // @ts-ignore
 import { LiveSocket } from "phoenix_live_view"
-// @ts-ignore
-import { hooks as colocatedHooks } from "phoenix-colocated/bauta_web"
 import topbar from "../vendor/topbar"
 
 // Import only the core functionality that's needed on every page
@@ -38,7 +37,7 @@ import {
 } from "./utils/lazy-hooks.mjs"
 
 // Setting up LiveView hooks
-const Hooks = { ...colocatedHooks }
+const Hooks = {}
 
 // Flash hook is used on all pages - load immediately
 addFlashAutoHideHook(Hooks)
@@ -48,7 +47,9 @@ Hooks.ChatScreen = createLazyChatScreenHook()
 Hooks.RegistrationScreen = createLazyRegistrationScreenHook()
 Hooks.BautaSelectorScreen = createLazyBautaSelectorScreenHook()
 
-const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const csrfToken = /** @type {HTMLMetaElement} */ (
+  document.querySelector("meta[name='csrf-token']")
+).getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
@@ -93,17 +94,18 @@ if (process.env.NODE_ENV === "development") {
     //
     //   * click with "c" key pressed to open at caller location
     //   * click with "d" key pressed to open at function component definition location
-    let keyDown
-    window.addEventListener("keydown", (ev) => (keyDown = ev.key))
+    /** @type {KeyboardEvent | null} */
+    let keyDown = null
+    window.addEventListener("keydown", (ev) => (keyDown = ev))
     window.addEventListener("keyup", () => (keyDown = null))
     window.addEventListener(
       "click",
       (e) => {
-        if (keyDown === "c") {
+        if (keyDown?.key === "c") {
           e.preventDefault()
           e.stopImmediatePropagation()
           reloader.openEditorAtCaller(e.target)
-        } else if (keyDown === "d") {
+        } else if (keyDown?.key === "d") {
           e.preventDefault()
           e.stopImmediatePropagation()
           reloader.openEditorAtDef(e.target)

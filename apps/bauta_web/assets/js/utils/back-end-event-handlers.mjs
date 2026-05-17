@@ -7,8 +7,7 @@ import { handleSessionNamePrivateKeyRegistrationEvent } from "./security.mjs"
  */
 
 /**
- * @typedef {object & Event} PhoenixSessionNameEvent This type represents a custom Phoenix event.
- * @property {PhoenixSessionNameEventDetail} detail The event details
+ * @typedef {{detail: PhoenixSessionNameEventDetail} & Event} PhoenixSessionNameEvent This type represents a custom Phoenix event.
  */
 
 /**

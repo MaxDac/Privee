@@ -3,6 +3,7 @@
  * @param {string} selector The query selector.
  */
 export const querySelectorArrayOf = (selector) => {
+  /** @type {Element[]} */
   const elements = []
   document.querySelectorAll(selector).forEach((e) => elements.push(e))
   return elements

@@ -38,6 +38,8 @@ export class NotificationMock {
       callback()
     }
   }
+
+  close() {}
 }
 
 /**

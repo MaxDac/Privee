@@ -9,13 +9,23 @@ defmodule BautaWeb.Release do
     load_app()
 
     for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      case Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true)) do
+        {:ok, _, _} -> :ok
+        {:error, reason} -> raise "migration failed for #{inspect(repo)}: #{inspect(reason)}"
+      end
     end
   end
 
   def rollback(repo, version) do
     load_app()
-    {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
+
+    case Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version)) do
+      {:ok, _, _} ->
+        :ok
+
+      {:error, reason} ->
+        raise "rollback failed for #{inspect(repo)} to #{version}: #{inspect(reason)}"
+    end
   end
 
   defp repos do

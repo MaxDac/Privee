@@ -4,7 +4,9 @@ import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-s
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 
 // Cache for lazy-loaded handlers to avoid re-importing on every event
+/** @type {typeof import("../utils/chat.mjs").handleSendingPublicKey | null} */
 let cachedHandleSendingPublicKey = null
+/** @type {typeof import("../utils/security.mjs").handleSessionNamePrivateKeyRegistrationEvent | null} */
 let cachedHandleSessionNamePrivateKeyRegistrationEvent = null
 
 /**
@@ -53,19 +55,29 @@ export const addBackEndEventHandlers = () => {
   askNotificationPermission().then(console.debug).catch(console.error)
 
   // Push notifications
-  window.addEventListener("phx:trigger_notification", pushBackEndNotification)
+  window.addEventListener("phx:trigger_notification", (event) =>
+    pushBackEndNotification(
+      /** @type {import("../utils/push-notifications.mjs").PhoenixEvent} */ (
+        /** @type {unknown} */ (event)
+      ),
+    ),
+  )
 
   // Post registration handlers - lazy-loaded with caching
   window.addEventListener("phx:handle_new_session_registration", async (event) => {
     const handleSessionNamePrivateKeyRegistrationEvent = await getSecurityHandler()
-    await handleSessionNameCopyToClipboardRegistrationEvent(event)
-    await handleSessionNamePrivateKeyRegistrationEvent(event)
+    const registrationEvent =
+      /** @type {import("../utils/back-end-event-handlers.mjs").PhoenixSessionNameEvent} */ (event)
+    await handleSessionNameCopyToClipboardRegistrationEvent(registrationEvent)
+    await handleSessionNamePrivateKeyRegistrationEvent(registrationEvent)
   })
 
   // Adding the crypto keys handling for the chat - lazy-loaded with caching
   window.addEventListener("phx:sending_keys", async (event) => {
     const handleSendingPublicKey = await getChatHandler()
-    handleSendingPublicKey(event)
+    handleSendingPublicKey(
+      /** @type {import("../utils/chat.mjs").SessionsPublicKeyEvent} */ (event),
+    )
   })
 
   // Close session dropdown when any menu item is clicked

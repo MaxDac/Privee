@@ -14,7 +14,11 @@ const themeToggleButtonDataThemeToggle = "[data-theme-toggle=\"theme-toggle\"]"
  * @returns {boolean} `True` if the `localStorage` is available, `False` otherwise.
  */
 const isLocalStorageAvailable = () =>
-  Boolean(localStorage && localStorage.getItem && localStorage.setItem)
+  Boolean(
+    localStorage &&
+    typeof localStorage.getItem === "function" &&
+    typeof localStorage.setItem === "function",
+  )
 
 /**
  * Gets the setting value for the dark theme from the local storage.
@@ -39,19 +43,27 @@ const getDarkThemeSettingFromLocalStorage = () => {
  * Determines whether the dark mode is enabled for the application or not.
  * @returns {boolean} `True` if the dark mode is enabled, `False` otherwise.
  */
-const isDarkModeEnabled = () => getDarkThemeSettingFromLocalStorage()
+const isDarkModeEnabled = () => getDarkThemeSettingFromLocalStorage() ?? false
 
 /**
  * Removes all the items from the document.
  * @param {NodeListOf<Element>} [items] The item to be removed.
  */
-const removeItems = (items) => items.forEach((item) => item.classList.add("hidden"))
+const removeItems = (items) => {
+  if (!items) return
+
+  items.forEach((item) => item.classList.add("hidden"))
+}
 
 /**
  * Re-add all the items from the document.
  * @param {NodeListOf<Element>} [items] The item to be re-added.
  */
-const reAddItems = (items) => items.forEach((item) => item.classList.remove("hidden"))
+const reAddItems = (items) => {
+  if (!items) return
+
+  items.forEach((item) => item.classList.remove("hidden"))
+}
 
 /**
  * Tries to set the theme for the page.

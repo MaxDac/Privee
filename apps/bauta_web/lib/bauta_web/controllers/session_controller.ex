@@ -40,11 +40,10 @@ defmodule BautaWeb.SessionController do
     end
   end
 
-  defp put_error_flash(conn, session_params) do
+  defp put_error_flash(conn, _session_params) do
     # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
     conn
     |> put_flash(:error, "Invalid recovery_phrase or session_name")
-    |> maybe_put_recovery_phrase_flash(session_params)
     |> redirect(to: ~p"/")
   end
 
@@ -58,16 +57,6 @@ defmodule BautaWeb.SessionController do
 
       _ ->
         nil
-    end
-  end
-
-  defp maybe_put_recovery_phrase_flash(conn, session_params) do
-    case session_params do
-      %{"recovery_phrase" => recovery_phrase} when not is_nil(recovery_phrase) ->
-        put_flash(conn, :recovery_phrase, String.slice(recovery_phrase, 0, 160))
-
-      _ ->
-        conn
     end
   end
 

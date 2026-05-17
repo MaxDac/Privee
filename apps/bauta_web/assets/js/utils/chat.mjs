@@ -18,12 +18,13 @@ const toHiddenInputSelector = "#text-to"
 const chatEntryUnconverted="[data-converted=\"false\"]"
 
 /**
- * @typedef {object & Event} SessionsPublicKeyEvent The event that sends the
+ * @typedef {{detail: SessionsPublicKey} & Event} SessionsPublicKeyEvent The event that sends the
  * public keys of the two sessions of the chat page.
- * @property {SessionsPublicKey} detail The payload of the event.
  */
 
+/** @type {CryptoKey | null} */
 var currentPublicKey = null
+/** @type {CryptoKey | null} */
 var selectedPublicKey = null
 
 /**
@@ -50,19 +51,26 @@ export const handleChatInput = async (e) => {
 
   e.preventDefault()
 
-  /** @type {HTMLFormElement} */ const formElement = document.querySelector(chatFormSelector)
-  /** @type {HTMLInputElement} */ const chatTextInput =
+  const formElement = /** @type {HTMLFormElement} */ (document.querySelector(chatFormSelector))
+  const chatTextInput = /** @type {HTMLInputElement} */ (
     document.querySelector(chatTextInputSelector)
-  /** @type {HTMLInputElement} */ const fromHiddenInput =
+  )
+  const fromHiddenInput = /** @type {HTMLInputElement} */ (
     document.querySelector(fromHiddenInputSelector)
-  /** @type {HTMLInputElement} */ const toHiddenInput =
+  )
+  const toHiddenInput = /** @type {HTMLInputElement} */ (
     document.querySelector(toHiddenInputSelector)
+  )
 
   const text = chatTextInput.value
 
   if (text == null || text === "") {
     fromHiddenInput.value = ""
     toHiddenInput.value = ""
+    return
+  }
+
+  if (!currentPublicKey || !selectedPublicKey) {
     return
   }
 
@@ -80,8 +88,9 @@ export const handleChatInput = async (e) => {
  * Adds the chat input handler to the chat form.
  */
 export const addChatInputHandler = () => {
-  /** @type {HTMLInputElement} */ const chatTextInput =
+  const chatTextInput = /** @type {HTMLInputElement} */ (
     document.querySelector(chatTextInputSelector)
+  )
   chatTextInput.removeEventListener("keypress", handleChatInput)
   chatTextInput.addEventListener("keypress", handleChatInput)
 }
@@ -99,7 +108,14 @@ export const decryptChatEntriesText = async (sessionName) => {
   }
 
   const privateKey = await getPrivateKey(sessionName)
-  const promises = uncoveredChatEntries.map((ce) => decryptChatEntryText(ce, privateKey))
+
+  if (!privateKey) {
+    return Promise.resolve()
+  }
+
+  const promises = uncoveredChatEntries.map((ce) =>
+    decryptChatEntryText(/** @type {HTMLElement} */ (ce), privateKey),
+  )
   await Promise.all(promises)
 }
 
@@ -143,13 +159,13 @@ const decryptChatEntryText = async (chatEntry, privateKey) => {
 export const testExports = {
   /**
    * Gets the current public key.
-   * @returns {CryptoKey} The current public key.
+   * @returns {CryptoKey | null} The current public key.
    */
   getCurrentPublicKey: () => currentPublicKey,
 
   /**
    * Gets the selected public key.
-   * @returns {CryptoKey} The selected public key.
+   * @returns {CryptoKey | null} The selected public key.
    */
   getSelectedPublicKey: () => selectedPublicKey,
 

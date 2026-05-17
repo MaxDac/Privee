@@ -22,4 +22,5 @@ export const stringToArrayData = (s) => {
  * @param {ArrayBuffer} a The array buffer.
  * @returns {string} The converted string.
  */
-export const arrayDataToString = (a) => String.fromCharCode.apply(null, new Uint8Array(a))
+export const arrayDataToString = (a) =>
+  String.fromCharCode.apply(null, Array.from(new Uint8Array(a)))

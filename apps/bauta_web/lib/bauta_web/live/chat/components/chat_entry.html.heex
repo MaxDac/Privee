@@ -8,13 +8,7 @@
       {_, _} -> "chat-start"
     end
   ]}
-  dir={[
-    if @message.from == @current_session.id && @message.in_thread do
-      "rtl"
-    else
-      "ltr"
-    end
-  ]}
+  dir={if @message.from == @current_session.id && @message.in_thread, do: "rtl", else: "ltr"}
 >
   <div class={[
     "chat-bubble",

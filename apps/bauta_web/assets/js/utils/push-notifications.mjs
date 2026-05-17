@@ -1,5 +1,17 @@
 import { getPrivateKey } from "./security.mjs"
 import { decryptMessage } from "./message-encryption.mjs"
+import { createNotificationCoordinator } from "./notification-coordinator.mjs"
+
+/** @type {import("./notification-coordinator.mjs").NotificationCoordinator} */
+let coordinator = createNotificationCoordinator()
+
+/**
+ * Replaces the active notification coordinator (useful for testing).
+ * @param {import("./notification-coordinator.mjs").NotificationCoordinator} c
+ */
+export const setNotificationCoordinator = (c) => {
+  coordinator = c
+}
 
 /**
  * Determines whether the browser supports notifications, if not it logs it,
@@ -18,27 +30,35 @@ export const askNotificationPermission = async () => {
 /**
  * @typedef {object} EventDetails Represents the details of the event sent from the back end. For more information read `events.ex` file.
  * @property {string} [text] The text of the message that triggered the notification.
+ * @property {string} [body] The body text associated with the event.
  * @property {string} [session_name] The session name that sent the message.
+ * @property {string} [receiver_session_name] The receiver session name used for decryption.
  * @property {boolean} [check_focus] Whether to check if the window is in focus before triggering the notification.
  */
 
 /**
- * @typedef {object & Event} PhoenixEvent This type represents a custom Phoenix event.
+ * @typedef {object} PhoenixEvent This type represents a custom Phoenix event.
  * @property {EventDetails} detail The event details
  */
 
 /**
  * Handles the Phoenix back end event that requires triggering a notification.
  * @param {PhoenixEvent} event The event triggered from the back-end.
- * @returns {Promise<?Notification>} The notification that was triggered, undefined if no notification was triggered.
+ * @returns {Promise<Notification|undefined>} The notification that was triggered, undefined if no notification was triggered.
  */
 export const pushBackEndNotification = async (event) => {
   const mustCheckWindowFocus = event.detail.check_focus
   const browserWindowNotInFocus = document.hidden
 
   if (!mustCheckWindowFocus || browserWindowNotInFocus) {
+    const sessionName = /** @type {string} */ (event.detail.session_name)
+
+    // Cross-tab deduplication: only one tab should show the notification
+    const allowed = await coordinator.shouldShowNotification(sessionName)
+    if (!allowed) return undefined
+
     const title = "Bauta - Text received"
-    const url = `/chat/${event.detail.session_name}`
+    const url = `/chat/${sessionName}`
     const message = await getNotificationMessage(event)
 
     const notification = new Notification(title, {
@@ -46,8 +66,14 @@ export const pushBackEndNotification = async (event) => {
       icon: "/favicon.ico",
     })
 
-    // Open the chat when the notification is clicked.
-    notification.addEventListener("click", () => window.open(url, "_blank"))
+    const windowName = getChatWindowName(sessionName)
+
+    // Open or focus the chat when the notification is clicked.
+    notification.addEventListener("click", () => {
+      const win = window.open(url, windowName)
+      if (win?.focus) win.focus()
+      notification.close?.()
+    })
 
     const sendNotification = () =>
       new Promise((resolve, _reject) =>
@@ -77,12 +103,18 @@ const getNotificationMessage = async (event) => {
 
   if (receiverSessionName != null && receiverSessionName != "") {
     // Getting the private key to decrypt the message in the user notification.
-    const privateKey = await getPrivateKey(receiverSessionName)
+    const privateKey = await getPrivateKey(/** @type {string} */ (receiverSessionName))
 
-    if (privateKey) {
+    if (privateKey && encryptedMessage) {
       decryptedMessage = await decryptMessage(encryptedMessage, privateKey)
     }
   }
 
   return decryptedMessage
 }
+
+/**
+ * @param {string} sessionName
+ * @returns {string}
+ */
+const getChatWindowName = (sessionName) => `bauta-chat-${sessionName}`

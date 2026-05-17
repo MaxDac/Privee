@@ -20,6 +20,11 @@ export const addChatHooks = (Hooks) => {
      * @this {ChatScreenHook}
      */
     mounted() {
+      const targetSessionName = this.el.dataset.selectedSessionName
+      if (targetSessionName) {
+        window.name = `bauta-chat-${targetSessionName}`
+      }
+
       // Readding the event listener for the chat menu buttons.
       const pushEvent = this.pushEvent.bind(this)
       addSessionNameCopyListener(pushFlash(pushEvent))
@@ -40,6 +45,10 @@ export const addChatHooks = (Hooks) => {
      */
     async handleChat() {
       const sessionName = this.el.dataset.sessionName
+
+      if (!sessionName) {
+        return
+      }
 
       try {
         await decryptChatEntriesText(sessionName)

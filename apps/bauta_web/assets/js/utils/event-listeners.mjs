@@ -49,8 +49,10 @@ export const addPassiveListener = (element, eventType, handler) => {
  */
 export const addThrottledPassiveListener = (element, eventType, handler, delay = 100) => {
   let lastCall = 0
-  let timeoutId = null
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timeoutId
 
+  /** @param {Event} event */
   const throttledHandler = (event) => {
     const now = Date.now()
     const timeSinceLastCall = now - lastCall
@@ -60,7 +62,7 @@ export const addThrottledPassiveListener = (element, eventType, handler, delay =
       handler(event)
     } else {
       // Schedule the call for when the delay period is over
-      if (timeoutId) {
+      if (timeoutId !== undefined) {
         clearTimeout(timeoutId)
       }
       timeoutId = setTimeout(() => {
@@ -99,8 +101,10 @@ export const addThrottledPassiveListener = (element, eventType, handler, delay =
  * }, 200)
  */
 export const addDebouncedPassiveListener = (element, eventType, handler, delay = 200) => {
-  let timeoutId = null
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timeoutId
 
+  /** @param {Event} event */
   const debouncedHandler = (event) => {
     if (timeoutId) {
       clearTimeout(timeoutId)

@@ -17,6 +17,16 @@ It is possible to use NeoVim with a terminal connection. [This script](./.devcon
 
 In order to start developing the project, it's necessary to install Elixir.
 
+## Git hooks
+
+To enable the pre-commit hook:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Run `mix precommit` to reproduce the checks locally.
+
 After having installed Elixir and Erlang in the machine, install the Phoenix Framework by executing the following command in the terminal:
 
 ```bash

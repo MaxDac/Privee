@@ -25,7 +25,10 @@ defmodule Bauta.Application do
 
   defp migrate do
     for repo <- Application.fetch_env!(:bauta, :ecto_repos) do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      case Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true)) do
+        {:ok, _, _} -> :ok
+        {:error, reason} -> raise "migration failed for #{inspect(repo)}: #{inspect(reason)}"
+      end
     end
   end
 end

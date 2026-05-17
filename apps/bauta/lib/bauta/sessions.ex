@@ -5,10 +5,7 @@ defmodule Bauta.Sessions do
 
   import Ecto.Query, warn: false
 
-  alias Plug.Session
-
   alias Bauta.Repo
-  alias Bauta.Sessions.BautaForm
   alias Bauta.Sessions.{BautaForm, Message, Session, SessionToken}
 
   @doc """

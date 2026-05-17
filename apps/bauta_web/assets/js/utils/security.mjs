@@ -79,11 +79,14 @@ export const importStringPublicKey = async (publicKey) => {
  */
 export const bindKeys = async () => {
   const inputSelector = "#session-registration-public-key"
-  /** @type {HTMLInputElement} */ const hiddenInput = document.querySelector(inputSelector)
+  const hiddenInputElement = document.querySelector(inputSelector)
 
-  if (!hiddenInput) {
+  if (!hiddenInputElement) {
     throw new Error("The input field is not available.")
   }
+
+  /** @type {HTMLInputElement} */
+  const hiddenInput = /** @type {HTMLInputElement} */ (hiddenInputElement)
 
   try {
     const { publicKey, privateKey } = await generateNewKeyPair()

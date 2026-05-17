@@ -10,11 +10,13 @@
  * @returns {object} The lazy-loaded ChatScreen hook
  */
 export const createLazyChatScreenHook = () => ({
+  /** @this {Record<string, any>} */
   async mounted() {
     // Dynamic import - only loads when this hook is used
     const { addChatHooks } = await import("../hooks/chat-hooks.mjs")
 
     // Create temporary hooks object
+    /** @type {Record<string, any>} */
     const tempHooks = {}
     addChatHooks(tempHooks)
 
@@ -33,12 +35,14 @@ export const createLazyChatScreenHook = () => ({
     }
   },
 
+  /** @this {Record<string, any>} */
   async updated() {
     if (this.__updated) {
       await this.__updated.call(this)
     }
   },
 
+  /** @this {Record<string, any>} */
   async handleChat() {
     if (this.__handleChat) {
       await this.__handleChat.call(this)
@@ -55,6 +59,7 @@ export const createLazyRegistrationScreenHook = () => ({
   async mounted() {
     const { addRegistrationHooks } = await import("../hooks/registration-hooks.mjs")
 
+    /** @type {Record<string, any>} */
     const tempHooks = {}
     addRegistrationHooks(tempHooks)
 
@@ -71,9 +76,11 @@ export const createLazyRegistrationScreenHook = () => ({
  * @returns {object} The lazy-loaded BautaSelectorScreen hook
  */
 export const createLazyBautaSelectorScreenHook = () => ({
+  /** @this {Record<string, any>} */
   async mounted() {
     const { addBautaSelectorHooks } = await import("../hooks/bauta-selector-hooks.mjs")
 
+    /** @type {Record<string, any>} */
     const tempHooks = {}
     addBautaSelectorHooks(tempHooks)
 
@@ -88,6 +95,7 @@ export const createLazyBautaSelectorScreenHook = () => ({
     }
   },
 
+  /** @this {Record<string, any>} */
   async updated() {
     if (this.__updated) {
       await this.__updated.call(this)

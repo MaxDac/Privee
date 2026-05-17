@@ -13,10 +13,9 @@ defmodule BautaWeb.Application do
       BautaWeb.Telemetry,
       # Start a worker by calling: BautaWeb.Worker.start_link(arg)
       # {BautaWeb.Worker, arg},
+      Chats,
       # Start to serve requests, typically the last entry
-      # ,
-      BautaWeb.Endpoint,
-      Chats
+      BautaWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

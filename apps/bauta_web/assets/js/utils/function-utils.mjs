@@ -26,11 +26,14 @@
  * })
  */
 export const debounce = (fn, ms) => {
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
   let timeoutId
-  return (...args) => {
+  /** @type {(...args: any[]) => void} */
+  const debounced = (...args) => {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => fn(...args), ms)
   }
+  return debounced
 }
 
 /**
@@ -55,9 +58,11 @@ export const debounce = (fn, ms) => {
  */
 export const throttle = (fn, ms) => {
   let lastCall = 0
-  let timeoutId = null
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timeoutId
 
-  return (...args) => {
+  /** @type {(...args: any[]) => void} */
+  const throttled = (...args) => {
     const now = Date.now()
     const timeSinceLastCall = now - lastCall
 
@@ -75,6 +80,8 @@ export const throttle = (fn, ms) => {
       }, ms - timeSinceLastCall)
     }
   }
+
+  return throttled
 }
 
 /**
@@ -98,16 +105,20 @@ export const throttle = (fn, ms) => {
  * initializeApp() // Does nothing
  */
 export const once = (fn) => {
+  /** @type {any} */
   let result
   let hasRun = false
 
-  return (...args) => {
+  /** @type {(...args: any[]) => any} */
+  const runOnce = (...args) => {
     if (!hasRun) {
       result = fn(...args)
       hasRun = true
     }
     return result
   }
+
+  return runOnce
 }
 
 /**
@@ -133,7 +144,8 @@ export const once = (fn) => {
 export const memoize = (fn) => {
   const cache = new Map()
 
-  return (...args) => {
+  /** @type {(...args: any[]) => any} */
+  const memoized = (...args) => {
     const key = JSON.stringify(args)
 
     if (cache.has(key)) {
@@ -144,6 +156,8 @@ export const memoize = (fn) => {
     cache.set(key, result)
     return result
   }
+
+  return memoized
 }
 
 /**
@@ -164,11 +178,14 @@ export const memoize = (fn) => {
  * await delayedAlert()
  */
 export const delay = (fn, ms) => {
-  return (...args) => {
+  /** @type {(...args: any[]) => Promise<any>} */
+  const delayed = (...args) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(fn(...args))
       }, ms)
     })
   }
+
+  return delayed
 }

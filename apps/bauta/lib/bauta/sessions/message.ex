@@ -26,7 +26,7 @@ defmodule Bauta.Sessions.Message do
           text_from: String.t(),
           text_to: String.t(),
           from: non_neg_integer(),
-          to: String.t(),
+          to: non_neg_integer(),
           in_thread: boolean(),
           sender_session_name: String.t()
         }

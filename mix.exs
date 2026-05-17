@@ -59,7 +59,13 @@ defmodule Bauta.Umbrella.MixProject do
     [
       # run `mix setup` in all child apps
       setup: ["cmd mix setup"],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warning-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test",
+        "do --app bauta_web cmd --cd assets npm run check"
+      ]
     ]
   end
 end

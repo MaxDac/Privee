@@ -1,10 +1,15 @@
 /**
  * Copies the given text into the user clipboard.
- * @param {import("./push-notifications.mjs").PhoenixEvent} [event] The event sent by the back-end.
+ * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} [event] The event sent by the back-end.
  * @returns {Promise<void>} The result of the copy operation.
  */
 export const copySessionNameToClipboardBackEndEventHandler = (event) => {
-  const sessionName = event.detail.session_name
+  const sessionName = event?.detail.session_name
+
+  if (!sessionName) {
+    return Promise.resolve()
+  }
+
   return copyTextToClipboard(sessionName)
 }
 
@@ -42,10 +47,15 @@ const getCopyButtons = () => document.querySelectorAll("[data-session-name][data
  * Produces a Handler to the click of the copy button click.
  * @param {import("../hooks/flash-hooks.mjs").PushFlash} pushFlash - The function to push events to the back end.
  */
-const createCopyButtonHandler = (pushFlash) =>
-  function () {
+const createCopyButtonHandler = (pushFlash) => {
+  /** @this {HTMLButtonElement} */
+  return function () {
     const sessionName = this.dataset.sessionName
     const action = this.dataset.action
+
+    if (!sessionName) {
+      return Promise.resolve()
+    }
 
     if (action === "code") {
       return copyTextToClipboard(sessionName).then(() => pushFlash("Info", "Session copied"))
@@ -54,6 +64,7 @@ const createCopyButtonHandler = (pushFlash) =>
       return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied"))
     }
   }
+}
 
 /**
  * Tries to copy the text in input into the user clipboard through the browser API.
