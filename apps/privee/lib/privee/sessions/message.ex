@@ -14,8 +14,8 @@ defmodule Privee.Sessions.Message do
   Represents a message session.
 
   Fields:
-    * `text_from` - The original text of the message.
-    * `text_to` - The translated or target text of the message.
+    * `ciphertext` - The encrypted message content (Signal Protocol ciphertext).
+    * `header` - The Signal Protocol message header (for ratchet state).
     * `from` - The sender's identifier (non-negative integer).
     * `to` - The recipient's identifier or name (string).
     * `in_thread` - Indicates if the message is part of a thread, i.e. if the 
@@ -23,8 +23,8 @@ defmodule Privee.Sessions.Message do
     * `sender_session_name` - The name of the sender's session (string).
   """
   @type t :: %__MODULE__{
-          text_from: String.t(),
-          text_to: String.t(),
+          ciphertext: String.t(),
+          header: String.t(),
           from: non_neg_integer(),
           to: non_neg_integer(),
           in_thread: boolean(),
@@ -32,8 +32,8 @@ defmodule Privee.Sessions.Message do
         }
 
   embedded_schema do
-    field :text_from, :string
-    field :text_to, :string
+    field :ciphertext, :string
+    field :header, :string
     field :from, :id
     field :to, :id
     field :in_thread, :boolean, default: false
@@ -44,7 +44,7 @@ defmodule Privee.Sessions.Message do
   @doc false
   def changeset(%Message{} = message, attrs) do
     message
-    |> cast(attrs, [:text_from, :text_to, :from, :to, :sender_session_name])
-    |> validate_required([:text_from, :text_to, :from, :to, :sender_session_name])
+    |> cast(attrs, [:ciphertext, :header, :from, :to, :sender_session_name])
+    |> validate_required([:ciphertext, :header, :from, :to, :sender_session_name])
   end
 end

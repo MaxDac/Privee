@@ -1,8 +1,8 @@
-import { testExports } from "./security.mjs"
+import { testExports } from "./signal-protocol.mjs"
 
 export const exportDebugFunctions = () => {
   // @ts-ignore
-  window.stringToArrayData = testExports.stringToArrayData
+  window.bufToBase64 = testExports.bufToBase64
   // @ts-ignore
-  window.arrayDataToString = testExports.arrayDataToString
+  window.base64ToBuf = testExports.base64ToBuf
 }

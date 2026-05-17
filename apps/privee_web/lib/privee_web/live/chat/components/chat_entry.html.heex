@@ -30,10 +30,10 @@
           "text-zinc-900"
         end
       ]}
+      data-ciphertext={@message.ciphertext}
+      data-header={@message.header}
     >
-      {if @message.from == @current_session.id,
-        do: @message.text_from,
-        else: @message.text_to}&lrm;
+      &lrm;
     </p>
   </div>
 </div>

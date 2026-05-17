@@ -53,14 +53,10 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       valid_form_attributes = valid_session_attributes(session_name: session_name)
 
       form =
-        form(lv, "#registration_form", session: Map.delete(valid_form_attributes, :public_key))
+        form(lv, "#registration_form", session: valid_form_attributes)
 
-      # Applying the hidden input value in the submit, as the `form` function is intended
-      # to simulate the user interaction only, and hidden inputs cannot be changed by the user.
-      # Please refer to [this](https://github.com/phoenixframework/phoenix_live_view/issues/988#issuecomment-646586166)
-      # and [this documentation](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveViewTest.html#render_submit/2)
-      # highlighted from [this](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveViewTest.html#render_submit/2).
-      render_submit(form, %{"session" => %{"public_key" => valid_form_attributes.public_key}})
+      # Submit the form (no longer needs public_key hidden input)
+      render_submit(form)
 
       # This asserts that the session creation results in the copy to event being triggered
       assert_push_event(lv, "handle_new_session_registration", %{session_name: ^session_name})
@@ -179,8 +175,8 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
           }
         )
 
-      # Submit the form with public key (simulating the hidden field behavior)
-      render_submit(form, %{"session" => %{"public_key" => generate_new_unique_public_key()}})
+      # Submit the form (no longer needs public_key hidden field)
+      render_submit(form)
 
       # Verify the session creation event was triggered
       assert_push_event(lv, "handle_new_session_registration", %{session_name: ^session_name})

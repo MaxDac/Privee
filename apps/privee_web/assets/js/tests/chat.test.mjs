@@ -1,385 +1,291 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
-import { indexedDB } from "fake-indexeddb"
 import {
   testExports,
-  handleSendingPublicKey,
+  handlePreKeyBundle,
   handleChatInput,
   decryptChatEntriesText,
 } from "../utils/chat.mjs"
-import { convertPublicKeyToString, generateNewKeyPair } from "../utils/security.mjs"
-import { decryptMessage, encryptMessage } from "../utils/message-encryption.mjs"
-import { storeObject } from "../utils/front-end-database.mjs"
-import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
-import { Constants } from "../utils/constants.mjs"
+import {
+  generateRegistrationKeys,
+  exportPreKeyBundle,
+  initSendingSession,
+  initReceivingSession,
+  x3dhInitiate,
+  ratchetEncrypt,
+  generateSigningKeyPair,
+} from "../utils/signal-protocol.mjs"
+import * as signalStore from "../utils/signal-store.mjs"
 
 const html = `
   <form id="chat-form">
-    <input type="hidden" id="text-from" />
-    <input type="hidden" id="text-to" />
-    <input type-"text" id="chat-text" />
+    <input type="hidden" id="chat-ciphertext" />
+    <input type="hidden" id="chat-header" />
+    <input type="text" id="chat-text" />
   </form>
 `
 
-describe("handleSendingPublicKey", () => {
-  it("should return an error when the keys are not present", async () => {
-    const event = {
-      detail: {},
-    }
-
-    try {
-      await handleSendingPublicKey(event)
-      expect.fail("It should have thrown an exception")
-    } catch {
-      /* test passing */
-    }
+describe("handlePreKeyBundle", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    testExports.setCurrentSession(null)
+    testExports.setCurrentPeerSessionId(null)
   })
 
-  it("handleSendingPublicKey should store the public key", async () => {
-    const { publicKey: currentPublicKey } = await generateNewKeyPair()
-    const { publicKey: selectedPublicKey } = await generateNewKeyPair()
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
+  it("should warn and return when no peer_session_id present", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
-    const event = {
+    await handlePreKeyBundle({ detail: { peer_session_id: null } })
+
+    expect(warnSpy).toHaveBeenCalledWith("No prekey bundle available for peer")
+    expect(testExports.getCurrentSession()).toBeNull()
+  })
+
+  it("should load existing session if one exists for the peer", async () => {
+    const mockSession = { rootKey: "mock" }
+    vi.spyOn(signalStore, "getSession").mockResolvedValue(mockSession)
+    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue(null)
+
+    await handlePreKeyBundle({
       detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
+        peer_session_id: "peer-123",
+        identity_key: "fake",
+        signed_prekey: { key_id: 1, public_key: "fake", signature: "fake" },
+        one_time_prekey: null,
       },
-    }
+    })
 
-    await handleSendingPublicKey(event)
+    expect(testExports.getCurrentSession()).toBe(mockSession)
+  })
 
-    const currentPublicKeyFromModule = testExports.getCurrentPublicKey()
-    const selectedPublicKeyFromModule = testExports.getSelectedPublicKey()
+  it("should establish new session via X3DH when no existing session", async () => {
+    // Generate real keys for the peer (Bob)
+    const bobKeys = await generateRegistrationKeys(1)
+    const bobBundle = await exportPreKeyBundle(bobKeys)
 
-    expect(currentPublicKeyFromModule).toBeTruthy()
-    expect(currentPublicKeyFromModule).toBeTruthy()
-    expect(selectedPublicKeyFromModule).toBeTruthy()
+    // Generate identity key pair for Alice (local)
+    const aliceIdentity = await generateSigningKeyPair()
 
-    expect(await convertPublicKeyToString(currentPublicKeyFromModule)).toBe(currentPublicKeyString)
-    expect(await convertPublicKeyToString(selectedPublicKeyFromModule)).toBe(
-      selectedPublicKeyString,
-    )
+    vi.spyOn(signalStore, "getSession").mockResolvedValue(null)
+    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue({
+      publicKey: aliceIdentity.publicKey,
+      privateKey: aliceIdentity.privateKey,
+    })
+    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
+
+    await handlePreKeyBundle({
+      detail: {
+        peer_session_id: "peer-456",
+        identity_key: bobBundle.identityKey,
+        signed_prekey: {
+          key_id: bobBundle.signedPreKey.keyId,
+          public_key: bobBundle.signedPreKey.publicKey,
+          signature: bobBundle.signedPreKey.signature,
+        },
+        one_time_prekey: bobBundle.oneTimePreKeys[0]
+          ? {
+              key_id: bobBundle.oneTimePreKeys[0].keyId,
+              public_key: bobBundle.oneTimePreKeys[0].publicKey,
+            }
+          : null,
+      },
+    })
+
+    expect(testExports.getCurrentSession()).not.toBeNull()
+    expect(signalStore.storeSession).toHaveBeenCalledWith("peer-456", expect.anything())
   })
 })
 
 describe("handleChatInput", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    testExports.setCurrentSession(null)
+    testExports.setCurrentPeerSessionId(null)
   })
 
-  it(" should encrypt and set the values of hidden inputs", async () => {
-    const { publicKey: currentPublicKey, privateKey: currentPrivateKey } =
-      await generateNewKeyPair()
+  it("should do nothing when key is not Enter", async () => {
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
-    const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } =
-      await generateNewKeyPair()
+    await handleChatInput(new KeyboardEvent("keypress", { key: "a" }))
 
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
+    const ciphertextInput = document.querySelector("#chat-ciphertext")
+    expect(ciphertextInput.value).toBe("")
+  })
 
+  it("should clear hidden inputs when chat text is empty", async () => {
     const dom = new JSDOM(html)
     vi.stubGlobal("document", dom.window.document)
     vi.stubGlobal("Event", dom.window.Event)
     vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
-    // Simulating the event from the back end which sends the public keys
-    const publicKeysSendingEvent = {
-      detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
+    // Set up a session
+    const bobKeys = await generateRegistrationKeys(1)
+    const bobBundle = await exportPreKeyBundle(bobKeys)
+    const aliceIdentity = await generateSigningKeyPair()
+    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
+      identity_key: bobBundle.identityKey,
+      signed_prekey: {
+        public_key: bobBundle.signedPreKey.publicKey,
+        signature: bobBundle.signedPreKey.signature,
       },
-    }
+      one_time_prekey: bobBundle.oneTimePreKeys[0],
+    })
+    const session = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
+    testExports.setCurrentSession(session)
+    testExports.setCurrentPeerSessionId("peer-1")
+    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
 
-    await handleSendingPublicKey(publicKeysSendingEvent)
+    const chatText = document.querySelector("#chat-text")
+    chatText.value = ""
 
-    // @ts-ignore
-    /** @type {HTMLFormElement} */ const form = document.querySelector("#chat-form")
-    /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
-    /** @type {HTMLInputElement} */ const hiddenTextFrom = document.querySelector("#text-from")
-    /** @type {HTMLInputElement} */ const hiddenTextTo = document.querySelector("#text-to")
+    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
+    await handleChatInput(event)
 
-    // Simulating filling the input with a message
-    const inputText = "Hello, world!"
+    const ciphertextInput = document.querySelector("#chat-ciphertext")
+    const headerInput = document.querySelector("#chat-header")
+    expect(ciphertextInput.value).toBe("")
+    expect(headerInput.value).toBe("")
+  })
 
-    textbox.value = inputText
+  it("should encrypt and set hidden inputs when session exists", async () => {
+    const dom = new JSDOM(html)
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("Event", dom.window.Event)
+    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
-    // Workaround for the event listener to be added and fired from the form.
-    // This function will later be bound to the `Promise` that will resolve the test.
-    let testResolve = null
+    // Set up a session
+    const bobKeys = await generateRegistrationKeys(1)
+    const bobBundle = await exportPreKeyBundle(bobKeys)
+    const aliceIdentity = await generateSigningKeyPair()
+    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
+      identity_key: bobBundle.identityKey,
+      signed_prekey: {
+        public_key: bobBundle.signedPreKey.publicKey,
+        signature: bobBundle.signedPreKey.signature,
+      },
+      one_time_prekey: bobBundle.oneTimePreKeys[0],
+    })
+    const session = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
+    testExports.setCurrentSession(session)
+    testExports.setCurrentPeerSessionId("peer-1")
+    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
 
-    // Adding a submit event listener for the form to check the values of the hidden inputs
-    form.addEventListener("submit", async (e) => {
+    const chatText = document.querySelector("#chat-text")
+    chatText.value = "Hello, world!"
+
+    let formSubmitted = false
+    const form = document.querySelector("#chat-form")
+    form.addEventListener("submit", (e) => {
       e.preventDefault()
-
-      expect(hiddenTextFrom.value).not.toBe("")
-      expect(hiddenTextTo.value).not.toBe("")
-
-      const fromMessage = await decryptMessage(hiddenTextFrom.value, currentPrivateKey)
-      const toMessage = await decryptMessage(hiddenTextTo.value, selectedPrivateKey)
-
-      expect(fromMessage).toBe(inputText)
-      expect(toMessage).toBe(inputText)
-
-      expect(textbox.value).toBe("")
-
-      testResolve()
+      formSubmitted = true
     })
 
-    await handleChatInput(new KeyboardEvent("keypress", { key: "Enter" }))
+    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
+    await handleChatInput(event)
 
-    await new Promise((resolve) => {
-      // Binding the resolve function to the testResolve variable.
-      // This will be resolved when the submit event is fired and handled by the
-      // test event listener.
-      testResolve = resolve
-    })
+    const ciphertextInput = document.querySelector("#chat-ciphertext")
+    const headerInput = document.querySelector("#chat-header")
+
+    expect(ciphertextInput.value).not.toBe("")
+    expect(headerInput.value).not.toBe("")
+    expect(chatText.value).toBe("")
+    expect(formSubmitted).toBe(true)
   })
 
-  it("handleChatInput should do nothing when the chat input is empty", async () => {
-    const { publicKey: currentPublicKey } = await generateNewKeyPair()
-
-    const { publicKey: selectedPublicKey } = await generateNewKeyPair()
-
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
-
+  it("should log error when no session established", async () => {
     const dom = new JSDOM(html)
     vi.stubGlobal("document", dom.window.document)
     vi.stubGlobal("Event", dom.window.Event)
     vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
-    // Simulating the event from the back end which sends the public keys
-    const publicKeysSendingEvent = {
-      detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
+    testExports.setCurrentSession(null)
+
+    const chatText = document.querySelector("#chat-text")
+    chatText.value = "Hello"
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
+    await handleChatInput(event)
+
+    expect(errorSpy).toHaveBeenCalledWith("No Signal session established")
+  })
+})
+
+describe("decryptChatEntriesText", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    testExports.setCurrentSession(null)
+    testExports.setCurrentPeerSessionId(null)
+  })
+
+  it("should do nothing when no unconverted entries exist", async () => {
+    const dom = new JSDOM("<div></div>")
+    vi.stubGlobal("document", dom.window.document)
+
+    await decryptChatEntriesText("session-name")
+    // No errors thrown
+  })
+
+  it("should do nothing when no session exists", async () => {
+    // prettier-ignore
+    const dom = new JSDOM("<div data-converted=\"false\" data-ciphertext=\"x\" data-header=\"y\"></div>")
+    vi.stubGlobal("document", dom.window.document)
+
+    testExports.setCurrentSession(null)
+    await decryptChatEntriesText("session-name")
+
+    // prettier-ignore
+    const el = document.querySelector("[data-converted=\"false\"]")
+    expect(el).not.toBeNull()
+  })
+
+  it("should decrypt entries when a session exists", async () => {
+    // Set up paired sessions
+    const bobKeys = await generateRegistrationKeys(1)
+    const bobBundle = await exportPreKeyBundle(bobKeys)
+    const aliceIdentity = await generateSigningKeyPair()
+    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
+      identity_key: bobBundle.identityKey,
+      signed_prekey: {
+        public_key: bobBundle.signedPreKey.publicKey,
+        signature: bobBundle.signedPreKey.signature,
       },
-    }
-
-    await handleSendingPublicKey(publicKeysSendingEvent)
-
-    // @ts-ignore
-    /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
-    /** @type {HTMLInputElement} */ const hiddenTextFrom = document.querySelector("#text-from")
-    /** @type {HTMLInputElement} */ const hiddenTextTo = document.querySelector("#text-to")
-
-    textbox.value = ""
-
-    await handleChatInput(new KeyboardEvent("submit"))
-
-    expect(hiddenTextFrom.value).toBe("")
-    expect(hiddenTextTo.value).toBe("")
-  })
-})
-
-describe("Chat entries decryption", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  const messageHtml = (encryptedText, dataConverted) => `
-    <div>
-      <p
-        data-message="from"
-        data-converted="${dataConverted}"
-        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
-      >
-        ${encryptedText}&lrm;
-      </p>
-    </div>
-  `
-
-  it("decryptChatEntryText should decrypt the chat message inside the p element", async () => {
-    const { privateKey, publicKey } = await generateNewKeyPair()
-
-    const message = "some message"
-    const encryptedMessage = await encryptMessage(message, publicKey)
-
-    const html = messageHtml(encryptedMessage, "false")
-    const dom = new JSDOM(html)
-
-    vi.stubGlobal("document", dom.window.document)
-
-    // prettier-ignore
-    const element = document.querySelector("[data-converted=\"false\"]")
-
-    await testExports.decryptChatEntryText(element, privateKey)
-
-    // prettier-ignore
-    const unconvertedElement = document.querySelector("[data-converted=\"false\"]")
-    // prettier-ignore
-    const convertedElement = document.querySelector("[data-converted=\"true\"]")
-
-    expect(unconvertedElement).toBeNull()
-    expect(convertedElement.innerHTML).toEqual(testExports.reAddTrailingChar(message))
-    expect(convertedElement.dataset.converted).toEqual("true")
-  })
-
-  const chatEntriesContainer = (entries) => {
-    let string = "<div>"
-
-    for (const entry of entries) {
-      string = `${string}${entry}`
-    }
-
-    return `${string}</div>`
-  }
-
-  it("decryptChatEntriesText should decrypt the chat entries", async () => {
-    const sessionName = "some-other-session-name"
-    const { privateKey, publicKey } = await generateNewKeyPair()
-
-    vi.stubGlobal("indexedDB", indexedDB)
-
-    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
-
-    const messages = await Promise.all(
-      ["0", "1", "2", "3", "4"]
-        .map((i) => `Some message ${i}`)
-        .map((m) => encryptMessage(m, publicKey)),
-    )
-
-    const messageEntries = messages.map((m) => messageHtml(m, "false"))
-
-    const html = chatEntriesContainer(messageEntries)
-
-    const dom = new JSDOM(html)
-
-    vi.stubGlobal("document", dom.window.document)
-
-    await decryptChatEntriesText(sessionName)
-
-    // prettier-ignore
-    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
-    // prettier-ignore
-    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
-
-    expect(convertedElements.length).toEqual(5)
-    expect(unconvertedElements.length).toEqual(0)
-
-    convertedElements.forEach((element, i) => {
-      const expectedMessage = `Some message ${String(i)}`
-      expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
-      expect(element.dataset.converted).toEqual("true")
+      one_time_prekey: bobBundle.oneTimePreKeys[0],
     })
-  })
 
-  it("decryptChatEntriesText should decrypt only the chat entries not yet converted", async () => {
-    const sessionName = "some-session-name"
-    const { privateKey, publicKey } = await generateNewKeyPair()
+    // Alice encrypts
+    const aliceSession = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
+    const { ciphertext, header } = await ratchetEncrypt(aliceSession, "Secret message")
 
-    vi.stubGlobal("indexedDB", indexedDB)
+    // Bob session for decryption
+    const bobSession = await initReceivingSession(sharedSecret, bobKeys.signedPreKey.keyPair)
+    testExports.setCurrentSession(bobSession)
+    testExports.setCurrentPeerSessionId("alice-id")
+    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
 
-    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
-
-    const messages = await Promise.all(
-      ["0", "1", "2", "3", "4"]
-        .map((i) => `Some message ${i}`)
-        .map((m) => encryptMessage(m, publicKey)),
-    )
-
-    const messageEntries = messages.map((m, i) => messageHtml(m, i < 2 ? "false" : "true"))
-
-    const html = chatEntriesContainer(messageEntries)
-
-    const dom = new JSDOM(html)
-
+    // Set up DOM with the encrypted message - use proper attribute escaping
+    // prettier-ignore
+    const entryEl = "<div><p data-converted=\"false\" class=\"hidden\"></p></div>"
+    const dom = new JSDOM(entryEl)
     vi.stubGlobal("document", dom.window.document)
 
-    await decryptChatEntriesText(sessionName)
+    // Set data attributes programmatically to avoid HTML escaping issues
+    const pEl = document.querySelector("p")
+    pEl.dataset.ciphertext = ciphertext
+    pEl.dataset.header = header
+
+    await decryptChatEntriesText("session-name")
 
     // prettier-ignore
-    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
-    // prettier-ignore
-    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
-
-    expect(convertedElements.length).toEqual(5)
-    expect(unconvertedElements.length).toEqual(0)
-
-    convertedElements.forEach((element, i) => {
-      const expectedMessage = `Some message ${String(i)}`
-
-      if (i < 2) {
-        expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
-      } else {
-        expect(element.innerHTML).not.toEqual(testExports.reAddTrailingChar(expectedMessage))
-      }
-
-      expect(element.dataset.converted).toEqual("true")
-    })
-  })
-})
-
-describe("cleanEncryptedString", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it("should remove trailing left-to-right mark character", () => {
-    const html = "<div>encrypted-text\u200E</div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should return text as-is when no trailing left-to-right mark", () => {
-    const html = "<div>encrypted-text</div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should trim whitespace and remove trailing left-to-right mark", () => {
-    const html = "<div>  encrypted-text  \u200E  </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should only trim whitespace when no left-to-right mark present", () => {
-    const html = "<div>  encrypted-text  </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should handle empty text", () => {
-    const html = "<div></div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("")
-  })
-
-  it("should handle text with only whitespace and left-to-right mark", () => {
-    const html = "<div>   \u200E   </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("")
+    const el = document.querySelector("[data-converted=\"true\"]")
+    expect(el).not.toBeNull()
+    expect(el.textContent).toContain("Secret message")
+    expect(el.classList.contains("hidden")).toBe(false)
   })
 })

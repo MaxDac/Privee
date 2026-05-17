@@ -1,5 +1,3 @@
-import { getPrivateKey } from "./security.mjs"
-import { decryptMessage } from "./message-encryption.mjs"
 import { createNotificationCoordinator } from "./notification-coordinator.mjs"
 
 /** @type {import("./notification-coordinator.mjs").NotificationCoordinator} */
@@ -92,25 +90,13 @@ export const pushBackEndNotification = async (event) => {
 
 /**
  * Handles the decryption of the notification message.
- * @param {PhoenixEvent} event The event triggered from the back-end.
- * @returns {Promise<string>} The decrypted message.
+ * With Signal Protocol, we cannot decrypt outside the ratchet session context,
+ * so notifications show a generic message.
+ * @param {PhoenixEvent} _event The event triggered from the back-end.
+ * @returns {Promise<string>} The notification message.
  */
-const getNotificationMessage = async (event) => {
-  const encryptedMessage = event.detail.text
-  const receiverSessionName = event.detail.receiver_session_name
-
-  let decryptedMessage = ""
-
-  if (receiverSessionName != null && receiverSessionName != "") {
-    // Getting the private key to decrypt the message in the user notification.
-    const privateKey = await getPrivateKey(/** @type {string} */ (receiverSessionName))
-
-    if (privateKey && encryptedMessage) {
-      decryptedMessage = await decryptMessage(encryptedMessage, privateKey)
-    }
-  }
-
-  return decryptedMessage
+const getNotificationMessage = (_event) => {
+  return Promise.resolve("New message received")
 }
 
 /**

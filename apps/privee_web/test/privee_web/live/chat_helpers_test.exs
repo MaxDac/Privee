@@ -22,16 +22,16 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       assert {message_22, [_, message_22]} = parse_messages([message_11, message_12])
@@ -52,24 +52,24 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       assert {message_22, [message_21, message_22]} = parse_messages([message_11, message_12])
 
-      assert message_11.text_from == message_21.text_from
-      assert message_11.text_to == message_21.text_to
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
+      assert message_11.ciphertext == message_21.ciphertext
+      assert message_11.header == message_21.header
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
 
       assert message_21.id == 0
       assert message_22.id == 1
@@ -83,24 +83,24 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       assert {message_22, [message_21, message_22]} = parse_messages([message_11, message_12])
 
-      assert message_11.text_from == message_21.text_from
-      assert message_11.text_to == message_21.text_to
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
+      assert message_11.ciphertext == message_21.ciphertext
+      assert message_11.header == message_21.header
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
 
       refute message_21.in_thread
       refute message_22.in_thread
@@ -114,35 +114,35 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       message_13 =
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_3",
+          header: ~s({"ratchetKey":"key3","n":0,"pn":0})
         })
 
       assert {message_23, [message_21, message_22, message_23]} =
                parse_messages([message_11, message_12, message_13])
 
-      assert message_11.text_from == message_21.text_from
-      assert message_11.text_to == message_21.text_to
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
-      assert message_13.text_from == message_23.text_from
-      assert message_13.text_to == message_23.text_to
+      assert message_11.ciphertext == message_21.ciphertext
+      assert message_11.header == message_21.header
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
+      assert message_13.ciphertext == message_23.ciphertext
+      assert message_13.header == message_23.header
 
       refute message_21.in_thread
       refute message_22.in_thread
@@ -157,35 +157,35 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       message_13 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_3",
+          header: ~s({"ratchetKey":"key3","n":0,"pn":0})
         })
 
       assert {message_23, [message_21, message_22, message_23]} =
                parse_messages([message_11, message_12, message_13])
 
-      assert message_11.text_from == message_21.text_from
-      assert message_11.text_to == message_21.text_to
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
-      assert message_13.text_from == message_23.text_from
-      assert message_13.text_to == message_23.text_to
+      assert message_11.ciphertext == message_21.ciphertext
+      assert message_11.header == message_21.header
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
+      assert message_13.ciphertext == message_23.ciphertext
+      assert message_13.header == message_23.header
 
       refute message_21.in_thread
       refute message_22.in_thread
@@ -208,24 +208,24 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_1.id,
           to: session_2.id,
-          text_from: "text 1",
-          text_to: "text 1"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       message_11 = Map.put(message_11, :id, 0)
 
       assert message_22 = add_message(message_12, message_11)
 
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
 
       refute message_22.in_thread
     end
@@ -238,16 +238,16 @@ defmodule PriveeWeb.ChatHelpersTest do
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_1",
+          header: ~s({"ratchetKey":"key1","n":0,"pn":0})
         })
 
       message_12 =
         message_fixture(%{
           from: session_2.id,
           to: session_1.id,
-          text_from: "text 2",
-          text_to: "text 2"
+          ciphertext: "encrypted_text_2",
+          header: ~s({"ratchetKey":"key2","n":0,"pn":0})
         })
 
       message_11 = Map.put(message_11, :id, 0)
@@ -255,8 +255,8 @@ defmodule PriveeWeb.ChatHelpersTest do
       assert message_22 =
                add_message(message_12, message_11)
 
-      assert message_12.text_from == message_22.text_from
-      assert message_12.text_to == message_22.text_to
+      assert message_12.ciphertext == message_22.ciphertext
+      assert message_12.header == message_22.header
 
       assert message_22.in_thread
     end

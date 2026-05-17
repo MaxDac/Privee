@@ -17,7 +17,7 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   embed_templates "components/*"
 
-  @keys_send_event "sending_keys"
+  @prekey_bundle_event "prekey_bundle"
   @chat_created_event "chat_created"
   @message_received_event "message_received"
 
@@ -29,7 +29,7 @@ defmodule PriveeWeb.Chat.ChatLive do
       {:cont, socket} ->
         {:ok,
          socket
-         |> send_public_keys()
+         |> send_prekey_bundle()
          |> assign_existing_messages()
          |> subscribe_to_events()
          |> assign_form()}
@@ -60,6 +60,28 @@ defmodule PriveeWeb.Chat.ChatLive do
      socket
      |> deliver_message(params)
      |> assign_form()}
+  end
+
+  @impl true
+  def handle_event("register_prekeys", params, socket) do
+    session_id = socket.assigns.current_session.id
+
+    bundle = %{
+      identity_key: params["identity_key"],
+      registration_id: params["registration_id"],
+      signed_prekey: %{
+        key_id: params["signed_prekey"]["key_id"],
+        public_key: params["signed_prekey"]["public_key"],
+        signature: params["signed_prekey"]["signature"]
+      },
+      one_time_prekeys:
+        Enum.map(params["one_time_prekeys"] || [], fn pk ->
+          %{key_id: pk["key_id"], public_key: pk["public_key"]}
+        end)
+    }
+
+    Privee.PreKeyStore.register_bundle(session_id, bundle)
+    {:noreply, socket}
   end
 
   @impl true
@@ -116,14 +138,22 @@ defmodule PriveeWeb.Chat.ChatLive do
     assign(socket, :form, form)
   end
 
-  defp send_public_keys(
-         %{assigns: %{current_session: current_session, selected_session: selected_session}} =
-           socket
+  defp send_prekey_bundle(
+         %{assigns: %{selected_session: selected_session}} = socket
        ) do
-    push_event(socket, @keys_send_event, %{
-      current: current_session.public_key,
-      selected: selected_session.public_key
-    })
+    case Privee.PreKeyStore.get_bundle(selected_session.id) do
+      {:ok, bundle} ->
+        push_event(socket, @prekey_bundle_event, %{
+          peer_session_id: selected_session.id,
+          identity_key: bundle.identity_key,
+          registration_id: bundle.registration_id,
+          signed_prekey: bundle.signed_prekey,
+          one_time_prekey: bundle.one_time_prekey
+        })
+
+      {:error, :not_found} ->
+        push_event(socket, @prekey_bundle_event, %{peer_session_id: nil})
+    end
   end
 
   defp subscribe_to_events(

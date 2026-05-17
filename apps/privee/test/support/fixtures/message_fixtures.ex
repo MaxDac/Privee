@@ -14,8 +14,8 @@ defmodule Privee.MessageFixtures do
       |> check_message_to()
 
     Enum.into(attrs, %{
-      text_from: "Some text",
-      text_to: "Some text"
+      ciphertext: "encrypted_content_base64",
+      header: ~s({"ratchetKey":"abc","n":0,"pn":0})
     })
   end
 
@@ -25,8 +25,8 @@ defmodule Privee.MessageFixtures do
     %Message{
       from: valid_attributes.from,
       to: valid_attributes.to,
-      text_from: valid_attributes.text_from,
-      text_to: valid_attributes.text_to
+      ciphertext: valid_attributes.ciphertext,
+      header: valid_attributes.header
     }
   end
 

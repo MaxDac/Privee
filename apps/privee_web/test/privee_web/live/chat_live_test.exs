@@ -13,17 +13,20 @@ defmodule PriveeWeb.ChatLiveTest do
       current_session = session_fixture()
       selected_session = session_fixture(%{session_name: generate_new_unique_session_name()})
 
+      # Register a prekey bundle for the selected session so the chat can load
+      Privee.PreKeyStore.register_bundle(selected_session.id, %{
+        identity_key: "test_identity_key",
+        registration_id: 12345,
+        signed_prekey: %{key_id: 1, public_key: "test_spk", signature: "test_sig"},
+        one_time_prekeys: [%{key_id: 1, public_key: "test_opk"}]
+      })
+
       {:ok, lv, html} =
         conn
         |> log_in_session(current_session)
         |> live(~p"/chat/#{selected_session.session_name}")
 
-      expected_event_payload = %{
-        current: current_session.public_key,
-        selected: selected_session.public_key
-      }
-
-      assert_push_event(lv, "sending_keys", ^expected_event_payload)
+      assert_push_event(lv, "prekey_bundle", %{peer_session_id: _})
       assert html =~ selected_session.session_name
     end
 
@@ -74,8 +77,8 @@ defmodule PriveeWeb.ChatLiveTest do
     end
 
     test "renders a chat message", %{conn: conn} do
-      message_text_from = "some message from"
-      message_text_to = "some message to"
+      ciphertext = "encrypted_message_content_base64"
+      header = ~s({"ratchetKey":"test_key","n":0,"pn":0})
       current_session = session_fixture()
       selected_session = session_fixture(%{session_name: generate_new_unique_session_name()})
 
@@ -100,22 +103,21 @@ defmodule PriveeWeb.ChatLiveTest do
         })
         |> render_submit(%{
           "message" => %{
-            "text_from" => message_text_from,
-            "text_to" => message_text_to
+            "ciphertext" => ciphertext,
+            "header" => header
           }
         })
 
       expected_event = %{
         session_name: selected_session.session_name,
-        text: message_text_to,
         check_focus: true
       }
 
-      assert render(lv) =~ message_text_to
+      assert render(lv) =~ ciphertext
 
       assert_push_event(lv, "trigger_notification", ^expected_event)
 
-      assert render(sender_lv) =~ message_text_from
+      assert render(sender_lv) =~ ciphertext
     end
   end
 end

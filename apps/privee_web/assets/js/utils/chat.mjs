@@ -1,48 +1,85 @@
 /**
- * @typedef {object} SessionsPublicKey The payload of the event that sends the
- * public key of the session to the server.
- * @property {string} current The current session public key in string format.
- * @property {string} selected The selected session public key in string format.
+ * Chat encryption and input handling using Signal Protocol (Double Ratchet).
  */
 
 import { querySelectorArrayOf } from "./dom-utils.mjs"
-import { getPrivateKey, importStringPublicKey } from "./security.mjs"
-import { decryptMessage, encryptMessage } from "./message-encryption.mjs"
+import {
+  x3dhInitiate,
+  initSendingSession,
+  ratchetEncrypt,
+  ratchetDecrypt,
+} from "./signal-protocol.mjs"
+import { getIdentityKeyPair, getSession, storeSession } from "./signal-store.mjs"
 
 const chatFormSelector = "#chat-form"
 const chatTextInputSelector = "#chat-text"
-const fromHiddenInputSelector = "#text-from"
-const toHiddenInputSelector = "#text-to"
+const ciphertextHiddenInputSelector = "#chat-ciphertext"
+const headerHiddenInputSelector = "#chat-header"
 
 // prettier-ignore
 const chatEntryUnconverted="[data-converted=\"false\"]"
 
-/**
- * @typedef {{detail: SessionsPublicKey} & Event} SessionsPublicKeyEvent The event that sends the
- * public keys of the two sessions of the chat page.
- */
-
-/** @type {CryptoKey | null} */
-var currentPublicKey = null
-/** @type {CryptoKey | null} */
-var selectedPublicKey = null
+/** @type {import("./signal-protocol.mjs").SessionState | null} */
+var currentSession = null
+/** @type {string | null} */
+var currentPeerSessionId = null
 
 /**
- * Handles the event that sends the public keys of the two sessions of the chat.
- * @param {SessionsPublicKeyEvent} e The event payload.
- * @returns {Promise<void>} A promise that resolves when the public key is stored.
+ * @typedef {object} PreKeyBundleEvent
+ * @property {{peer_session_id: string|null, identity_key: string, registration_id: number, signed_prekey: {key_id: number, public_key: string, signature: string}, one_time_prekey: {key_id: number, public_key: string}|null}} detail
  */
-export const handleSendingPublicKey = async (e) => {
-  const { current, selected } = e.detail
-  currentPublicKey = await importStringPublicKey(current)
-  selectedPublicKey = await importStringPublicKey(selected)
+
+/**
+ * Handles the prekey bundle event from the backend to establish a Signal session.
+ * @param {PreKeyBundleEvent & Event} e
+ * @returns {Promise<void>}
+ */
+export const handlePreKeyBundle = async (e) => {
+  const { peer_session_id, identity_key, signed_prekey, one_time_prekey } = e.detail
+
+  if (!peer_session_id) {
+    console.warn("No prekey bundle available for peer")
+    return
+  }
+
+  currentPeerSessionId = String(peer_session_id)
+
+  // Check if we already have a session with this peer
+  const existingSession = await getSession(currentPeerSessionId)
+  if (existingSession) {
+    currentSession = existingSession
+    console.debug("Loaded existing Signal session for peer", currentPeerSessionId)
+    return
+  }
+
+  // Establish new session via X3DH
+  const identityKeyPair = await getIdentityKeyPair()
+  if (!identityKeyPair) {
+    console.error("No identity key pair found - registration incomplete")
+    return
+  }
+
+  try {
+    const peerBundle = {
+      identity_key,
+      signed_prekey,
+      one_time_prekey,
+    }
+
+    const { sharedSecret } = await x3dhInitiate(identityKeyPair.privateKey, peerBundle)
+
+    currentSession = await initSendingSession(sharedSecret, signed_prekey.public_key)
+    await storeSession(currentPeerSessionId, currentSession)
+    console.debug("Established new Signal session with peer", currentPeerSessionId)
+  } catch (err) {
+    console.error("Failed to establish Signal session:", err)
+  }
 }
 
 /**
- * Handles the chat input by encrypting the content of the text input, and then
- * putting the values into the related hidden inputs.
- * @param {KeyboardEvent} e The submit event.
- * @returns {Promise<void>} The result of the operation.
+ * Handles the chat input by encrypting with Signal Protocol.
+ * @param {KeyboardEvent} e
+ * @returns {Promise<void>}
  */
 export const handleChatInput = async (e) => {
   if (e.key !== "Enter") {
@@ -55,33 +92,41 @@ export const handleChatInput = async (e) => {
   const chatTextInput = /** @type {HTMLInputElement} */ (
     document.querySelector(chatTextInputSelector)
   )
-  const fromHiddenInput = /** @type {HTMLInputElement} */ (
-    document.querySelector(fromHiddenInputSelector)
+  const ciphertextInput = /** @type {HTMLInputElement} */ (
+    document.querySelector(ciphertextHiddenInputSelector)
   )
-  const toHiddenInput = /** @type {HTMLInputElement} */ (
-    document.querySelector(toHiddenInputSelector)
+  const headerInput = /** @type {HTMLInputElement} */ (
+    document.querySelector(headerHiddenInputSelector)
   )
 
   const text = chatTextInput.value
 
   if (text == null || text === "") {
-    fromHiddenInput.value = ""
-    toHiddenInput.value = ""
+    ciphertextInput.value = ""
+    headerInput.value = ""
     return
   }
 
-  if (!currentPublicKey || !selectedPublicKey) {
+  if (!currentSession) {
+    console.error("No Signal session established")
     return
   }
 
-  const encryptedFrom = await encryptMessage(text, currentPublicKey)
-  const encryptedTo = await encryptMessage(text, selectedPublicKey)
+  try {
+    const { ciphertext, header } = await ratchetEncrypt(currentSession, text)
+    ciphertextInput.value = ciphertext
+    headerInput.value = header
+    chatTextInput.value = ""
 
-  fromHiddenInput.value = encryptedFrom
-  toHiddenInput.value = encryptedTo
-  chatTextInput.value = ""
+    // Persist session state after encryption (ratchet advanced)
+    if (currentPeerSessionId) {
+      await storeSession(currentPeerSessionId, currentSession)
+    }
 
-  formElement.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    formElement.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+  } catch (err) {
+    console.error("Failed to encrypt message:", err)
+  }
 }
 
 /**
@@ -96,82 +141,80 @@ export const addChatInputHandler = () => {
 }
 
 /**
- * Converts all the chat entries whose text is still in base64 encrypted format into normal
- * chat entries.
- * @param {string} sessionName The current session name.
+ * Decrypts all unconverted chat entries using the Signal session.
+ * @param {string} _sessionName - The current session name (kept for API compat).
  */
-export const decryptChatEntriesText = async (sessionName) => {
+export const decryptChatEntriesText = async (_sessionName) => {
   const uncoveredChatEntries = querySelectorArrayOf(chatEntryUnconverted)
 
   if (uncoveredChatEntries.length === 0) {
     return Promise.resolve()
   }
 
-  const privateKey = await getPrivateKey(sessionName)
-
-  if (!privateKey) {
+  if (!currentSession) {
     return Promise.resolve()
   }
 
   const promises = uncoveredChatEntries.map((ce) =>
-    decryptChatEntryText(/** @type {HTMLElement} */ (ce), privateKey),
+    decryptChatEntryText(/** @type {HTMLElement} */ (ce)),
   )
   await Promise.all(promises)
+
+  // Persist session state after decryption (ratchet may have advanced)
+  if (currentPeerSessionId) {
+    await storeSession(currentPeerSessionId, currentSession)
+  }
 }
 
 /**
- * Removes trailing invisible characters from encrypted chat entry text.
- * @param {HTMLElement} chatEntry - The chat entry HTML element containing encrypted text.
- * @returns {string} The cleaned encrypted text string with trailing invisible characters removed.
+ * Decrypts a single chat entry element.
+ * @param {HTMLElement} chatEntry
+ * @returns {Promise<void>}
  */
-const cleanEncryptedString = (chatEntry) => {
-  const initialTrimmed = chatEntry.innerHTML.trim()
+const decryptChatEntryText = async (chatEntry) => {
+  const ciphertext = chatEntry.dataset.ciphertext
+  const header = chatEntry.dataset.header
 
-  const withoutInvisibleChar = initialTrimmed.endsWith("\u200E")
-    ? initialTrimmed.slice(0, -1)
-    : initialTrimmed
+  if (!ciphertext || !header) {
+    return
+  }
 
-  return withoutInvisibleChar.trim()
-}
-
-/**
- * Re-adds the trailing invisible character (U+200E) to a decrypted message.
- * This character is used as a marker to indicate processed chat entries.
- * @param {string} decryptedMessage - The decrypted message text.
- * @returns {string} The decrypted message with the trailing invisible character appended.
- */
-const reAddTrailingChar = (decryptedMessage) => `${decryptedMessage}\u200E`
-
-/**
- * Converts a single chat entry element text by decrypting it.
- * @param {HTMLElement} chatEntry The chat entry HTML element.
- * @param {CryptoKey} privateKey The private key with which the chat text can be decrypted.
- * @returns {Promise<string | void>} The execution result.
- */
-const decryptChatEntryText = async (chatEntry, privateKey) => {
-  const encryptedText = cleanEncryptedString(chatEntry)
-  const decryptedMessage = await decryptMessage(encryptedText, privateKey)
-  chatEntry.innerHTML = reAddTrailingChar(decryptedMessage)
-  chatEntry.setAttribute("data-converted", "true")
-  chatEntry.classList.remove("hidden")
+  try {
+    const decryptedMessage = await ratchetDecrypt(
+      /** @type {import("./signal-protocol.mjs").SessionState} */ (currentSession),
+      ciphertext,
+      header,
+    )
+    chatEntry.textContent = `${decryptedMessage}\u200E`
+    chatEntry.setAttribute("data-converted", "true")
+    chatEntry.classList.remove("hidden")
+  } catch (err) {
+    console.error("Failed to decrypt message:", err)
+  }
 }
 
 export const testExports = {
   /**
-   * Gets the current public key.
-   * @returns {CryptoKey | null} The current public key.
+   * Gets the current session.
+   * @returns {import("./signal-protocol.mjs").SessionState | null}
    */
-  getCurrentPublicKey: () => currentPublicKey,
+  getCurrentSession: () => currentSession,
 
   /**
-   * Gets the selected public key.
-   * @returns {CryptoKey | null} The selected public key.
+   * Sets the current session (for testing).
+   * @param {import("./signal-protocol.mjs").SessionState | null} session
    */
-  getSelectedPublicKey: () => selectedPublicKey,
+  setCurrentSession: (session) => {
+    currentSession = session
+  },
+
+  /**
+   * Sets the current peer session ID (for testing).
+   * @param {string | null} id
+   */
+  setCurrentPeerSessionId: (id) => {
+    currentPeerSessionId = id
+  },
 
   decryptChatEntryText,
-
-  cleanEncryptedString,
-
-  reAddTrailingChar,
 }
