@@ -33,10 +33,23 @@ export const addChatHooks = (Hooks) => {
       addDarkModeToggleHandlers()
       addChatInputHandler()
 
-      // Handle prekey bundle from server for Signal session establishment
+      // Handle prekey bundle from server for Signal session establishment (for late-arriving bundles via PubSub)
       this.handleEvent("prekey_bundle", (/** @type {any} */ data) => {
+        console.debug("Received prekey_bundle event from server:", data)
         handlePreKeyBundle(/** @type {any} */ ({ detail: data }))
       })
+
+      // Process initial prekey bundle from data attribute (avoids race condition with async hook loading)
+      const peerBundleJson = this.el.dataset.peerPrekeyBundle
+      if (peerBundleJson) {
+        try {
+          const bundleData = JSON.parse(peerBundleJson)
+          console.debug("Processing initial prekey bundle from data attribute:", bundleData)
+          handlePreKeyBundle(/** @type {any} */ ({ detail: bundleData }))
+        } catch (e) {
+          console.error("Failed to parse initial prekey bundle:", e)
+        }
+      }
 
       // Upload our own prekey bundle to the server so peers can establish sessions
       uploadOwnPreKeyBundle(pushEvent)
@@ -83,13 +96,16 @@ const scrollElementToEnd = (element) => (element.scrollTop = element.scrollHeigh
  * @param {Function} pushEvent - LiveView pushEvent function
  */
 const uploadOwnPreKeyBundle = async (pushEvent) => {
+  console.debug("uploadOwnPreKeyBundle: starting")
   try {
     const bundle = await getPreKeyBundle()
+    console.debug("uploadOwnPreKeyBundle: got bundle from IndexedDB:", !!bundle)
     if (!bundle) {
       console.warn("No prekey bundle found in IndexedDB - registration may be incomplete")
       return
     }
 
+    console.debug("Uploading own prekey bundle to server")
     pushEvent("register_prekeys", {
       identity_key: bundle.identityKey,
       registration_id: bundle.registrationId,

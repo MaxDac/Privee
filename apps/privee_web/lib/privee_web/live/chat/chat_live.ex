@@ -20,6 +20,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   @prekey_bundle_event "prekey_bundle"
   @chat_created_event "chat_created"
   @message_received_event "message_received"
+  @prekeys_available_event "prekeys_available"
 
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
@@ -65,6 +66,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   @impl true
   def handle_event("register_prekeys", params, socket) do
     session_id = socket.assigns.current_session.id
+    Logger.debug("Registering prekeys for session #{session_id}")
 
     bundle = %{
       identity_key: params["identity_key"],
@@ -82,8 +84,17 @@ defmodule PriveeWeb.Chat.ChatLive do
 
     Privee.PreKeyStore.register_bundle(session_id, bundle)
 
+    # Notify anyone waiting for our prekey bundle
+    PriveeWeb.Endpoint.broadcast("prekeys:#{session_id}", @prekeys_available_event, %{})
+
     # After registering our bundle, send the peer's bundle for session establishment
-    {:noreply, send_prekey_bundle(socket)}
+    {:noreply, push_prekey_bundle(socket)}
+  end
+
+  @impl true
+  def handle_info(%{event: @prekeys_available_event}, socket) do
+    # Peer's prekeys just became available - send their bundle to the client
+    {:noreply, push_prekey_bundle(socket)}
   end
 
   @impl true
@@ -143,6 +154,29 @@ defmodule PriveeWeb.Chat.ChatLive do
   defp send_prekey_bundle(%{assigns: %{selected_session: selected_session}} = socket) do
     case Privee.PreKeyStore.get_bundle(selected_session.id) do
       {:ok, bundle} ->
+        Logger.debug("Sending prekey bundle for peer #{selected_session.id}")
+
+        bundle_data = %{
+          peer_session_id: selected_session.id,
+          identity_key: bundle.identity_key,
+          registration_id: bundle.registration_id,
+          signed_prekey: bundle.signed_prekey,
+          one_time_prekey: bundle.one_time_prekey
+        }
+
+        assign(socket, :peer_prekey_bundle, Jason.encode!(bundle_data))
+
+      {:error, :not_found} ->
+        Logger.debug("No prekey bundle found for peer #{selected_session.id}")
+        assign(socket, :peer_prekey_bundle, nil)
+    end
+  end
+
+  defp push_prekey_bundle(%{assigns: %{selected_session: selected_session}} = socket) do
+    case Privee.PreKeyStore.get_bundle(selected_session.id) do
+      {:ok, bundle} ->
+        Logger.debug("Sending prekey bundle for peer #{selected_session.id}")
+
         push_event(socket, @prekey_bundle_event, %{
           peer_session_id: selected_session.id,
           identity_key: bundle.identity_key,
@@ -152,7 +186,7 @@ defmodule PriveeWeb.Chat.ChatLive do
         })
 
       {:error, :not_found} ->
-        push_event(socket, @prekey_bundle_event, %{peer_session_id: nil})
+        socket
     end
   end
 
@@ -163,7 +197,8 @@ defmodule PriveeWeb.Chat.ChatLive do
     if connected?(socket) do
       with :ok <-
              Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
-           :ok <- Events.subscribe_to_receiving_events(socket, current_session.id) do
+           :ok <- Events.subscribe_to_receiving_events(socket, current_session.id),
+           :ok <- PriveeWeb.Endpoint.subscribe("prekeys:#{selected_session.id}") do
         socket
       else
         error ->

@@ -21,13 +21,13 @@ defmodule PriveeWeb.ChatLiveTest do
         one_time_prekeys: [%{key_id: 1, public_key: "test_opk"}]
       })
 
-      {:ok, lv, html} =
+      {:ok, _lv, html} =
         conn
         |> log_in_session(current_session)
         |> live(~p"/chat/#{selected_session.session_name}")
 
-      assert_push_event(lv, "prekey_bundle", %{peer_session_id: _})
       assert html =~ selected_session.session_name
+      assert html =~ "data-peer-prekey-bundle="
     end
 
     test "redirects to the privee page when the logo is clicked", %{conn: conn} do

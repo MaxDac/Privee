@@ -23,6 +23,8 @@ const chatEntryUnconverted="[data-converted=\"false\"]"
 var currentSession = null
 /** @type {string | null} */
 var currentPeerSessionId = null
+/** @type {Map<string, string>} Map of ciphertext to plaintext for sent messages */
+const sentMessages = new Map()
 
 /**
  * @typedef {object} PreKeyBundleEvent
@@ -38,12 +40,13 @@ export const handlePreKeyBundle = async (e) => {
   const { peer_session_id, identity_key, signed_prekey, one_time_prekey } = e.detail
 
   if (!peer_session_id) {
-    console.warn("No prekey bundle available for peer")
+    console.warn("No prekey bundle available for peer - waiting for peer to come online")
     currentSession = null
     currentPeerSessionId = null
     return
   }
 
+  console.debug("Processing prekey bundle for peer:", peer_session_id)
   currentPeerSessionId = String(peer_session_id)
 
   // Check if we already have a session with this peer
@@ -120,6 +123,9 @@ export const handleChatInput = async (e) => {
     headerInput.value = header
     chatTextInput.value = ""
 
+    // Store plaintext so we can display our own sent messages without decryption
+    sentMessages.set(ciphertext, text)
+
     // Persist session state after encryption (ratchet advanced)
     if (currentPeerSessionId) {
       await storeSession(currentPeerSessionId, currentSession)
@@ -178,6 +184,18 @@ const decryptChatEntryText = async (chatEntry) => {
   const header = chatEntry.dataset.header
 
   if (!ciphertext || !header) {
+    return
+  }
+
+  // Sent messages (data-message="from") can't be decrypted with our ratchet
+  // Use the locally cached plaintext instead
+  if (chatEntry.dataset.message === "from") {
+    const plaintext = sentMessages.get(ciphertext)
+    if (plaintext) {
+      chatEntry.textContent = `${plaintext}\u200E`
+      chatEntry.setAttribute("data-converted", "true")
+      chatEntry.classList.remove("hidden")
+    }
     return
   }
 

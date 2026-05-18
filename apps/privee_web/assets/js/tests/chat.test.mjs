@@ -38,7 +38,9 @@ describe("handlePreKeyBundle", () => {
 
     await handlePreKeyBundle({ detail: { peer_session_id: null } })
 
-    expect(warnSpy).toHaveBeenCalledWith("No prekey bundle available for peer")
+    expect(warnSpy).toHaveBeenCalledWith(
+      "No prekey bundle available for peer - waiting for peer to come online",
+    )
     expect(testExports.getCurrentSession()).toBeNull()
   })
 

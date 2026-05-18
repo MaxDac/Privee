@@ -15,7 +15,7 @@ import {
 
 const DB_NAME = "SignalKeyStore"
 const KEYS_TABLE = "signal_keys"
-const SESSIONS_TABLE = "signal_sessions"
+const SESSIONS_TABLE = "signal_keys"
 
 const KEY_IDENTITY = "identity_key_pair"
 const KEY_REGISTRATION_ID = "registration_id"
