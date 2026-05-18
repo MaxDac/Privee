@@ -50,6 +50,7 @@ const MAX_SKIP = 256
  * @property {number} recvCount
  * @property {number} prevSendCount
  * @property {Map<string, CryptoKey>} skippedKeys
+ * @property {{identityKey: string, ephemeralKey: string, usedOPKId: number|null}} [_preKeyInfo]
  */
 
 // Utility: ArrayBuffer <-> Base64
@@ -634,6 +635,7 @@ export const serializeSession = async (session) => {
     recvCount: session.recvCount,
     prevSendCount: session.prevSendCount,
     skippedKeys: skippedEntries,
+    _preKeyInfo: session._preKeyInfo || null,
   }
 }
 
@@ -679,6 +681,7 @@ export const deserializeSession = async (data) => {
     recvCount: data.recvCount,
     prevSendCount: data.prevSendCount,
     skippedKeys,
+    _preKeyInfo: data._preKeyInfo || undefined,
   }
 }
 

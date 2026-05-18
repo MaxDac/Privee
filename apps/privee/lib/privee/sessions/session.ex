@@ -23,6 +23,7 @@ defmodule Privee.Sessions.Session do
     field :hashed_recovery_phrase, :string, redact: true
     field :is_quick, :boolean, default: false
     field :has_logged, :boolean, default: false
+    field :prekey_bundle, :map
 
     timestamps()
   end

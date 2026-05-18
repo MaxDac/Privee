@@ -31,6 +31,7 @@ describe("handlePreKeyBundle", () => {
     vi.restoreAllMocks()
     testExports.setCurrentSession(null)
     testExports.setCurrentPeerSessionId(null)
+    testExports.setPendingPeerBundle(null)
   })
 
   it("should warn and return when no peer_session_id present", async () => {
@@ -61,19 +62,13 @@ describe("handlePreKeyBundle", () => {
     expect(testExports.getCurrentSession()).toBe(mockSession)
   })
 
-  it("should establish new session via X3DH when no existing session", async () => {
+  it("should store peer bundle for lazy session initiation when no existing session", async () => {
     // Generate real keys for the peer (Bob)
     const bobKeys = await generateRegistrationKeys(1)
     const bobBundle = await exportPreKeyBundle(bobKeys)
 
-    // Generate identity key pair for Alice (local)
-    const aliceIdentity = await generateSigningKeyPair()
-
     vi.spyOn(signalStore, "getSession").mockResolvedValue(null)
-    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue({
-      publicKey: aliceIdentity.publicKey,
-      privateKey: aliceIdentity.privateKey,
-    })
+    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue(null)
     vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
 
     await handlePreKeyBundle({
@@ -94,8 +89,8 @@ describe("handlePreKeyBundle", () => {
       },
     })
 
-    expect(testExports.getCurrentSession()).not.toBeNull()
-    expect(signalStore.storeSession).toHaveBeenCalledWith("peer-456", expect.anything())
+    // Session is NOT established immediately - it's deferred to first send
+    expect(testExports.getCurrentSession()).toBeNull()
   })
 })
 
@@ -105,6 +100,7 @@ describe("handleChatInput", () => {
     vi.restoreAllMocks()
     testExports.setCurrentSession(null)
     testExports.setCurrentPeerSessionId(null)
+    testExports.setPendingPeerBundle(null)
   })
 
   it("should do nothing when key is not Enter", async () => {
@@ -198,13 +194,14 @@ describe("handleChatInput", () => {
     expect(formSubmitted).toBe(true)
   })
 
-  it("should log error when no session established", async () => {
+  it("should log error when no session and no pending bundle", async () => {
     const dom = new JSDOM(html)
     vi.stubGlobal("document", dom.window.document)
     vi.stubGlobal("Event", dom.window.Event)
     vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
 
     testExports.setCurrentSession(null)
+    testExports.setPendingPeerBundle(null)
 
     const chatText = document.querySelector("#chat-text")
     chatText.value = "Hello"

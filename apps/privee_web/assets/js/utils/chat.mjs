@@ -5,11 +5,21 @@
 import { querySelectorArrayOf } from "./dom-utils.mjs"
 import {
   x3dhInitiate,
+  x3dhRespond,
   initSendingSession,
+  initReceivingSession,
   ratchetEncrypt,
   ratchetDecrypt,
+  exportPublicKey,
 } from "./signal-protocol.mjs"
-import { getIdentityKeyPair, getSession, storeSession } from "./signal-store.mjs"
+import {
+  getIdentityKeyPair,
+  getSignedPreKey,
+  getOneTimePreKey,
+  removeOneTimePreKey,
+  getSession,
+  storeSession,
+} from "./signal-store.mjs"
 
 const chatFormSelector = "#chat-form"
 const chatTextInputSelector = "#chat-text"
@@ -27,12 +37,20 @@ var currentPeerSessionId = null
 const sentMessages = new Map()
 
 /**
+ * Stored peer prekey bundle for lazy session initiation (X3DH happens on first send).
+ * @type {{identity_key: string, signed_prekey: {key_id: number, public_key: string, signature: string}, one_time_prekey: {key_id: number, public_key: string}|null} | null}
+ */
+var pendingPeerBundle = null
+
+/**
  * @typedef {object} PreKeyBundleEvent
  * @property {{peer_session_id: string|null, identity_key: string, registration_id: number, signed_prekey: {key_id: number, public_key: string, signature: string}, one_time_prekey: {key_id: number, public_key: string}|null}} detail
  */
 
 /**
- * Handles the prekey bundle event from the backend to establish a Signal session.
+ * Handles the prekey bundle event from the backend.
+ * Stores the bundle for lazy session initiation (X3DH on first send).
+ * If a receiving session already exists, loads it instead.
  * @param {PreKeyBundleEvent & Event} e
  * @returns {Promise<void>}
  */
@@ -43,6 +61,7 @@ export const handlePreKeyBundle = async (e) => {
     console.warn("No prekey bundle available for peer - waiting for peer to come online")
     currentSession = null
     currentPeerSessionId = null
+    pendingPeerBundle = null
     return
   }
 
@@ -57,27 +76,109 @@ export const handlePreKeyBundle = async (e) => {
     return
   }
 
-  // Establish new session via X3DH
+  // Store the bundle — session will be established on first send or first receive
+  pendingPeerBundle = { identity_key, signed_prekey, one_time_prekey }
+  console.debug("Stored peer prekey bundle for lazy session initiation")
+}
+
+/**
+ * Establishes a sending session on first message send (X3DH initiator role).
+ * @returns {Promise<boolean>} True if session was established successfully
+ */
+const establishSendingSession = async () => {
+  if (!pendingPeerBundle || !currentPeerSessionId) {
+    return false
+  }
+
   const identityKeyPair = await getIdentityKeyPair()
   if (!identityKeyPair) {
     console.error("No identity key pair found - registration incomplete")
-    return
+    return false
   }
 
   try {
-    const peerBundle = {
-      identity_key,
-      signed_prekey,
-      one_time_prekey,
+    const { sharedSecret, ephemeralPublicKey, usedOneTimePreKey } = await x3dhInitiate(
+      identityKeyPair.privateKey,
+      pendingPeerBundle,
+    )
+
+    const myIdentityPubB64 = await exportPublicKey(identityKeyPair.publicKey)
+
+    currentSession = await initSendingSession(
+      sharedSecret,
+      pendingPeerBundle.signed_prekey.public_key,
+    )
+
+    // Store prekey message info for inclusion in first message header
+    currentSession._preKeyInfo = {
+      identityKey: myIdentityPubB64,
+      ephemeralKey: ephemeralPublicKey,
+      usedOPKId: usedOneTimePreKey ? (pendingPeerBundle.one_time_prekey?.key_id ?? null) : null,
     }
 
-    const { sharedSecret } = await x3dhInitiate(identityKeyPair.privateKey, peerBundle)
-
-    currentSession = await initSendingSession(sharedSecret, signed_prekey.public_key)
     await storeSession(currentPeerSessionId, currentSession)
-    console.debug("Established new Signal session with peer", currentPeerSessionId)
+    pendingPeerBundle = null
+    console.debug("Established sending session with peer", currentPeerSessionId)
+    return true
   } catch (err) {
     console.error("Failed to establish Signal session:", err)
+    return false
+  }
+}
+
+/**
+ * Establishes a receiving session from a PreKey message (X3DH responder role).
+ * @param {object} preKeyInfo - PreKey info from the message header
+ * @param {string} preKeyInfo.identityKey - Sender's identity public key
+ * @param {string} preKeyInfo.ephemeralKey - Sender's ephemeral public key
+ * @param {number|null} preKeyInfo.usedOPKId - Which one-time prekey was consumed
+ * @returns {Promise<boolean>}
+ */
+const establishReceivingSession = async (preKeyInfo) => {
+  const identityKeyPair = await getIdentityKeyPair()
+  if (!identityKeyPair) {
+    console.error("No identity key pair found - cannot establish receiving session")
+    return false
+  }
+
+  const signedPreKey = await getSignedPreKey(1)
+  if (!signedPreKey) {
+    console.error("No signed prekey found - cannot establish receiving session")
+    return false
+  }
+
+  let oneTimePreKeyPrivate = null
+  if (preKeyInfo.usedOPKId != null) {
+    const opk = await getOneTimePreKey(preKeyInfo.usedOPKId)
+    if (opk) {
+      oneTimePreKeyPrivate = opk.privateKey
+      await removeOneTimePreKey(preKeyInfo.usedOPKId)
+    }
+  }
+
+  try {
+    const sharedSecret = await x3dhRespond(
+      identityKeyPair.privateKey,
+      signedPreKey.privateKey,
+      oneTimePreKeyPrivate,
+      preKeyInfo.identityKey,
+      preKeyInfo.ephemeralKey,
+    )
+
+    currentSession = initReceivingSession(sharedSecret, {
+      publicKey: signedPreKey.publicKey,
+      privateKey: signedPreKey.privateKey,
+    })
+
+    if (currentPeerSessionId) {
+      await storeSession(currentPeerSessionId, currentSession)
+    }
+
+    console.debug("Established receiving session from PreKey message")
+    return true
+  } catch (err) {
+    console.error("Failed to establish receiving session:", err)
+    return false
   }
 }
 
@@ -112,15 +213,38 @@ export const handleChatInput = async (e) => {
     return
   }
 
+  // Establish session on first send if needed
+  if (!currentSession && pendingPeerBundle) {
+    const established = await establishSendingSession()
+    if (!established) {
+      console.error("Failed to establish Signal session for sending")
+      return
+    }
+  }
+
   if (!currentSession) {
-    console.error("No Signal session established")
+    console.warn(
+      "No Signal session established - peer has not registered their encryption keys yet. " +
+        "The peer needs to open the chat page at least once.",
+    )
     return
   }
 
   try {
     const { ciphertext, header } = await ratchetEncrypt(currentSession, text)
+
+    // If this is the first message, include PreKey info in the header
+    let finalHeader = header
+    if (currentSession._preKeyInfo) {
+      const headerObj = JSON.parse(header)
+      headerObj.preKey = currentSession._preKeyInfo
+      finalHeader = JSON.stringify(headerObj)
+      // Clear preKey info after first message
+      delete currentSession._preKeyInfo
+    }
+
     ciphertextInput.value = ciphertext
-    headerInput.value = header
+    headerInput.value = finalHeader
     chatTextInput.value = ""
 
     // Store plaintext so we can display our own sent messages without decryption
@@ -159,17 +283,13 @@ export const decryptChatEntriesText = async (_sessionName) => {
     return Promise.resolve()
   }
 
-  if (!currentSession) {
-    return Promise.resolve()
+  // Process entries sequentially to handle PreKey messages and maintain ratchet order
+  for (const ce of uncoveredChatEntries) {
+    await decryptChatEntryText(/** @type {HTMLElement} */ (ce))
   }
 
-  const promises = uncoveredChatEntries.map((ce) =>
-    decryptChatEntryText(/** @type {HTMLElement} */ (ce)),
-  )
-  await Promise.all(promises)
-
   // Persist session state after decryption (ratchet may have advanced)
-  if (currentPeerSessionId) {
+  if (currentPeerSessionId && currentSession) {
     await storeSession(currentPeerSessionId, currentSession)
   }
 }
@@ -200,10 +320,29 @@ const decryptChatEntryText = async (chatEntry) => {
   }
 
   try {
+    // Check if this is a PreKey message requiring session establishment
+    const headerObj = JSON.parse(header)
+    if (headerObj.preKey && !currentSession) {
+      const established = await establishReceivingSession(headerObj.preKey)
+      if (!established) {
+        console.error("Failed to establish receiving session from PreKey message")
+        return
+      }
+    }
+
+    if (!currentSession) {
+      return
+    }
+
+    // Strip preKey info from header before passing to ratchetDecrypt
+    const ratchetHeader = headerObj.preKey
+      ? JSON.stringify({ ratchetKey: headerObj.ratchetKey, n: headerObj.n, pn: headerObj.pn })
+      : header
+
     const decryptedMessage = await ratchetDecrypt(
       /** @type {import("./signal-protocol.mjs").SessionState} */ (currentSession),
       ciphertext,
-      header,
+      ratchetHeader,
     )
     chatEntry.textContent = `${decryptedMessage}\u200E`
     chatEntry.setAttribute("data-converted", "true")
@@ -234,6 +373,14 @@ export const testExports = {
    */
   setCurrentPeerSessionId: (id) => {
     currentPeerSessionId = id
+  },
+
+  /**
+   * Sets the pending peer bundle (for testing).
+   * @param {any} bundle
+   */
+  setPendingPeerBundle: (bundle) => {
+    pendingPeerBundle = bundle
   },
 
   decryptChatEntryText,

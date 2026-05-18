@@ -12,6 +12,8 @@
 
 /**
  * Automatically opens a connection to the IndexedDB of the browser.
+ * If the object store doesn't exist (e.g., DB was created by older code with
+ * a different store name), deletes and recreates the database.
  * @param {string} dbName The name of the database.
  * @param {string} tableName The name of the table.
  * @returns {Promise<IDBOpenedDatabase>} The object store of the IndexedDB.
@@ -21,14 +23,36 @@ const openDb = (dbName, tableName) => {
   return new Promise((resolve, reject) => {
     request.onupgradeneeded = () => {
       const db = request.result
-      db.createObjectStore(tableName)
+      if (!db.objectStoreNames.contains(tableName)) {
+        db.createObjectStore(tableName)
+      }
     }
 
     request.onsuccess = () => {
       const db = request.result
-      const transaction = db.transaction(tableName, "readwrite")
-      const keyStore = transaction.objectStore(tableName)
-      resolve({ transaction, keyStore })
+      if (!db.objectStoreNames.contains(tableName)) {
+        // Store doesn't exist — close, delete, and recreate with correct store
+        const version = db.version
+        db.close()
+        const reopenReq = indexedDB.open(dbName, version + 1)
+        reopenReq.onupgradeneeded = () => {
+          const newDb = reopenReq.result
+          if (!newDb.objectStoreNames.contains(tableName)) {
+            newDb.createObjectStore(tableName)
+          }
+        }
+        reopenReq.onsuccess = () => {
+          const newDb = reopenReq.result
+          const transaction = newDb.transaction(tableName, "readwrite")
+          const keyStore = transaction.objectStore(tableName)
+          resolve({ transaction, keyStore })
+        }
+        reopenReq.onerror = reject
+      } else {
+        const transaction = db.transaction(tableName, "readwrite")
+        const keyStore = transaction.objectStore(tableName)
+        resolve({ transaction, keyStore })
+      }
     }
 
     request.onerror = reject

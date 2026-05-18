@@ -2,7 +2,14 @@ import { addChatInputHandler, decryptChatEntriesText, handlePreKeyBundle } from 
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
 import { pushFlash } from "../hooks/flash-hooks.mjs"
-import { getPreKeyBundle } from "../utils/signal-store.mjs"
+import { getPreKeyBundle, storePreKeyBundle } from "../utils/signal-store.mjs"
+import { generateRegistrationKeys, exportPreKeyBundle } from "../utils/signal-protocol.mjs"
+import {
+  storeIdentityKeyPair,
+  storeRegistrationId,
+  storeSignedPreKey,
+  storeOneTimePreKey,
+} from "../utils/signal-store.mjs"
 
 /**
  * @typedef {object} ChatScreenHook
@@ -93,15 +100,21 @@ const scrollElementToEnd = (element) => (element.scrollTop = element.scrollHeigh
 
 /**
  * Loads the stored prekey bundle from IndexedDB and uploads it to the server.
+ * If no bundle exists (e.g., registration used old code), generates fresh keys.
  * @param {Function} pushEvent - LiveView pushEvent function
  */
 const uploadOwnPreKeyBundle = async (pushEvent) => {
   console.debug("uploadOwnPreKeyBundle: starting")
   try {
-    const bundle = await getPreKeyBundle()
-    console.debug("uploadOwnPreKeyBundle: got bundle from IndexedDB:", !!bundle)
+    let bundle = await getPreKeyBundle()
+
     if (!bundle) {
-      console.warn("No prekey bundle found in IndexedDB - registration may be incomplete")
+      console.debug("No prekey bundle in IndexedDB - generating fresh keys")
+      bundle = await generateFreshBundle()
+    }
+
+    if (!bundle) {
+      console.error("Failed to generate or retrieve prekey bundle")
       return
     }
 
@@ -121,5 +134,35 @@ const uploadOwnPreKeyBundle = async (pushEvent) => {
     })
   } catch (e) {
     console.error("Failed to upload prekey bundle:", e)
+  }
+}
+
+/**
+ * Generates a fresh set of Signal Protocol keys and stores them in IndexedDB.
+ * @returns {Promise<import("../utils/signal-protocol.mjs").PreKeyBundle|null>}
+ */
+const generateFreshBundle = async () => {
+  try {
+    const keys = await generateRegistrationKeys(10)
+
+    await storeIdentityKeyPair(keys.identityKeyPair)
+    await storeRegistrationId(keys.registrationId)
+    await storeSignedPreKey(
+      keys.signedPreKey.keyId,
+      keys.signedPreKey.keyPair,
+      keys.signedPreKey.signature,
+    )
+
+    for (const opk of keys.oneTimePreKeys) {
+      await storeOneTimePreKey(opk.keyId, opk.keyPair)
+    }
+
+    const bundle = await exportPreKeyBundle(keys)
+    await storePreKeyBundle(bundle)
+    console.debug("Fresh Signal keys generated and stored")
+    return bundle
+  } catch (e) {
+    console.error("Failed to generate fresh Signal keys:", e)
+    return null
   }
 }
