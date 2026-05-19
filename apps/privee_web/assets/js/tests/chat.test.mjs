@@ -206,12 +206,15 @@ describe("handleChatInput", () => {
     const chatText = document.querySelector("#chat-text")
     chatText.value = "Hello"
 
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
 
     const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
     await handleChatInput(event)
 
-    expect(errorSpy).toHaveBeenCalledWith("No Signal session established")
+    expect(warnSpy).toHaveBeenCalledWith(
+      "No Signal session established - peer has not registered their encryption keys yet. " +
+        "The peer needs to open the chat page at least once.",
+    )
   })
 })
 

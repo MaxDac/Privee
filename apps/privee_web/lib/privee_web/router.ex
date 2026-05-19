@@ -17,10 +17,12 @@ defmodule PriveeWeb.Router do
     plug :accepts, ["json"]
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", PriveeWeb do
-  #   pipe_through :api
-  # end
+  # API routes for prekey bundle registration (no auth required - uses session_id directly)
+  scope "/api", PriveeWeb do
+    pipe_through :api
+
+    post "/prekeys/:session_id", PreKeyController, :register
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:privee_web, :dev_routes) do

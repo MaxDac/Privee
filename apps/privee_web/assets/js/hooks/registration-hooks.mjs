@@ -17,7 +17,18 @@ let pendingPreKeyBundle = null
 export function addRegistrationHooks(Hooks) {
   Hooks.RegistrationScreen = {
     mounted() {
-      generateAndStoreKeys()
+      // Disable submit until keys are generated to prevent race condition
+      const submitBtn = this.el.querySelector("button[name=action]")
+      if (submitBtn) submitBtn.disabled = true
+
+      generateAndStoreKeys().then(() => {
+        if (submitBtn) submitBtn.disabled = false
+      })
+
+      // When registration succeeds, POST the prekey bundle to the API endpoint
+      this.handleEvent("handle_new_session_registration", async (/** @type {any} */ data) => {
+        await registerPreKeyBundleViaAPI(data.session_id)
+      })
     },
   }
 }
@@ -50,6 +61,50 @@ const generateAndStoreKeys = async () => {
     console.debug("Signal keys generated and stored")
   } catch (e) {
     console.error("Failed to generate Signal keys:", e)
+  }
+}
+
+/**
+ * Registers the prekey bundle with the server via a direct HTTP POST.
+ * This is more reliable than injecting hidden form fields because it doesn't
+ * depend on LiveView DOM patching or form submission timing.
+ * @param {number} sessionId - The newly created session's ID
+ */
+const registerPreKeyBundleViaAPI = async (sessionId) => {
+  if (!pendingPreKeyBundle || !sessionId) {
+    console.warn("No prekey bundle available to register")
+    return
+  }
+
+  const payload = {
+    identity_key: pendingPreKeyBundle.identityKey,
+    registration_id: pendingPreKeyBundle.registrationId,
+    signed_prekey: {
+      key_id: pendingPreKeyBundle.signedPreKey.keyId,
+      public_key: pendingPreKeyBundle.signedPreKey.publicKey,
+      signature: pendingPreKeyBundle.signedPreKey.signature,
+    },
+    one_time_prekeys: pendingPreKeyBundle.oneTimePreKeys.map((pk) => ({
+      key_id: pk.keyId,
+      public_key: pk.publicKey,
+    })),
+  }
+
+  try {
+    const resp = await fetch(`/api/prekeys/${sessionId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    })
+
+    if (resp.ok) {
+      console.debug("Prekey bundle registered via API for session:", sessionId)
+    } else {
+      console.error("Failed to register prekey bundle:", resp.status)
+    }
+  } catch (e) {
+    console.error("Failed to register prekey bundle via API:", e)
   }
 }
 
