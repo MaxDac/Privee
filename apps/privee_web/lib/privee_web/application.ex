@@ -6,7 +6,6 @@ defmodule PriveeWeb.Application do
   use Application
 
   alias Privee.Chats
-  alias Privee.PreKeyStore
 
   @impl true
   def start(_type, _args) do
@@ -15,7 +14,6 @@ defmodule PriveeWeb.Application do
       # Start a worker by calling: PriveeWeb.Worker.start_link(arg)
       # {PriveeWeb.Worker, arg},
       Chats,
-      PreKeyStore,
       # Start to serve requests, typically the last entry
       PriveeWeb.Endpoint
     ]

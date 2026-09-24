@@ -71,8 +71,14 @@ export const handlePreKeyBundle = async (e) => {
   // Check if we already have a session with this peer
   const existingSession = await getSession(currentPeerSessionId)
   if (existingSession) {
-    currentSession = existingSession
-    console.debug("Loaded existing Signal session for peer", currentPeerSessionId)
+    // Only use the stored session if no concurrent operation (e.g. decryption) has already
+    // established an in-memory session. The in-memory session may be more up-to-date than
+    // what was persisted at the time getSession() was called.
+    if (!currentSession) {
+      currentSession = existingSession
+      console.debug("Loaded existing Signal session for peer", currentPeerSessionId)
+    }
+    pendingPeerBundle = null
     return
   }
 

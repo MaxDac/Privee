@@ -1,5 +1,5 @@
 defmodule Privee.PreKeyStoreTest do
-  use Privee.DataCase, async: false
+  use Privee.DataCase, async: true
 
   alias Privee.PreKeyStore
 
@@ -21,13 +21,6 @@ defmodule Privee.PreKeyStoreTest do
   }
 
   setup do
-    # Ensure PreKeyStore is running
-    case GenServer.whereis(PreKeyStore) do
-      nil -> start_supervised!(PreKeyStore)
-      _pid -> :ok
-    end
-
-    # Create a session fixture for testing
     session = session_fixture(%{session_name: Ecto.UUID.generate()})
     %{session: session}
   end
@@ -141,20 +134,6 @@ defmodule Privee.PreKeyStoreTest do
 
     test "returns error when session not found" do
       assert {:error, :not_found} = PreKeyStore.replenish_prekeys(999_999, [])
-    end
-  end
-
-  describe "database persistence" do
-    test "bundle survives ETS cache clear", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-
-      # Clear the ETS cache for this session via GenServer call
-      GenServer.call(PreKeyStore, {:clear_cache, session.id})
-
-      # Should still find it via DB fallback
-      assert PreKeyStore.has_bundle?(session.id)
-      {:ok, result} = PreKeyStore.get_bundle(session.id)
-      assert result.identity_key == "test_identity_key_base64"
     end
   end
 end

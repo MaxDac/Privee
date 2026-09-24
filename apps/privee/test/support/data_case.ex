@@ -40,11 +40,6 @@ defmodule Privee.DataCase do
   def setup_sandbox(tags) do
     pid = Sandbox.start_owner!(Privee.Repo, shared: not tags[:async])
     on_exit(fn -> Sandbox.stop_owner(pid) end)
-
-    # Allow the PreKeyStore GenServer to access the sandbox connection
-    if prekey_store_pid = GenServer.whereis(Privee.PreKeyStore) do
-      Sandbox.allow(Privee.Repo, pid, prekey_store_pid)
-    end
   end
 
   @doc """
