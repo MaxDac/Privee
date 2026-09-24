@@ -10,25 +10,23 @@ defmodule Privee.MessageFixtures do
   def valid_message_attributes(attrs \\ %{}) do
     attrs =
       attrs
+      |> Map.new()
       |> check_message_from()
       |> check_message_to()
 
     Enum.into(attrs, %{
-      ciphertext: "encrypted_content_base64",
-      header: ~s({"ratchetKey":"abc","n":0,"pn":0})
+      type: 1,
+      body: Base.encode64("ciphertext-" <> Ecto.UUID.generate()),
+      client_nonce: unique_nonce(),
+      sender_session_name: "sender"
     })
   end
 
   def message_fixture(attrs \\ %{}) do
-    valid_attributes = valid_message_attributes(attrs)
-
-    %Message{
-      from: valid_attributes.from,
-      to: valid_attributes.to,
-      ciphertext: valid_attributes.ciphertext,
-      header: valid_attributes.header
-    }
+    struct!(Message, valid_message_attributes(attrs))
   end
+
+  def unique_nonce, do: Ecto.UUID.generate()
 
   defp check_message_from(%{from: from} = attrs) when not is_nil(from), do: attrs
 

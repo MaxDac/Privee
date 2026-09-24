@@ -5,6 +5,11 @@
 
 [Architecture & Azure deployment details](docs/architecture.md)
 
+Chats are end-to-end encrypted with the Signal Protocol. See
+[End-to-end encryption](docs/e2e-encryption.md) for the design, its trade-offs
+(local plaintext history, node-local ciphertext, one device per session) and the
+manual release checklist.
+
 ## Codespaces development
 
 The project is configured to be developed using Codespaces. The initial script should be able to install all the dependencies, but the `ElixirLS` extension might require some time to fetch and build up all the dependencies.
@@ -144,6 +149,11 @@ This is not optimal, but there is issue #109 addressing this.
 ## Deployment
 
 This application supports deployment to both Fly.io and Azure AKS with automatic environment detection.
+
+> **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
+> serving the conversation and are lost on restart, so the chat must run as a
+> single node (one Fly machine, one AKS replica). See
+> [End-to-end encryption](docs/e2e-encryption.md#deliberate-trade-offs).
 
 ### Fly.io Deployment
 

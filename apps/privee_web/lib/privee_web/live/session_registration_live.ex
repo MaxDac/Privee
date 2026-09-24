@@ -32,16 +32,10 @@ defmodule PriveeWeb.SessionRegistrationLive do
       {:ok, session} ->
         changeset = Sessions.change_session_registration(session)
 
-        # Push the event first — trigger_submit will happen in a separate render cycle
-        # to ensure the client processes handleEvent (fires API call) before form submits
-        send(self(), :trigger_submit)
-
         {:noreply,
          socket
-         |> push_event(@handle_new_session_registration, %{
-           session_name: session.session_name,
-           session_id: session.id
-         })
+         |> push_event(@handle_new_session_registration, %{session_name: session.session_name})
+         |> assign(trigger_submit: true)
          |> assign_form(changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -58,11 +52,6 @@ defmodule PriveeWeb.SessionRegistrationLive do
       Sessions.change_session_registration(%Session{}, session_params)
 
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
-  end
-
-  @impl true
-  def handle_info(:trigger_submit, socket) do
-    {:noreply, assign(socket, trigger_submit: true)}
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do

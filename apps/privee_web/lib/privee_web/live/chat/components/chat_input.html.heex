@@ -1,10 +1,25 @@
-<div>
-  <.input id="chat-ciphertext" type="hidden" field={@form[:ciphertext]} />
-  <.input id="chat-header" type="hidden" field={@form[:header]} />
-  <.input
+<%!--
+  The composer is intentionally not a LiveView form and the input has no `name`:
+  plaintext must never be serialized to the server. The ChatScreen hook reads it,
+  encrypts it and pushes only the ciphertext.
+--%>
+<div id="chat-composer" class="flex items-center gap-2">
+  <input
     id="chat-text"
-    field={@form[:text]}
-    phx-debounce="blur"
+    type="text"
+    autocomplete="off"
+    maxlength="4000"
     placeholder="Write your message here"
+    aria-label="Message"
+    disabled
+    class="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 transition focus:border-zinc-400 focus:outline-none focus:ring-0 disabled:opacity-50 sm:text-sm sm:leading-6 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
   />
+  <button
+    id="chat-send"
+    type="button"
+    disabled
+    class="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-700 active:scale-95 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+  >
+    Send
+  </button>
 </div>

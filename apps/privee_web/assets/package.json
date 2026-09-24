@@ -8,6 +8,7 @@
     "test:watch": "NODE_ENV=test NODE_OPTIONS=\"--no-experimental-global-navigator\" vitest --silent=false"
   },
   "dependencies": {
+    "@privacyresearch/libsignal-protocol-typescript": "0.0.16",
     "daisyui": "^5.5.19"
   },
   "devDependencies": {

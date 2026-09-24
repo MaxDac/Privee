@@ -3,137 +3,199 @@ defmodule Privee.PreKeyStoreTest do
 
   alias Privee.PreKeyStore
 
+  import Privee.PreKeyFixtures
   import Privee.SessionsFixtures
 
-  @sample_bundle %{
-    identity_key: "test_identity_key_base64",
-    registration_id: 12345,
-    signed_prekey: %{
-      key_id: 1,
-      public_key: "test_spk_base64",
-      signature: "test_spk_signature_base64"
-    },
-    one_time_prekeys: [
-      %{key_id: 1, public_key: "opk_1_base64"},
-      %{key_id: 2, public_key: "opk_2_base64"},
-      %{key_id: 3, public_key: "opk_3_base64"}
-    ]
-  }
-
   setup do
-    session = session_fixture(%{session_name: Ecto.UUID.generate()})
-    %{session: session}
+    %{session: session_fixture(%{session_name: Ecto.UUID.generate()})}
   end
 
-  describe "register_bundle/2" do
-    test "registers a prekey bundle for a session", %{session: session} do
-      assert :ok = PreKeyStore.register_bundle(session.id, @sample_bundle)
-      assert PreKeyStore.has_bundle?(session.id)
+  describe "publish_identity/2" do
+    test "stores a valid bundle", %{session: s} do
+      attrs = bundle_attrs()
+      assert :ok = PreKeyStore.publish_identity(s.id, attrs)
+      assert PreKeyStore.identity_key(s.id) == attrs["identity_key"]
+      assert PreKeyStore.count_one_time_prekeys(s.id) == 3
     end
 
-    test "overwrites existing bundle on re-register", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-      new_bundle = %{@sample_bundle | identity_key: "new_identity_key"}
-      assert :ok = PreKeyStore.register_bundle(session.id, new_bundle)
-
-      {:ok, result} = PreKeyStore.get_bundle(session.id)
-      assert result.identity_key == "new_identity_key"
-    end
-  end
-
-  describe "get_bundle/1" do
-    test "returns the bundle with a consumed one-time prekey", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-      {:ok, result} = PreKeyStore.get_bundle(session.id)
-
-      assert result.identity_key == "test_identity_key_base64"
-      assert result.registration_id == 12345
-
-      assert result.signed_prekey == %{
-               key_id: 1,
-               public_key: "test_spk_base64",
-               signature: "test_spk_signature_base64"
-             }
-
-      assert result.one_time_prekey == %{key_id: 1, public_key: "opk_1_base64"}
+    test "is idempotent for the same identity", %{session: s} do
+      attrs = bundle_attrs()
+      :ok = PreKeyStore.publish_identity(s.id, attrs)
+      assert :ok = PreKeyStore.publish_identity(s.id, attrs)
     end
 
-    test "consumes one-time prekeys in order", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-
-      {:ok, r1} = PreKeyStore.get_bundle(session.id)
-      assert r1.one_time_prekey.key_id == 1
-
-      {:ok, r2} = PreKeyStore.get_bundle(session.id)
-      assert r2.one_time_prekey.key_id == 2
-
-      {:ok, r3} = PreKeyStore.get_bundle(session.id)
-      assert r3.one_time_prekey.key_id == 3
+    test "refuses to replace a different identity", %{session: s} do
+      :ok = PreKeyStore.publish_identity(s.id, bundle_attrs())
+      assert {:error, :already_published} = PreKeyStore.publish_identity(s.id, bundle_attrs())
     end
 
-    test "returns nil one_time_prekey when all are consumed", %{session: session} do
-      bundle = %{@sample_bundle | one_time_prekeys: [%{key_id: 1, public_key: "only_one"}]}
-      PreKeyStore.register_bundle(session.id, bundle)
+    test "accepts atom keys", %{session: s} do
+      attrs = %{
+        identity_key: public_key(),
+        registration_id: 1,
+        signed_prekey: %{key_id: 1, public_key: public_key(), signature: signature()},
+        one_time_prekeys: []
+      }
 
-      {:ok, _} = PreKeyStore.get_bundle(session.id)
-      {:ok, result} = PreKeyStore.get_bundle(session.id)
-
-      assert result.one_time_prekey == nil
+      assert :ok = PreKeyStore.publish_identity(s.id, attrs)
     end
 
-    test "returns error when session not found" do
-      assert {:error, :not_found} = PreKeyStore.get_bundle(999_999)
-    end
-  end
-
-  describe "has_bundle?/1" do
-    test "returns false when no bundle registered" do
-      refute PreKeyStore.has_bundle?(999_999)
+    test "returns not_found for a missing session" do
+      assert {:error, :not_found} = PreKeyStore.publish_identity(-1, bundle_attrs())
     end
 
-    test "returns true when bundle is registered", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-      assert PreKeyStore.has_bundle?(session.id)
+    for {name, mutate} <- [
+          {"short identity key",
+           quote(do: &Map.put(&1, "identity_key", Base.encode64(<<5, 1, 2>>)))},
+          {"identity key without 0x05 prefix",
+           quote(
+             do:
+               &Map.put(&1, "identity_key", Base.encode64(<<4>> <> :crypto.strong_rand_bytes(32)))
+           )},
+          {"non base64 key", quote(do: &Map.put(&1, "identity_key", "not base64!"))},
+          {"bad signature",
+           quote(do: &put_in(&1, ["signed_prekey", "signature"], Base.encode64("short")))},
+          {"registration id out of range", quote(do: &Map.put(&1, "registration_id", 0x4000))},
+          {"zero opk id",
+           quote(do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([0])))},
+          {"duplicate opk ids",
+           quote(
+             do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([1, 1]))
+           )},
+          {"string key id", quote(do: &put_in(&1, ["signed_prekey", "key_id"], "1"))}
+        ] do
+      test "rejects #{name}", %{session: s} do
+        attrs = unquote(mutate).(bundle_attrs())
+        assert {:error, :invalid_bundle} = PreKeyStore.publish_identity(s.id, attrs)
+        refute PreKeyStore.has_bundle?(s.id)
+      end
     end
-  end
 
-  describe "remove_bundle/1" do
-    test "removes a registered bundle", %{session: session} do
-      PreKeyStore.register_bundle(session.id, @sample_bundle)
-      assert :ok = PreKeyStore.remove_bundle(session.id)
-      refute PreKeyStore.has_bundle?(session.id)
+    test "rejects more than the maximum number of opks", %{session: s} do
+      attrs = bundle_attrs(opk_ids: 1..(PreKeyStore.max_one_time_prekeys() + 1))
+      assert {:error, :too_many_prekeys} = PreKeyStore.publish_identity(s.id, attrs)
     end
 
-    test "succeeds even if bundle doesn't exist" do
-      assert :ok = PreKeyStore.remove_bundle(999_999)
+    test "rejects unknown keys without creating atoms", %{session: s} do
+      attrs = Map.delete(bundle_attrs(), "identity_key")
+      assert {:error, :invalid_bundle} = PreKeyStore.publish_identity(s.id, attrs)
     end
   end
 
-  describe "replenish_prekeys/2" do
-    test "appends new one-time prekeys to existing bundle", %{session: session} do
-      bundle = %{@sample_bundle | one_time_prekeys: [%{key_id: 1, public_key: "opk_1"}]}
-      PreKeyStore.register_bundle(session.id, bundle)
+  describe "reset_identity/2" do
+    test "replaces the identity", %{session: s} do
+      :ok = PreKeyStore.publish_identity(s.id, bundle_attrs())
+      new = bundle_attrs(opk_ids: [1])
+      assert :ok = PreKeyStore.reset_identity(s.id, new)
+      assert PreKeyStore.identity_key(s.id) == new["identity_key"]
+      assert PreKeyStore.count_one_time_prekeys(s.id) == 1
+    end
+  end
 
-      new_prekeys = [
-        %{key_id: 4, public_key: "opk_4"},
-        %{key_id: 5, public_key: "opk_5"}
-      ]
+  describe "rotate_signed_prekey/3" do
+    test "replaces the signed prekey for the current identity", %{session: s} do
+      attrs = bundle_attrs()
+      :ok = PreKeyStore.publish_identity(s.id, attrs)
+      spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
 
-      assert :ok = PreKeyStore.replenish_prekeys(session.id, new_prekeys)
-
-      # Consume all and verify order
-      {:ok, r1} = PreKeyStore.get_bundle(session.id)
-      assert r1.one_time_prekey.key_id == 1
-
-      {:ok, r2} = PreKeyStore.get_bundle(session.id)
-      assert r2.one_time_prekey.key_id == 4
-
-      {:ok, r3} = PreKeyStore.get_bundle(session.id)
-      assert r3.one_time_prekey.key_id == 5
+      assert :ok = PreKeyStore.rotate_signed_prekey(s.id, attrs["identity_key"], spk)
+      assert {:ok, %{signed_prekey: %{key_id: 2}}, _} = PreKeyStore.fetch_bundle(s.id)
     end
 
-    test "returns error when session not found" do
-      assert {:error, :not_found} = PreKeyStore.replenish_prekeys(999_999, [])
+    test "refuses a stale identity", %{session: s} do
+      :ok = PreKeyStore.publish_identity(s.id, bundle_attrs())
+      spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
+
+      assert {:error, :identity_mismatch} =
+               PreKeyStore.rotate_signed_prekey(s.id, public_key(), spk)
     end
+  end
+
+  describe "add_one_time_prekeys/3" do
+    setup %{session: s} do
+      attrs = bundle_attrs()
+      :ok = PreKeyStore.publish_identity(s.id, attrs)
+      %{ik: attrs["identity_key"]}
+    end
+
+    test "appends new ids", %{session: s, ik: ik} do
+      assert :ok = PreKeyStore.add_one_time_prekeys(s.id, ik, one_time_prekeys(4..6))
+      assert PreKeyStore.count_one_time_prekeys(s.id) == 6
+    end
+
+    test "rejects ids already stored", %{session: s, ik: ik} do
+      assert {:error, :stale_prekey_ids} =
+               PreKeyStore.add_one_time_prekeys(s.id, ik, one_time_prekeys([3, 4]))
+
+      assert PreKeyStore.count_one_time_prekeys(s.id) == 3
+    end
+
+    test "rejects ids that were already served", %{session: s, ik: ik} do
+      for _ <- 1..3, do: {:ok, _, _} = PreKeyStore.fetch_bundle(s.id)
+      assert PreKeyStore.count_one_time_prekeys(s.id) == 0
+
+      assert {:error, :stale_prekey_ids} =
+               PreKeyStore.add_one_time_prekeys(s.id, ik, one_time_prekeys([1]))
+    end
+
+    test "enforces the cap", %{session: s, ik: ik} do
+      max = PreKeyStore.max_one_time_prekeys()
+
+      assert {:error, :too_many_prekeys} =
+               PreKeyStore.add_one_time_prekeys(s.id, ik, one_time_prekeys(4..(max + 1)))
+    end
+
+    test "refuses a stale identity", %{session: s} do
+      assert {:error, :identity_mismatch} =
+               PreKeyStore.add_one_time_prekeys(s.id, public_key(), one_time_prekeys([10]))
+    end
+
+    test "requires a bundle" do
+      other = session_fixture(%{session_name: Ecto.UUID.generate()})
+
+      assert {:error, :not_found} =
+               PreKeyStore.add_one_time_prekeys(other.id, public_key(), one_time_prekeys([1]))
+    end
+  end
+
+  describe "fetch_bundle/2" do
+    test "pops one-time prekeys in order until exhausted", %{session: s} do
+      :ok = PreKeyStore.publish_identity(s.id, bundle_attrs(opk_ids: [1, 2]))
+
+      assert {:ok, %{one_time_prekey: %{key_id: 1}}, 1} = PreKeyStore.fetch_bundle(s.id)
+      assert {:ok, %{one_time_prekey: %{key_id: 2}}, 0} = PreKeyStore.fetch_bundle(s.id)
+
+      assert {:ok, %{one_time_prekey: nil, signed_prekey: %{}}, 0} =
+               PreKeyStore.fetch_bundle(s.id)
+    end
+
+    test "can serve without popping", %{session: s} do
+      :ok = PreKeyStore.publish_identity(s.id, bundle_attrs())
+
+      assert {:ok, %{one_time_prekey: nil}, 3} =
+               PreKeyStore.fetch_bundle(s.id, pop_one_time_prekey: false)
+    end
+
+    test "returns not_found without a bundle", %{session: s} do
+      assert {:error, :not_found} = PreKeyStore.fetch_bundle(s.id)
+      assert {:error, :not_found} = PreKeyStore.fetch_bundle(-1)
+    end
+  end
+
+  test "status/1", %{session: s} do
+    assert %{identity_key: nil, opk_count: 0, max_opk_id: 0} = PreKeyStore.status(s.id)
+    attrs = bundle_attrs(opk_ids: [2, 7])
+    :ok = PreKeyStore.publish_identity(s.id, attrs)
+    {:ok, _, _} = PreKeyStore.fetch_bundle(s.id)
+    ik = attrs["identity_key"]
+    assert %{identity_key: ^ik, opk_count: 1, max_opk_id: 7} = PreKeyStore.status(s.id)
+  end
+
+  test "remove_bundle/1", %{session: s} do
+    :ok = PreKeyStore.publish_identity(s.id, bundle_attrs())
+    assert :ok = PreKeyStore.remove_bundle(s.id)
+    refute PreKeyStore.has_bundle?(s.id)
+    assert PreKeyStore.identity_key(s.id) == nil
+    assert PreKeyStore.count_one_time_prekeys(s.id) == nil
   end
 end

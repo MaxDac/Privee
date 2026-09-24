@@ -5,15 +5,12 @@ defmodule PriveeWeb.Application do
 
   use Application
 
-  alias Privee.Chats
-
   @impl true
   def start(_type, _args) do
     children = [
       PriveeWeb.Telemetry,
       # Start a worker by calling: PriveeWeb.Worker.start_link(arg)
       # {PriveeWeb.Worker, arg},
-      Chats,
       # Start to serve requests, typically the last entry
       PriveeWeb.Endpoint
     ]

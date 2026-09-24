@@ -13,17 +13,6 @@ defmodule PriveeWeb.Router do
     plug :fetch_current_session
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
-
-  # API routes for prekey bundle registration (no auth required - uses session_id directly)
-  scope "/api", PriveeWeb do
-    pipe_through :api
-
-    post "/prekeys/:session_id", PreKeyController, :register
-  end
-
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:privee_web, :dev_routes) do
     # If you want to use the LiveDashboard in production, you should put
@@ -64,7 +53,8 @@ defmodule PriveeWeb.Router do
     live_session :require_authenticated_session,
       on_mount: [
         {PriveeWeb.SessionAuth, :ensure_authenticated},
-        {PriveeWeb.Navigation, :logged}
+        {PriveeWeb.Navigation, :logged},
+        PriveeWeb.SignalKeysLive
       ] do
       live "/privee", PriveeSelectorLive
       live "/chat/:session", Chat.ChatLive

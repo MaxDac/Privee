@@ -1,293 +1,256 @@
-import { describe, it, expect, vi, afterEach } from "vitest"
+import "fake-indexeddb/auto"
+import { IDBFactory } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
-import {
-  testExports,
-  handlePreKeyBundle,
-  handleChatInput,
-  decryptChatEntriesText,
-} from "../utils/chat.mjs"
-import {
-  generateRegistrationKeys,
-  exportPreKeyBundle,
-  initSendingSession,
-  initReceivingSession,
-  x3dhInitiate,
-  ratchetEncrypt,
-  generateSigningKeyPair,
-} from "../utils/signal-protocol.mjs"
-import * as signalStore from "../utils/signal-store.mjs"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import { ChatController, Texts } from "../utils/chat.mjs"
+import { SignalClient } from "../utils/signal-client.mjs"
+import { createMemoryLocks } from "../utils/signal-locks.mjs"
+import { FakeServer } from "./signal-fake-server.mjs"
 
-const html = `
-  <form id="chat-form">
-    <input type="hidden" id="chat-ciphertext" />
-    <input type="hidden" id="chat-header" />
-    <input type="text" id="chat-text" />
-  </form>
+const ALICE = 1
+const BOB = 2
+
+const layout = (/** @type {string} */ epoch) => `
+  <div id="chat-banner"></div>
+  <button id="chat-safety-number"></button>
+  <button id="chat-clear-history"></button>
+  <button id="chat-forget-device"></button>
+  <main id="chat-screen" data-epoch="${epoch}">
+    <div id="chat-local-history"></div>
+    <div id="chat-screen-container"></div>
+  </main>
+  <input id="chat-text" disabled />
+  <button id="chat-send" disabled></button>
 `
 
-describe("handlePreKeyBundle", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-    testExports.setCurrentSession(null)
-    testExports.setCurrentPeerSessionId(null)
-    testExports.setPendingPeerBundle(null)
+/**
+ * Renders a server message like `chat_entry.html.heex`.
+ * @param {Document} doc
+ * @param {any} message Serialized server message.
+ */
+const appendEntry = (doc, message) => {
+  const p = doc.createElement("p")
+  p.id = `chat-message-${message.id}`
+  p.setAttribute("data-signal-message", "")
+  Object.assign(p.dataset, {
+    id: message.id,
+    seq: String(message.seq),
+    epoch: message.epoch,
+    type: String(message.type),
+    body: message.body,
+    direction: message.direction,
+    converted: "false",
+  })
+  if (message.client_nonce) p.dataset.clientNonce = message.client_nonce
+  p.className = "hidden"
+  p.innerHTML = "&lrm;"
+  doc.getElementById("chat-screen-container")?.append(p)
+  return p
+}
+
+/**
+ * @param {FakeServer} server
+ * @param {number} ownId
+ * @param {number} peerId
+ * @param {IDBFactory} [factory]
+ */
+const party = async (server, ownId, peerId, factory = new IDBFactory()) => {
+  const dom = new JSDOM(`<body>${layout(server.currentEpoch(ownId, peerId))}</body>`)
+  const doc = dom.window.document
+  const client = await SignalClient.open({
+    ownId,
+    push: server.connect(ownId, peerId),
+    locks: createMemoryLocks(),
+    factory,
+  })
+  const el = /** @type {HTMLElement} */ (doc.getElementById("chat-screen"))
+  const controller = new ChatController({
+    el,
+    client,
+    peerId,
+    confirm: () => true,
+    reload: vi.fn(),
+  })
+  return { doc, client, controller, factory }
+}
+
+/**
+ * Streams every message of the conversation not yet in the DOM.
+ * @param {FakeServer} server
+ * @param {Document} doc
+ * @param {number} viewer
+ */
+const stream = (server, doc, viewer) => {
+  for (const m of server.messages) {
+    if (doc.getElementById(`chat-message-${m.id}`)) continue
+    appendEntry(doc, server.serialize(m, viewer))
+  }
+}
+
+/** @param {Document} doc */
+const texts = (doc) =>
+  [...doc.querySelectorAll("[data-signal-message]")].map((el) => el.textContent)
+
+describe("ChatController", () => {
+  /** @type {FakeServer} */
+  let server
+
+  beforeEach(() => {
+    server = new FakeServer()
+    vi.spyOn(console, "warn").mockImplementation(() => {})
   })
 
-  it("should warn and return when no peer_session_id present", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    await handlePreKeyBundle({ detail: { peer_session_id: null } })
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      "No prekey bundle available for peer - waiting for peer to come online",
-    )
-    expect(testExports.getCurrentSession()).toBeNull()
-  })
-
-  it("should load existing session if one exists for the peer", async () => {
-    const mockSession = { rootKey: "mock" }
-    vi.spyOn(signalStore, "getSession").mockResolvedValue(mockSession)
-    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue(null)
-
-    await handlePreKeyBundle({
-      detail: {
-        peer_session_id: "peer-123",
-        identity_key: "fake",
-        signed_prekey: { key_id: 1, public_key: "fake", signature: "fake" },
-        one_time_prekey: null,
-      },
-    })
-
-    expect(testExports.getCurrentSession()).toBe(mockSession)
-  })
-
-  it("should store peer bundle for lazy session initiation when no existing session", async () => {
-    // Generate real keys for the peer (Bob)
-    const bobKeys = await generateRegistrationKeys(1)
-    const bobBundle = await exportPreKeyBundle(bobKeys)
-
-    vi.spyOn(signalStore, "getSession").mockResolvedValue(null)
-    vi.spyOn(signalStore, "getIdentityKeyPair").mockResolvedValue(null)
-    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
-
-    await handlePreKeyBundle({
-      detail: {
-        peer_session_id: "peer-456",
-        identity_key: bobBundle.identityKey,
-        signed_prekey: {
-          key_id: bobBundle.signedPreKey.keyId,
-          public_key: bobBundle.signedPreKey.publicKey,
-          signature: bobBundle.signedPreKey.signature,
-        },
-        one_time_prekey: bobBundle.oneTimePreKeys[0]
-          ? {
-              key_id: bobBundle.oneTimePreKeys[0].keyId,
-              public_key: bobBundle.oneTimePreKeys[0].publicKey,
-            }
-          : null,
-      },
-    })
-
-    // Session is NOT established immediately - it's deferred to first send
-    expect(testExports.getCurrentSession()).toBeNull()
-  })
-})
-
-describe("handleChatInput", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-    testExports.setCurrentSession(null)
-    testExports.setCurrentPeerSessionId(null)
-    testExports.setPendingPeerBundle(null)
-  })
-
-  it("should do nothing when key is not Enter", async () => {
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    await handleChatInput(new KeyboardEvent("keypress", { key: "a" }))
-
-    const ciphertextInput = document.querySelector("#chat-ciphertext")
-    expect(ciphertextInput.value).toBe("")
-  })
-
-  it("should clear hidden inputs when chat text is empty", async () => {
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("Event", dom.window.Event)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    // Set up a session
-    const bobKeys = await generateRegistrationKeys(1)
-    const bobBundle = await exportPreKeyBundle(bobKeys)
-    const aliceIdentity = await generateSigningKeyPair()
-    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
-      identity_key: bobBundle.identityKey,
-      signed_prekey: {
-        public_key: bobBundle.signedPreKey.publicKey,
-        signature: bobBundle.signedPreKey.signature,
-      },
-      one_time_prekey: bobBundle.oneTimePreKeys[0],
-    })
-    const session = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
-    testExports.setCurrentSession(session)
-    testExports.setCurrentPeerSessionId("peer-1")
-    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
-
-    const chatText = document.querySelector("#chat-text")
-    chatText.value = ""
-
-    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
-    await handleChatInput(event)
-
-    const ciphertextInput = document.querySelector("#chat-ciphertext")
-    const headerInput = document.querySelector("#chat-header")
-    expect(ciphertextInput.value).toBe("")
-    expect(headerInput.value).toBe("")
-  })
-
-  it("should encrypt and set hidden inputs when session exists", async () => {
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("Event", dom.window.Event)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    // Set up a session
-    const bobKeys = await generateRegistrationKeys(1)
-    const bobBundle = await exportPreKeyBundle(bobKeys)
-    const aliceIdentity = await generateSigningKeyPair()
-    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
-      identity_key: bobBundle.identityKey,
-      signed_prekey: {
-        public_key: bobBundle.signedPreKey.publicKey,
-        signature: bobBundle.signedPreKey.signature,
-      },
-      one_time_prekey: bobBundle.oneTimePreKeys[0],
-    })
-    const session = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
-    testExports.setCurrentSession(session)
-    testExports.setCurrentPeerSessionId("peer-1")
-    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
-
-    const chatText = document.querySelector("#chat-text")
-    chatText.value = "Hello, world!"
-
-    let formSubmitted = false
-    const form = document.querySelector("#chat-form")
-    form.addEventListener("submit", (e) => {
-      e.preventDefault()
-      formSubmitted = true
-    })
-
-    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
-    await handleChatInput(event)
-
-    const ciphertextInput = document.querySelector("#chat-ciphertext")
-    const headerInput = document.querySelector("#chat-header")
-
-    expect(ciphertextInput.value).not.toBe("")
-    expect(headerInput.value).not.toBe("")
-    expect(chatText.value).toBe("")
-    expect(formSubmitted).toBe(true)
-  })
-
-  it("should log error when no session and no pending bundle", async () => {
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("Event", dom.window.Event)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    testExports.setCurrentSession(null)
-    testExports.setPendingPeerBundle(null)
-
-    const chatText = document.querySelector("#chat-text")
-    chatText.value = "Hello"
-
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-
-    const event = new KeyboardEvent("keypress", { key: "Enter", cancelable: true })
-    await handleChatInput(event)
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      "No Signal session established - peer has not registered their encryption keys yet. " +
-        "The peer needs to open the chat page at least once.",
+  it("enables the composer once keys are ready", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
+      false,
     )
   })
-})
 
-describe("decryptChatEntriesText", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-    vi.restoreAllMocks()
-    testExports.setCurrentSession(null)
-    testExports.setCurrentPeerSessionId(null)
+  it("sends from the composer and renders both sides", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "  hello <b>bob</b>  "
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("")
+
+    stream(server, alice.doc, ALICE)
+    stream(server, bob.doc, BOB)
+    await alice.controller.processEntries()
+    await bob.controller.processEntries()
+
+    expect(texts(alice.doc)).toEqual(["hello <b>bob</b>"])
+    expect(texts(bob.doc)).toEqual(["hello <b>bob</b>"])
+    expect(bob.doc.querySelector("b")).toBeNull()
+    const entry = /** @type {HTMLElement} */ (bob.doc.querySelector("[data-signal-message]"))
+    expect(entry.dataset.converted).toBe("true")
+    expect(entry.classList.contains("hidden")).toBe(false)
   })
 
-  it("should do nothing when no unconverted entries exist", async () => {
-    const dom = new JSDOM("<div></div>")
-    vi.stubGlobal("document", dom.window.document)
-
-    await decryptChatEntriesText("session-name")
-    // No errors thrown
+  it("keeps the text and warns when the peer has no keys", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "anyone?"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("anyone?")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.noPeerKeys)
   })
 
-  it("should do nothing when no session exists", async () => {
-    // prettier-ignore
-    const dom = new JSDOM("<div data-converted=\"false\" data-ciphertext=\"x\" data-header=\"y\"></div>")
-    vi.stubGlobal("document", dom.window.document)
+  it("renders own messages after a reload from the local history", async () => {
+    const factory = new IDBFactory()
+    const alice = await party(server, ALICE, BOB, factory)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "persisted")
 
-    testExports.setCurrentSession(null)
-    await decryptChatEntriesText("session-name")
-
-    // prettier-ignore
-    const el = document.querySelector("[data-converted=\"false\"]")
-    expect(el).not.toBeNull()
+    const reloaded = await party(server, ALICE, BOB, factory)
+    stream(server, reloaded.doc, ALICE)
+    await reloaded.controller.start()
+    expect(texts(reloaded.doc)).toEqual(["persisted"])
   })
 
-  it("should decrypt entries when a session exists", async () => {
-    // Set up paired sessions
-    const bobKeys = await generateRegistrationKeys(1)
-    const bobBundle = await exportPreKeyBundle(bobKeys)
-    const aliceIdentity = await generateSigningKeyPair()
-    const { sharedSecret } = await x3dhInitiate(aliceIdentity.privateKey, {
-      identity_key: bobBundle.identityKey,
-      signed_prekey: {
-        public_key: bobBundle.signedPreKey.publicKey,
-        signature: bobBundle.signedPreKey.signature,
-      },
-      one_time_prekey: bobBundle.oneTimePreKeys[0],
-    })
+  it("shows a placeholder for own messages sent from another device", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "hi")
 
-    // Alice encrypts
-    const aliceSession = await initSendingSession(sharedSecret, bobBundle.signedPreKey.publicKey)
-    const { ciphertext, header } = await ratchetEncrypt(aliceSession, "Secret message")
+    const otherDevice = await party(server, ALICE, BOB)
+    stream(server, otherDevice.doc, ALICE)
+    await otherDevice.controller.start()
+    expect(texts(otherDevice.doc)).toEqual([Texts.unavailable])
+  })
 
-    // Bob session for decryption
-    const bobSession = await initReceivingSession(sharedSecret, bobKeys.signedPreKey.keyPair)
-    testExports.setCurrentSession(bobSession)
-    testExports.setCurrentPeerSessionId("alice-id")
-    vi.spyOn(signalStore, "storeSession").mockResolvedValue(undefined)
+  it("catches up with messages older than the server window into local history", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    const bob = await party(server, BOB, ALICE)
+    await bob.controller.start()
 
-    // Set up DOM with the encrypted message - use proper attribute escaping
-    // prettier-ignore
-    const entryEl = "<div><p data-converted=\"false\" class=\"hidden\"></p></div>"
-    const dom = new JSDOM(entryEl)
-    vi.stubGlobal("document", dom.window.document)
+    for (const text of ["1", "2", "3"]) await alice.client.send(BOB, text)
+    // The server stream only renders the latest message.
+    appendEntry(bob.doc, server.serialize(server.messages[2], BOB))
+    await bob.controller.start()
 
-    // Set data attributes programmatically to avoid HTML escaping issues
-    const pEl = document.querySelector("p")
-    pEl.dataset.ciphertext = ciphertext
-    pEl.dataset.header = header
+    expect(texts(bob.doc)).toEqual(["3"])
+    const earlier = bob.doc.getElementById("chat-local-history")
+    expect(earlier?.textContent).toContain(Texts.earlier)
+    expect(
+      [...(earlier?.querySelectorAll("[data-local-history]") || [])].map((e) => e.textContent),
+    ).toEqual(["1", "2"])
+  })
 
-    await decryptChatEntriesText("session-name")
+  it("blocks on an identity change until the user accepts it", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "hello")
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
 
-    // prettier-ignore
-    const el = document.querySelector("[data-converted=\"true\"]")
-    expect(el).not.toBeNull()
-    expect(el.textContent).toContain("Secret message")
-    expect(el.classList.contains("hidden")).toBe(false)
+    const alice2 = await party(server, ALICE, BOB)
+    await alice2.client.ensureKeys()
+    await alice2.client.resetIdentity()
+    server.rotateEpoch(ALICE, BOB)
+    await alice2.client.send(BOB, "new device")
+
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+    const banner = bob.doc.getElementById("chat-banner-identity")
+    expect(banner).not.toBeNull()
+    expect(banner?.textContent).toMatch(/\d{5} \d{5}/)
+    expect(/** @type {HTMLInputElement} */ (bob.doc.getElementById("chat-text")).disabled).toBe(
+      true,
+    )
+
+    await bob.controller.approveIdentity()
+    expect(bob.doc.getElementById("chat-banner-identity")).toBeNull()
+    expect(texts(bob.doc)).toEqual(["hello", "new device"])
+  })
+
+  it("shows the superseded banner when another device resets the identity", async () => {
+    const factory = new IDBFactory()
+    const alice = await party(server, ALICE, BOB, factory)
+    await alice.controller.start()
+
+    const other = await party(server, ALICE, BOB)
+    await other.client.ensureKeys()
+    await other.client.resetIdentity()
+
+    await alice.controller.onIdentitySuperseded({ identity_key: await other.client.identityKey() })
+    expect(alice.doc.getElementById("chat-banner-superseded")).not.toBeNull()
+    expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
+      true,
+    )
+
+    // Resetting on this device makes it the active one again.
+    alice.doc.getElementById("chat-banner-superseded-action")?.click()
+    await vi.waitFor(() => expect(alice.controller.state).toBe("ready"))
+    expect(alice.doc.getElementById("chat-banner-superseded")).toBeNull()
+  })
+
+  it("clears the local history and forgets the device", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "bye")
+
+    await alice.controller.clearHistory()
+    expect(await alice.client.history(BOB)).toEqual([])
+
+    await alice.controller.forgetDevice()
+    expect(alice.controller.reload).toHaveBeenCalled()
+    const names = (await alice.factory.databases()).map((d) => d.name)
+    expect(names).not.toContain(`privee-${ALICE}`)
   })
 })

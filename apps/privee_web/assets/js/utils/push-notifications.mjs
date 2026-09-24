@@ -30,7 +30,8 @@ export const askNotificationPermission = async () => {
  * @property {string} [text] The text of the message that triggered the notification.
  * @property {string} [body] The body text associated with the event.
  * @property {string} [session_name] The session name that sent the message.
- * @property {string} [receiver_session_name] The receiver session name used for decryption.
+ * @property {string} [message_id] The id of the received message, used for cross-tab dedup.
+ * @property {number} [to] The receiver session id.
  * @property {boolean} [check_focus] Whether to check if the window is in focus before triggering the notification.
  */
 
@@ -52,7 +53,9 @@ export const pushBackEndNotification = async (event) => {
     const sessionName = /** @type {string} */ (event.detail.session_name)
 
     // Cross-tab deduplication: only one tab should show the notification
-    const allowed = await coordinator.shouldShowNotification(sessionName)
+    const { message_id: messageId, to } = event.detail
+    const dedupKey = messageId ? `${to}:${messageId}` : sessionName
+    const allowed = await coordinator.shouldShowNotification(sessionName, dedupKey)
     if (!allowed) return undefined
 
     const title = "Privee - Text received"

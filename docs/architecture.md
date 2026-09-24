@@ -58,3 +58,9 @@ Relevant files in this repo (under `.azure`)
 - `.azure/k8s/*` (Kubernetes manifests: `deployment.yml`, `service.yml`, `headless-service.yml`, `ingress.yml`, `secret-provider-class.yml`, `cert-manager/*`)
 - `.azure/scripts/*` (helper deployment scripts)
 
+## Application-level encryption
+
+TLS protects traffic in transit to the Ingress; chat content is additionally
+end-to-end encrypted in the browser with the Signal Protocol, so the application
+and database only handle public keys and ciphertext. Encrypted messages are held
+in node-local ETS (single replica). See [End-to-end encryption](e2e-encryption.md).
