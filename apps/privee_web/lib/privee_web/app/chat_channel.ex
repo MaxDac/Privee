@@ -37,7 +37,7 @@ defmodule PriveeWeb.App.ChatChannel do
         :ok = Endpoint.subscribe(Events.chat_topic(me.id, peer.id))
         :ok = Endpoint.subscribe(SignalKeys.peer_topic(peer.id))
 
-        {:ok, %{peer_session_name: peer.session_name},
+        {:ok, %{peer_id: peer.id, peer_session_name: peer.session_name},
          socket
          |> assign(:peer, peer)
          |> assign(:signal_identity_key, PreKeyStore.identity_key(me.id))}

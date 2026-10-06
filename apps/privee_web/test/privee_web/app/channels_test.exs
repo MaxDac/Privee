@@ -109,7 +109,7 @@ defmodule PriveeWeb.App.ChannelsTest do
       {:ok, reply, channel} =
         subscribe_and_join(socket, ChatChannel, "chat:#{peer.session_name}")
 
-      assert reply == %{peer_session_name: peer.session_name}
+      assert reply == %{peer_id: peer.id, peer_session_name: peer.session_name}
       %{channel: channel, identity_key: my_bundle["identity_key"]}
     end
 

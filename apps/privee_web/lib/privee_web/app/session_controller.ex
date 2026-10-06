@@ -95,7 +95,7 @@ defmodule PriveeWeb.App.SessionController do
   end
 
   defp render_session(session),
-    do: %{session_name: session.session_name, is_quick: session.is_quick}
+    do: %{id: session.id, session_name: session.session_name, is_quick: session.is_quick}
 
   defp errors_on(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->

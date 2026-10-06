@@ -132,7 +132,11 @@ defmodule PriveeWeb.App.SessionControllerTest do
       conn = conn |> bearer(token) |> get(~p"/api/app/session")
 
       assert json_response(conn, 200) == %{
-               "session" => %{"session_name" => session.session_name, "is_quick" => false}
+               "session" => %{
+                 "id" => session.id,
+                 "session_name" => session.session_name,
+                 "is_quick" => false
+               }
              }
     end
 

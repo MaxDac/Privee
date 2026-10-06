@@ -37,7 +37,10 @@ Phoenix channels socket instead of LiveView:
 | `PUT` / `DELETE /api/app/push` | Registers / removes the app's UnifiedPush endpoint (see below). |
 | `/app/socket` | WebSocket authenticated with the channels `auth_token`. Topic `session`: the `SignalKeys` events, plus `replenish_prekeys`, `identity_superseded` and content-free `message_received %{message_id, from_session_name}` pushes. Topic `chat:<peer session name>`: the `ChatActions` events, plus `new_message` (serialized ciphertext) and `peer_keys_ready` pushes. |
 
-Log ins return `%{token, session}`. The token is the 60-day session token as
+Log ins return `%{token, session: %{id, session_name, is_quick}}`, and chat
+joins reply `%{peer_id, peer_session_name}`: like the web client, the app uses
+the numeric session ids as Signal address names and safety number
+identifiers. The token is the 60-day session token as
 unpadded base64url, sent as `Authorization: Bearer <token>` and as the socket
 `auth_token`. Registration and log in are rate-limited to 10 attempts per
 minute per client address. Channel replies always have the `ok` status; failures
