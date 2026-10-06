@@ -6,12 +6,12 @@ when:
 steps:
   - name: install
     image: node:22
-    directory: apps/bauta_web/assets
+    directory: apps/privee_web/assets
     commands:
       - npm ci
 
   - name: format
     image: node:22
-    directory: apps/bauta_web/assets
+    directory: apps/privee_web/assets
     commands:
       - npm run check
