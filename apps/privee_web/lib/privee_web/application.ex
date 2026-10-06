@@ -1,5 +1,5 @@
 defmodule PriveeWeb.Application do
-  # See https://hexdocs.pm/elixir/Application.html
+  # See https://elixir.hexdocs.pm/Application.html
   # for more information on OTP Applications
   @moduledoc false
 
@@ -15,7 +15,7 @@ defmodule PriveeWeb.Application do
       PriveeWeb.Endpoint
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
+    # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: PriveeWeb.Supervisor]
     Supervisor.start_link(children, opts)

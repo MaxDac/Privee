@@ -1,88 +1,90 @@
-<div class="mx-auto sm:max-w-sm md:max-w-md">
-  <.header class="text-center">
-    Create a new session
-    <:subtitle>
-      You want to reconnect with an existing session?
-      <.link
-        navigate={~p"/login"}
-        class="font-semibold text-brand dark:text-brand-dark hover:underline"
-      >
-        Sign in
-      </.link>
-      to your account now.
-    </:subtitle>
+<Layouts.app flash={@flash} current_session={@current_session} navigate_to={@navigate_to}>
+  <div class="mx-auto sm:max-w-sm md:max-w-md">
+    <.header class="text-center">
+      Create a new session
+      <:subtitle>
+        You want to reconnect with an existing session?
+        <.link
+          navigate={~p"/login"}
+          class="font-semibold text-brand dark:text-brand-dark hover:underline"
+        >
+          Sign in
+        </.link>
+        to your account now.
+      </:subtitle>
 
-    <:description>
-      To register a session, you have to define a <strong>Session Name</strong>, a series of alphanumeric characters
-      divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only
-      alphabetic character, spaces and punctuation.
-    </:description>
-  </.header>
+      <:description>
+        To register a session, you have to define a <strong>Session Name</strong>, a series of alphanumeric characters
+        divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only
+        alphabetic character, spaces and punctuation.
+      </:description>
+    </.header>
 
-  <.simple_form
-    for={@form}
-    id="registration_form"
-    phx-submit="save"
-    phx-change="validate"
-    phx-trigger-action={@trigger_submit}
-    action={~p"/sessions/log_in?_action=registered"}
-    method="post"
-    phx-hook="RegistrationScreen"
-  >
-    <.error :if={@check_errors}>
-      Oops, something went wrong! Please check the errors below.
-    </.error>
+    <.simple_form
+      for={@form}
+      id="registration_form"
+      phx-submit="save"
+      phx-change="validate"
+      phx-trigger-action={@trigger_submit}
+      action={~p"/sessions/log_in?_action=registered"}
+      method="post"
+      phx-hook="RegistrationScreen"
+    >
+      <.error :if={@check_errors}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
-    <input
-      :if={@target_session_code}
-      type="hidden"
-      name="target_session_code"
-      value={@target_session_code}
-    />
+      <input
+        :if={@target_session_code}
+        type="hidden"
+        name="target_session_code"
+        value={@target_session_code}
+      />
 
-    <.input
-      field={@form[:session_name]}
-      type="search"
-      label="Session Name"
-      placeholder="Write your own session name"
-      value={@automatic_session_name}
-      phx-debounce="1000"
-      required
-    />
-
-    <div class="inline-flex space-x-10">
       <.input
-        field={@form[:is_quick]}
-        type="toggle"
-        label="Quick session"
+        field={@form[:session_name]}
+        type="search"
+        label="Session Name"
+        placeholder="Write your own session name"
+        value={@automatic_session_name}
+        phx-debounce="1000"
+        required
       />
 
-      <.info_icon
-        inline_description="What's this?"
-        short_description="This allows you to create a session quickly without the recovery phrase"
-        long_description={[
-          "By checking the \"Quick session\" toggle, you will be able to create a session without writing a recovery phrase.",
-          "This means that you will be able to login quickly, but the session will be used only once, and you would not be able",
-          "to login to this session again."
-        ]}
+      <div class="inline-flex space-x-10">
+        <.input
+          field={@form[:is_quick]}
+          type="toggle"
+          label="Quick session"
+        />
+
+        <.info_icon
+          inline_description="What's this?"
+          short_description="This allows you to create a session quickly without the recovery phrase"
+          long_description={[
+            "By checking the \"Quick session\" toggle, you will be able to create a session without writing a recovery phrase.",
+            "This means that you will be able to login quickly, but the session will be used only once, and you would not be able",
+            "to login to this session again."
+          ]}
+        />
+      </div>
+
+      <.input
+        :if={!quick_session?(@form)}
+        field={@form[:recovery_phrase]}
+        type="textarea"
+        label="Recovery phrase"
+        placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
+        rows="5"
+        phx-debounce="1000"
+        required
       />
-    </div>
 
-    <.input
-      :if={!quick_session?(@form)}
-      field={@form[:recovery_phrase]}
-      type="textarea"
-      label="Recovery phrase"
-      placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
-      rows="5"
-      phx-debounce="1000"
-      required
-    />
-
-    <:actions>
-      <.button phx-disable-with="Creating account..." class="w-full" name="action" value="create">
-        Create an account
-      </.button>
-    </:actions>
-  </.simple_form>
-</div>
+      <:actions>
+        <.button phx-disable-with="Creating account..." class="w-full" name="action" value="create">
+          Create an account
+        </.button>
+      </:actions>
+    </.simple_form>
+  </div>
+</Layouts.app>

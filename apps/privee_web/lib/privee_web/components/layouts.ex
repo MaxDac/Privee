@@ -4,6 +4,52 @@ defmodule PriveeWeb.Layouts do
   embed_templates "layouts/*"
 
   @doc """
+  Renders the default app layout, with the navigation header and a centered content area.
+
+  ## Examples
+
+      <Layouts.app flash={@flash} current_session={@current_session} navigate_to={@navigate_to}>
+        <h1>Content</h1>
+      </Layouts.app>
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :current_session, :any, default: nil, doc: "the currently authenticated session"
+  attr :navigate_to, :string, default: "/", doc: "the logo link destination"
+  slot :inner_block, required: true
+
+  def app(assigns) do
+    ~H"""
+    <.sticky_header>
+      <.menu current_session={@current_session} navigate_to={@navigate_to} />
+    </.sticky_header>
+    <main class="px-4 py-20 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-2xl">
+        <.flash_group flash={@flash} />
+        {render_slot(@inner_block)}
+      </div>
+    </main>
+    """
+  end
+
+  @doc """
+  Renders the full-width chat layout.
+  """
+  attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :current_session, :any, default: nil, doc: "the currently authenticated session"
+  attr :navigate_to, :string, default: "/", doc: "the logo link destination"
+  slot :inner_block, required: true
+
+  def chat(assigns) do
+    ~H"""
+    <.sticky_header>
+      <.menu current_session={@current_session} navigate_to={@navigate_to} />
+    </.sticky_header>
+    <.flash_group flash={@flash} />
+    {render_slot(@inner_block)}
+    """
+  end
+
+  @doc """
   Shows the flash group with standard titles and content using DaisyUI alert styling.
 
   ## Examples

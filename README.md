@@ -1,238 +1,106 @@
 # Privee
-[![Privee Main CI/CD pipeline](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml)
-[![Deploy to Fly.io](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml)
-[![Deploy to Azure](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml)
 
-[Architecture & Azure deployment details](docs/architecture.md)
+[![CI](https://github.com/MaxDac/Privee/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/ci.yml)
+[![Main](https://github.com/MaxDac/Privee/actions/workflows/main.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/main.yml)
+
+Privee is a Phoenix LiveView umbrella application:
+
+- `apps/privee` holds the domain logic and Ecto schemas.
+- `apps/privee_web` holds the web layer: LiveViews, components and assets.
 
 Chats are end-to-end encrypted with the Signal Protocol. See
 [End-to-end encryption](docs/e2e-encryption.md) for the design, its trade-offs
 (local plaintext history, node-local ciphertext, one device per session) and the
 manual release checklist.
 
-## Codespaces development
+## Toolchain
 
-The project is configured to be developed using Codespaces. The initial script should be able to install all the dependencies, but the `ElixirLS` extension might require some time to fetch and build up all the dependencies.
+Versions are pinned in [`.tool-versions`](./.tool-versions) for Erlang/OTP, Elixir and Node.js. CI reads the same file, so use [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/) to install matching versions:
 
-## How to start developing with NeoVim
+```bash
+mise install   # or: asdf install
+```
 
-It is possible to use NeoVim with a terminal connection. [This script](./.devcontainer/install-neovim-tooling.sh) will have to be executed manually, then to access in SSH, follow [these instructions](https://github.com/microsoft/vscode-dev-containers/blob/main/script-library/docs/sshd.md#usage-when-this-script-is-already-installed-in-an-image) in Codespaces.
+You also need a PostgreSQL server. The dev and test configs expect `postgres`/`postgres` on `localhost:5432`.
 
-## Setup of the project
+```bash
+docker run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
+  --restart=unless-stopped -p 5432:5432 -d postgres:18
+```
 
-In order to start developing the project, it's necessary to install Elixir.
+Podman accepts the same arguments (`podman run ...`).
 
-## Git hooks
+## Getting started
 
-To enable the pre-commit hook:
+```bash
+mix setup          # deps, database, esbuild/tailwind binaries, npm packages
+mix phx.server     # or: iex -S mix phx.server
+```
+
+The app listens on [`localhost:4000`](http://localhost:4000).
+
+## Checks
+
+Before pushing, run:
+
+```bash
+mix precommit
+```
+
+It compiles with `--warnings-as-errors`, unlocks unused deps, formats the code, then runs `credo --strict`, the tests and `npm run check` for the assets (prettier, tsc, eslint, vitest). CI runs the same checks in check-only mode, plus:
+
+- `mix dialyzer` (PLTs are stored in `priv/plts`)
+- a Docker image build
+
+Enable the pre-commit hook, which runs `mix precommit`:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-Run `mix precommit` to reproduce the checks locally.
+Editor setup notes are in [docs/ide-setup.md](docs/ide-setup.md).
 
-After having installed Elixir and Erlang in the machine, install the Phoenix Framework by executing the following command in the terminal:
+## CI/CD
 
-```bash
-mix local.hex
-mix archive.install hex phx_new
-```
+All workflows live in [`.github/workflows`](./.github/workflows):
 
-**Note**: to run the project with a local database, for problems of trusting the emulator local certificate,
-it will be necessary to run the dotnet app described below.
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Docker build |
+| [`main.yml`](./.github/workflows/main.yml) | Push to `main`, manual | Runs `ci.yml`, then deploys to Fly.io when it passes |
 
-To start the application, from the root folder, execute these commands
-
-- Install the required dependencies:
-```bash
-mix deps.get && mix deps compile
-```
-
-- Install Tailwind support
-```bash
-mix tailwind.install
-```
-
-- Run the script to initialise the database with the required collections:
-```bash
-mix run apps/guilds/priv/seeds.exs
-```
-
-- Start the local instance of the application:
-```bash
-mix phx.server
-```
-
-This will start the application, that will listen to the port 4000.
-
-### Local development with Docker
-
-To start development, run the database in a Docker container with this command:
+The deploy job targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
 
 ```bash
-docker run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+fly tokens create deploy -a privee
 ```
 
-Also, instead of relying on IDE tools, the PGAdmin tool can be started on Docker to explore the database:
-
-```bash
-docker run --name pgadmin -e "PGADMIN_DEFAULT_EMAIL=admin@admin.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" --restart=unless-stopped -p 5050:80 -d dpage/pgadmin4
-docker network create --driver bridge pgnetwork
-docker network connect pgnetwork pgadmin
-docker network connect pgnetwork privee-database
-```
-
-### Local development with Podman
-
-For those who prefer Podman over Docker, you can use these equivalent commands:
-
-To start the PostgreSQL database with Podman:
-
-```bash
-podman run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
-```
-
-To start PGAdmin with Podman:
-
-```bash
-podman run --name pgadmin -e "PGADMIN_DEFAULT_EMAIL=admin@admin.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" --restart=unless-stopped -p 5050:80 -d dpage/pgadmin4
-podman network create pgnetwork
-podman network connect pgnetwork pgadmin
-podman network connect pgnetwork privee-database
-```
-
-## IDE support
-
-The most natural way of developing in Elixir is to use Visual Studio Code with Elixir-LS extension.
-
-There are other extensions that helps with developing the application:
-
-- Phoenix Framework
-- Surface: A component based library for Phoenix
-
-## Instruction to install Tailwind in the project
-[Instructions](https://tailwindcss.com/docs/guides/phoenix)
-
-## Kubernetes discoverability
-
-Normally, every Erlang instance should be connected to one another manually. The package **libcluster** anyway
-offers a way of doing it automatically inside a service pod.
-
-For more information refer the [package information](https://hex.pm/packages/libcluster) and the
-[guide to set it up](https://www.poeticoding.com/connecting-elixir-nodes-with-libcluster-locally-and-on-kubernetes/).
-
-There is also an interesting guide in parts on [how to configure Elixir nodes on Kubernetes](https://david-delassus.medium.com/elixir-and-kubernetes-a-love-story-721cc6a5c7d5),
-always with **libcluster**.
-
-## Azure configuration
-
-### GitHub Actions CI/CD
-
-#### Login to Azure
-
-To login to Azure, a User-defined Managed Identity has been created with a federated identity, and OpenID Connect
-authentication type has been selected; the reason Managed Identity has not been used as an authentication type
-is that it required a **self-hosted** environment, i.e. a VM on Azure.
-
-For more information on how to setup the GitHub Action to work with Azure resources using User-defined Managed Identities,
-please refer to the [article of the `azure/login` GitHub Action](https://github.com/marketplace/actions/azure-login#login-with-openid-connect-oidc-recommended).
-
-### AKS configuration
-
-#### SECRET_KEY_BASE
-
-The SECRET_KEY_BASE environment variable required by the Phoenix application is currently being stored as a
-Kubernetes secret, and inject as an environment variables directly in the Kubernetes deployment file.
-This is not optimal, but there is issue #109 addressing this.
-
-## Deployment
-
-This application supports deployment to both Fly.io and Azure AKS with automatic environment detection.
+## Deployment (Fly.io)
 
 > **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
 > serving the conversation and are lost on restart, so the chat must run as a
-> single node (one Fly machine, one AKS replica). See
+> single Fly machine. See
 > [End-to-end encryption](docs/e2e-encryption.md#deliberate-trade-offs).
 
-### Fly.io Deployment
+[`fly.toml`](./fly.toml) configures the app. Fly builds the [`Dockerfile`](./Dockerfile) remotely. Each deploy runs migrations through the `release_command` (`/app/bin/migrate`).
 
-The application is pre-configured for Fly.io deployment. The `rel/env.sh.eex` file automatically detects Fly.io environment variables and configures clustering accordingly.
+Set these runtime secrets on the Fly app:
 
-1. Deploy using Fly CLI:
+```bash
+fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret) DATABASE_URL=ecto://... -a privee
+```
 
-   ```bash
-   fly deploy
-   ```
+Optional variables:
 
-   Or use the deployment script:
+- `PHX_HOST`: defaults to `privee.fly.dev`.
+- `POOL_SIZE`: database pool size.
+- `ENABLE_DB_SSL`: enables SSL for the database connection.
+- `DNS_CLUSTER_QUERY`: e.g. `privee.internal`, to cluster multiple machines.
 
-   ```bash
-   ./infra/deploy-fly.sh
-   ```
+[`rel/env.sh.eex`](./rel/env.sh.eex) detects Fly through `FLY_APP_NAME` and sets the node name and IPv6 distribution. Outside Fly the node falls back to a short name.
 
-### Azure AKS Deployment
+To deploy manually from a workstation:
 
-For Azure Kubernetes Service deployment:
-
-1. **Build and push the Docker image:**
-   ```bash
-   # Build the image
-   docker build -t privee.azurecr.io/privee:latest .
-
-   # Push to Azure Container Registry
-   docker push privee.azurecr.io/privee:latest
-   ```
-
-2. **Create necessary Kubernetes secrets:**
-   ```bash
-   # Create database secret
-   kubectl create secret generic postgres-secret \
-     --from-literal=POSTGRES_USER=your_user \
-     --from-literal=POSTGRES_PASSWORD=your_password \
-     --from-literal=POSTGRES_DB=your_database
-
-   # Create application secret
-   kubectl create secret generic privee-app-secret \
-     --from-literal=SECRET_KEY_BASE=$(mix phx.gen.secret)
-   ```
-
-3. **Deploy to AKS:**
-
-   ```bash
-   kubectl apply -f k8s-deployment.yml
-   ```
-
-   Or use the deployment script for a complete deployment:
-
-   ```bash
-   ./infra/deploy-aks.sh
-   ```
-
-4. **Check deployment status:**
-
-   ```bash
-   kubectl get pods -l app=privee
-   kubectl get services
-   kubectl logs -l app=privee --tail=50
-   ```
-
-   Or use the status check script:
-
-   ```bash
-   ./infra/check-aks.sh
-   ```
-
-### Configuration Details
-
-The application automatically detects the deployment environment:
-
-- **Fly.io**: Detected by `FLY_APP_NAME` environment variable
-- **Azure AKS**: Detected by `KUBERNETES_SERVICE_HOST` environment variable
-- **Local/Default**: Used when neither of the above are present
-
-Each environment uses appropriate clustering and networking configurations:
-
-- **Fly.io**: IPv6 support, DNS-based clustering via `${FLY_APP_NAME}.internal`
-- **Azure AKS**: IPv4, Kubernetes DNS service discovery via headless service
-- **Local**: Simple name-based distribution for development # Test ACR build improvements
+```bash
+fly deploy --remote-only
+```

@@ -1,0 +1,12 @@
+.git
+.github
+.elixir_ls
+.expert
+_build
+deps
+priv/plts
+**/node_modules
+apps/privee_web/priv/static/assets
+*.ez
+erl_crash.dump
+/tmp

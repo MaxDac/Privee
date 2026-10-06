@@ -16,7 +16,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   Server pushes: `peer_keys_ready` (content-free) when the peer publishes keys.
   """
 
-  use PriveeWeb, :chat_live_view
+  use PriveeWeb, :live_view
 
   alias Privee.Chats
   alias Privee.PreKeyStore

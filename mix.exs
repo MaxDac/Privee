@@ -9,6 +9,11 @@ defmodule Privee.Umbrella.MixProject do
       deps: deps(),
       aliases: aliases(),
       listeners: [Phoenix.CodeReloader],
+      dialyzer: [
+        plt_local_path: "priv/plts",
+        plt_core_path: "priv/plts",
+        plt_add_apps: [:mix, :ex_unit]
+      ],
       releases: [
         privee_umbrella: [
           applications: [
@@ -40,9 +45,10 @@ defmodule Privee.Umbrella.MixProject do
   # and cannot be accessed from applications inside the apps/ folder.
   defp deps do
     [
-      {:phoenix_live_view, "~> 1.1.28"},
-      {:credo, "~> 1.7.18", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.4.7", only: [:dev, :test], runtime: false}
+      # Required to run "mix format" on ~H/.heex files from the umbrella root
+      {:phoenix_live_view, "~> 1.2.12"},
+      {:credo, "~> 1.7.19", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4.8", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -60,9 +66,10 @@ defmodule Privee.Umbrella.MixProject do
       # run `mix setup` in all child apps
       setup: ["cmd mix setup"],
       precommit: [
-        "compile --warning-as-errors",
+        "compile --warnings-as-errors",
         "deps.unlock --unused",
         "format",
+        "credo --strict",
         "test",
         "do --app privee_web cmd --cd assets npm run check"
       ]
