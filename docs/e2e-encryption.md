@@ -1,9 +1,13 @@
 # End-to-end encryption (Signal Protocol)
 
-Privee chats are end-to-end encrypted with the Signal Protocol (X3DH key agreement
-plus the Double Ratchet), implemented by
-[`@privacyresearch/libsignal-protocol-typescript`](https://github.com/privacyresearch/libsignal-protocol-typescript)
-(pinned to `0.0.16`). The server only ever sees public keys and ciphertext.
+Privee chats are end-to-end encrypted with the Signal Protocol (PQXDH key agreement
+plus the Double Ratchet), implemented by Signal's official Rust
+[libsignal](https://github.com/signalapp/libsignal) `v0.86.5`. The browser runs it
+through [`libsignal-wasm`](https://github.com/MaxDac/libsignal-wasm), a
+wasm-bindgen wrapper vendored in `assets/vendor/libsignal-wasm/` (JS glue) and
+`priv/static/wasm/` (binary). The Android app uses `org.signal:libsignal-android`
+at the same version, so both clients speak the same wire format. The server only
+ever sees public keys and ciphertext.
 
 ## Components
 
@@ -11,7 +15,7 @@ plus the Double Ratchet), implemented by
 
 | Module | Role |
 | --- | --- |
-| `Privee.PreKeyStore` | Stores each session's public bundle (identity key, signed prekey, one-time prekeys) in `sessions.prekey_bundle`. Validates key sizes, keeps one-time prekey ids append-only and increasing, caps the pool at 100, and pops one-time prekeys under `SELECT ... FOR UPDATE`. |
+| `Privee.PreKeyStore` | Stores each session's public bundle (identity key, signed prekey, last-resort Kyber-1024 prekey, one-time prekeys) in `sessions.prekey_bundle`. Validates key sizes, keeps one-time prekey ids append-only and increasing, caps the pool at 100, and pops one-time prekeys under `SELECT ... FOR UPDATE`. |
 | `PriveeWeb.SignalKeysLive` | `on_mount` hook of every authenticated LiveView: `signal_status`, `publish_identity`, `reset_identity`, `rotate_signed_prekey` and `add_prekeys` events, scoped to the current session. Pushes `replenish_prekeys` when the pool runs low and `identity_superseded` when another device resets the identity. |
 | `PriveeWeb.ChatLive` | `open_conversation`, `request_peer_bundle` (rate-limited to 3 one-time prekey pops per 10 minutes per pair), `send_message` and `fetch_messages`. The sender, recipient and ids are always set by the server. |
 | `Privee.Chats` | Plain functions over public ETS tables owned by `Privee.Chats.TableOwner`. Stores ciphertext only, deduplicates by client nonce, and groups messages in conversation **epochs**. |
@@ -24,16 +28,18 @@ route was removed.
 
 | Module | Role |
 | --- | --- |
-| `signal-db.mjs` | One IndexedDB database per Privee session and device: `privee-<session id>`. |
-| `signal-store.mjs` | The library's `StorageType`. Every write is staged and committed in a single transaction, so ratchet state, history and outbox never diverge. Trust on first use; a changed identity is refused until the user approves it. |
+| `signal-wasm.mjs` | Loads the libsignal WASM module once, lazily, from `/wasm/libsignal_wasm_bg.wasm`. |
+| `signal-db.mjs` | One IndexedDB database per Privee session and device: `privee-<session id>`. Version 2 (PQXDH) drops the X3DH keys and sessions but keeps history and outbox. |
+| `signal-store.mjs` | Staged IndexedDB access: the serialized libsignal state, history and outbox are committed in a single transaction, so they never diverge. Trust on first use; a changed identity is refused until the user approves it. |
 | `signal-locks.mjs` | Web Locks, used to coordinate tabs. Locking is fail-closed: browsers without the API cannot chat. |
-| `signal-client.mjs` | Key management, session building, encrypt/decrypt, outbox, history and catch-up. |
+| `signal-client.mjs` | Key management, session building, encrypt/decrypt, outbox, history and catch-up. Every protocol operation restores the libsignal state, runs under the exclusive keys lock, and saves it back. |
 | `chat.mjs` | Chat screen controller: renders entries, composer, banners and menu actions. Plaintext only reaches the DOM through `textContent`. |
 
 ## Flows
 
 - **Keys.** The first authenticated page (selector or chat) calls `ensureKeys`.
-  It generates and publishes a bundle, rotates the signed prekey weekly (a retired
+  It generates and publishes a bundle, rotates the signed prekey and the Kyber
+  prekey (same id, signed by the identity key) weekly (a retired
   key is kept for the conversation lifetime plus a day after it stops being
   published), and tops up one-time
   prekeys. Private keys are persisted before their public halves are uploaded.
@@ -75,6 +81,16 @@ route was removed.
 - **One device at a time per session.** There is no multi-device fan-out:
   resetting the identity on a new device supersedes the previous one.
 
+## Cutover from X3DH to PQXDH
+
+- Migration `20261007000000_wipe_pre_kyber_prekey_bundles` clears every bundle
+  without a Kyber prekey; `PreKeyStore` now requires one.
+- The client's IndexedDB upgrade to version 2 drops the X3DH identity, sessions,
+  prekeys and trust records, then republishes a new identity. History and the
+  outbox are kept; pending messages are re-encrypted.
+- Message types are libsignal's: `2` (whisper) and `3` (prekey). Type `1` is
+  rejected.
+
 ## Cutover from the RSA / hand-rolled implementation
 
 - Migration `20260601000000_wipe_legacy_prekey_bundles` clears every stored P-256
@@ -114,8 +130,8 @@ Run against `mix assets.deploy` output (minified, production CSP) before releasi
 10. [ ] **No plaintext on the wire.** DevTools → Network → WS: `send_message`
     carries only `type`, `body` (base64), `client_nonce`, `epoch` and
     `identity_key`. No event carries the typed text.
-11. [ ] **CSP.** No CSP violations in the console. The curve25519 asm.js module
-    does not require `unsafe-eval`.
+11. [ ] **CSP.** No CSP violations in the console. WebAssembly compilation is
+    allowed by `script-src 'unsafe-eval'`; the binary loads from `'self'`.
 12. [ ] **Server restart.** Restart the server: the chat still shows the earlier
     messages from local history, and the next message starts a new session that
     the peer decrypts.

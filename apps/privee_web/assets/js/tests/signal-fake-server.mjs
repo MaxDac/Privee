@@ -94,6 +94,7 @@ export class FakeServer {
       case "rotate_signed_prekey": {
         if (!bundle || bundle.identity_key !== p.identity_key) return { error: "identity_mismatch" }
         bundle.signed_prekey = p.signed_prekey
+        bundle.kyber_prekey = p.kyber_prekey
         return { ok: true }
       }
 
@@ -122,6 +123,7 @@ export class FakeServer {
             identity_key: peer.identity_key,
             registration_id: peer.registration_id,
             signed_prekey: peer.signed_prekey,
+            kyber_prekey: peer.kyber_prekey,
             one_time_prekey: opk,
           },
         }
@@ -174,6 +176,7 @@ export class FakeServer {
       identity_key: p.identity_key,
       registration_id: p.registration_id,
       signed_prekey: p.signed_prekey,
+      kyber_prekey: p.kyber_prekey,
       one_time_prekeys: [...p.one_time_prekeys],
       max_opk_id: Math.max(0, ...p.one_time_prekeys.map((/** @type {any} */ k) => k.key_id)),
     })

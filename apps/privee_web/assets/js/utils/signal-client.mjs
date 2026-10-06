@@ -1,32 +1,32 @@
 /**
  * Signal Protocol client of one Privee session on this device.
  *
- * Wraps `@privacyresearch/libsignal-protocol-typescript` with:
+ * Wraps the official libsignal, compiled to WebAssembly (`signal-wasm.mjs`),
+ * with:
  *   - per-session persistence (`signal-db.mjs`) and atomic, staged operations
- *     (`signal-store.mjs`);
- *   - cross-tab locking (`signal-locks.mjs`): key management takes the
- *     `keys` lock exclusively, peer operations take it shared plus a per-peer lock;
- *   - key publication through the LiveView (`PriveeWeb.SignalKeysLive`);
+ *     (`signal-store.mjs`): the libsignal state is a serialized snapshot saved
+ *     in the same transaction as history and outbox changes;
+ *   - cross-tab locking (`signal-locks.mjs`): every operation reading or
+ *     writing the snapshot holds the `keys` lock exclusively;
+ *   - key publication through the LiveView (`PriveeWeb.SignalKeysLive`),
+ *     including the Kyber (ML-KEM) last-resort prekey required by PQXDH;
  *   - conversation epochs: a Signal session is bound to the server epoch it
  *     was built for and rebuilt when the conversation expires;
  *   - a local plaintext history and a pending outbox keyed by client nonce.
  */
 
-import {
-  FingerprintGenerator,
-  KeyHelper,
-  SessionBuilder,
-  SessionCipher,
-  SignalProtocolAddress,
-} from "@privacyresearch/libsignal-protocol-typescript"
 import { Stores, deleteLegacyDb, deleteSignalDb, openSignalDb } from "./signal-db.mjs"
 import { webLocks } from "./signal-locks.mjs"
 import { IdentityChangedError, SignalStore, equalBuffers } from "./signal-store.mjs"
+import { Protocol, loadSignal, preKeyMessageIdentity } from "./signal-wasm.mjs"
 
 export { IdentityChangedError }
 
 const DEVICE_ID = 1
 const DAY_MS = 24 * 60 * 60 * 1000
+
+/** libsignal `CiphertextMessageType` values used on the wire. */
+export const MessageType = Object.freeze({ whisper: 2, preKey: 3 })
 
 export const OPK_TARGET = 50
 export const OPK_LOW_WATERMARK = 20
@@ -40,7 +40,7 @@ const MAX_SEND_ATTEMPTS = 4
  * @typedef {object} OutboxRow
  * @property {string} nonce Client nonce, idempotency key on the server.
  * @property {number} peerId
- * @property {1 | 3} type Signal message type.
+ * @property {2 | 3} type Signal message type.
  * @property {string} body Base64 ciphertext.
  * @property {string} epoch Conversation epoch the session was built for.
  * @property {string} identityKey Own identity key used to encrypt.
@@ -68,6 +68,13 @@ const MAX_SEND_ATTEMPTS = 4
  * @property {string} body
  * @property {"in" | "out"} direction
  * @property {string | null} [client_nonce]
+ */
+
+/**
+ * @typedef {object} PublishedKey
+ * @property {number} key_id
+ * @property {string} public_key Base64.
+ * @property {string} [signature] Base64, for signed and Kyber prekeys.
  */
 
 /** @typedef {(event: string, payload: object) => Promise<any>} Push */
@@ -127,26 +134,17 @@ export const bufferToBase64 = (buffer) => {
 
 /**
  * @param {string} base64
- * @returns {ArrayBuffer}
+ * @returns {Uint8Array}
  */
-export const base64ToBuffer = (base64) => {
+export const base64ToBytes = (base64) => {
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return bytes.buffer
+  return bytes
 }
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-
-/**
- * @param {string} text
- * @returns {ArrayBuffer}
- */
-const utf8 = (text) => {
-  const bytes = encoder.encode(text)
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
-}
 
 /** @param {number} ms */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -154,8 +152,20 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 /** @param {number | string} peerId */
 const peerMetaKey = (peerId) => `peer:${peerId}`
 
-/** @param {number | string} peerId */
-const addressOf = (peerId) => new SignalProtocolAddress(String(peerId), DEVICE_ID)
+/**
+ * Converts a public prekey returned by libsignal to its JSON form, freeing it.
+ * @param {import("../../vendor/libsignal-wasm/libsignal_wasm.js").PublicPreKey} key
+ * @param {boolean} signed
+ * @returns {PublishedKey}
+ */
+const publishedKey = (key, signed) => {
+  try {
+    const json = { key_id: key.keyId, public_key: bufferToBase64(key.publicKey) }
+    return signed ? { ...json, signature: bufferToBase64(key.signature) } : json
+  } finally {
+    key.free()
+  }
+}
 
 export class SignalClient {
   /**
@@ -188,6 +198,7 @@ export class SignalClient {
    */
   static async open({ ownId, push, locks, factory, now }) {
     const resolvedLocks = locks || webLocks()
+    await loadSignal()
     await deleteLegacyDb(factory).catch(() => {})
     const db = await openSignalDb(ownId, factory)
     return new SignalClient({ ownId, db, push, locks: resolvedLocks, now, factory })
@@ -219,15 +230,21 @@ export class SignalClient {
   }
 
   /**
+   * Runs `fn` with the libsignal state of `store`, restored from its snapshot.
+   * Must be called while holding the keys lock exclusively.
    * @template T
-   * @param {number | string} peerId
-   * @param {() => Promise<T>} fn
+   * @param {SignalStore} store
+   * @param {(protocol: Protocol) => Promise<T>} fn
    * @returns {Promise<T>}
    */
-  withPeerLock(peerId, fn) {
-    return this.withKeysLock("shared", () =>
-      this.locks.request(`privee-peer-${this.ownId}-${peerId}`, { mode: "exclusive" }, fn),
-    )
+  async withProtocol(store, fn) {
+    const protocol = await store.loadProtocol()
+    if (!protocol) throw new DeviceNotReadyError(undefined)
+    try {
+      return await fn(protocol)
+    } finally {
+      protocol.free()
+    }
   }
 
   /**
@@ -260,8 +277,8 @@ export class SignalClient {
 
   /** @returns {Promise<string | null>} Own identity key (base64). */
   async identityKey() {
-    const keyPair = await this.operation().getIdentityKeyPair()
-    return keyPair ? bufferToBase64(keyPair.pubKey) : null
+    const key = await this.operation().publicIdentityKey()
+    return key ? bufferToBase64(key) : null
   }
 
   /**
@@ -274,10 +291,10 @@ export class SignalClient {
       const status = await this.call("signal_status")
       if (status.error) throw new ServerError(status.error)
 
-      const keyPair = await this.operation().getIdentityKeyPair()
+      const localKey = await this.identityKey()
       const serverKey = status.identity_key
 
-      if (!keyPair) {
+      if (!localKey) {
         if (serverKey) return this.setDeviceState("needs_reset")
         await this.publishNewIdentity("publish_identity", status)
         return this.setDeviceState("ready")
@@ -288,7 +305,7 @@ export class SignalClient {
         return this.setDeviceState("ready")
       }
 
-      if (serverKey !== bufferToBase64(keyPair.pubKey)) return this.setDeviceState("superseded")
+      if (serverKey !== localKey) return this.setDeviceState("superseded")
 
       await this.maintainKeys(status)
       return this.setDeviceState("ready")
@@ -323,114 +340,133 @@ export class SignalClient {
    * @param {{max_opk_id?: number}} status
    */
   async publishNewIdentity(event, status) {
-    const identity = await KeyHelper.generateIdentityKeyPair()
-    const registrationId = KeyHelper.generateRegistrationId()
-    const store = this.operation()
-
-    if (event === "reset_identity") {
-      for (const name of [Stores.identity, Stores.prekeys, Stores.signedPrekeys, Stores.sessions]) {
-        store.clear(name)
+    const protocol = Protocol.generate()
+    try {
+      const store = this.operation()
+      if (event === "reset_identity") {
+        store.clear(Stores.signedPrekeys)
+        await this.clearPeerSessionEpochs(store)
       }
-      await this.clearPeerSessionEpochs(store)
+      await this.publishBundle(event, store, protocol, status)
+    } finally {
+      protocol.free()
     }
-
-    store.put(Stores.identity, "keyPair", identity)
-    store.put(Stores.identity, "registrationId", registrationId)
-    const signedPrekey = await this.createSignedPreKey(store, identity)
-    const oneTimePrekeys = await this.createOneTimePreKeys(store, OPK_TARGET, status.max_opk_id)
-
-    // Private keys are persisted before the public halves are published.
-    await store.commit()
-
-    const reply = await this.call(event, {
-      identity_key: bufferToBase64(identity.pubKey),
-      registration_id: registrationId,
-      signed_prekey: signedPrekey,
-      one_time_prekeys: oneTimePrekeys,
-    })
-    if (reply.error) throw new ServerError(reply.error)
   }
 
   /**
    * The server has no bundle (e.g. it was wiped) but this device has keys.
    * @param {{max_opk_id?: number}} status
    */
-  async publishExistingIdentity(status) {
+  publishExistingIdentity(status) {
     const store = this.operation()
-    const identity = await store.getIdentityKeyPair()
-    if (!identity) throw new DeviceNotReadyError(undefined)
-    const registrationId = await store.getLocalRegistrationId()
-    const signedPrekey = await this.createSignedPreKey(store, identity)
-    const oneTimePrekeys = await this.createOneTimePreKeys(store, OPK_TARGET, status.max_opk_id)
+    return this.withProtocol(store, (protocol) =>
+      this.publishBundle("publish_identity", store, protocol, status),
+    )
+  }
+
+  /**
+   * Generates fresh prekeys, persists the private halves, then publishes.
+   * @param {"publish_identity" | "reset_identity"} event
+   * @param {SignalStore} store
+   * @param {Protocol} protocol
+   * @param {{max_opk_id?: number}} status
+   */
+  async publishBundle(event, store, protocol, status) {
+    const signed = await this.createSignedPreKey(store, protocol)
+    const oneTimePrekeys = await this.createOneTimePreKeys(
+      store,
+      protocol,
+      OPK_TARGET,
+      status.max_opk_id,
+    )
+
+    // Private keys are persisted before the public halves are published.
+    store.saveProtocol(protocol)
     await store.commit()
 
-    const reply = await this.call("publish_identity", {
-      identity_key: bufferToBase64(identity.pubKey),
-      registration_id: registrationId,
-      signed_prekey: signedPrekey,
+    const reply = await this.call(event, {
+      identity_key: bufferToBase64(protocol.identityKey()),
+      registration_id: protocol.registrationId(),
+      signed_prekey: signed.signed_prekey,
+      kyber_prekey: signed.kyber_prekey,
       one_time_prekeys: oneTimePrekeys,
     })
     if (reply.error) throw new ServerError(reply.error)
   }
 
   /**
-   * Rotates the signed prekey when due, prunes expired ones and replenishes
-   * one-time prekeys below the low watermark.
+   * Rotates the signed and Kyber prekeys when due, prunes expired ones and
+   * replenishes one-time prekeys below the low watermark.
    * @param {{identity_key: string, opk_count: number, max_opk_id: number, max_age_ms?: number}} status
    */
-  async maintainKeys(status) {
-    const now = this.now()
+  maintainKeys(status) {
     const store = this.operation()
-    const identity = await store.getIdentityKeyPair()
-    if (!identity) return
-    const identityKey = bufferToBase64(identity.pubKey)
-    const current = await store.get(Stores.meta, "spk_current")
 
-    if (!current || now - current.createdAt >= SPK_ROTATION_MS) {
-      const signedPrekey = await this.createSignedPreKey(store, identity)
-      await store.commit()
-      const reply = await this.call("rotate_signed_prekey", {
-        identity_key: identityKey,
-        signed_prekey: signedPrekey,
-      })
-      if (reply.error) throw new ServerError(reply.error)
-    }
+    return this.withProtocol(store, async (protocol) => {
+      const now = this.now()
+      const identityKey = bufferToBase64(protocol.identityKey())
+      const current = await store.get(Stores.meta, "spk_current")
 
-    // Old signed prekeys stay available for PreKey messages still on the server.
-    const retention = (status.max_age_ms || DEFAULT_MAX_AGE_MS) + DAY_MS
-    const latest = await store.get(Stores.meta, "spk_current")
-    const expired = (await store.getAll(Stores.signedPrekeys)).filter(
-      (record) =>
-        record.keyId !== latest?.keyId &&
-        record.retiredAt !== undefined &&
-        now - record.retiredAt > retention,
-    )
-    for (const record of expired) store.delete(Stores.signedPrekeys, record.keyId)
-    await store.commit()
+      if (!current || now - current.createdAt >= SPK_ROTATION_MS) {
+        const signed = await this.createSignedPreKey(store, protocol)
+        store.saveProtocol(protocol)
+        await store.commit()
+        const reply = await this.call("rotate_signed_prekey", {
+          identity_key: identityKey,
+          ...signed,
+        })
+        if (reply.error) throw new ServerError(reply.error)
+      }
 
-    if (status.opk_count < OPK_LOW_WATERMARK) {
-      const oneTimePrekeys = await this.createOneTimePreKeys(
-        store,
-        OPK_TARGET - status.opk_count,
-        status.max_opk_id,
+      // Old prekeys stay available for PreKey messages still on the server.
+      const retention = (status.max_age_ms || DEFAULT_MAX_AGE_MS) + DAY_MS
+      const latest = await store.get(Stores.meta, "spk_current")
+      const expired = (await store.getAll(Stores.signedPrekeys)).filter(
+        (record) =>
+          record.keyId !== latest?.keyId &&
+          record.retiredAt !== undefined &&
+          now - record.retiredAt > retention,
       )
-      await store.commit()
-      const reply = await this.call("add_prekeys", {
-        identity_key: identityKey,
-        one_time_prekeys: oneTimePrekeys,
-      })
-      if (reply.error) throw new ServerError(reply.error)
-    }
+      if (expired.length > 0) {
+        for (const record of expired) {
+          protocol.removeSignedPreKey(record.keyId)
+          protocol.removeKyberPreKey(record.keyId)
+          store.delete(Stores.signedPrekeys, record.keyId)
+        }
+        store.saveProtocol(protocol)
+        await store.commit()
+      }
+
+      if (status.opk_count < OPK_LOW_WATERMARK) {
+        const oneTimePrekeys = await this.createOneTimePreKeys(
+          store,
+          protocol,
+          OPK_TARGET - status.opk_count,
+          status.max_opk_id,
+        )
+        store.saveProtocol(protocol)
+        await store.commit()
+        const reply = await this.call("add_prekeys", {
+          identity_key: identityKey,
+          one_time_prekeys: oneTimePrekeys,
+        })
+        if (reply.error) throw new ServerError(reply.error)
+      }
+    })
   }
 
   /**
+   * Generates a signed prekey and the Kyber last-resort prekey published with
+   * it; both share the same id and lifecycle.
    * @param {SignalStore} store
-   * @param {import("@privacyresearch/libsignal-protocol-typescript").KeyPairType} identity
+   * @param {Protocol} protocol
+   * @returns {Promise<{signed_prekey: PublishedKey, kyber_prekey: PublishedKey}>}
    */
-  async createSignedPreKey(store, identity) {
+  async createSignedPreKey(store, protocol) {
     const keyId = ((await store.get(Stores.meta, "spk_counter")) || 0) + 1
-    const signed = await KeyHelper.generateSignedPreKey(identity, keyId)
     const createdAt = this.now()
+    const signedPrekey = publishedKey(protocol.generateSignedPreKey(keyId, createdAt), true)
+    const kyberPrekey = publishedKey(protocol.generateKyberPreKey(keyId, createdAt), true)
 
     // Retention of the previous key starts when it stops being published.
     const previous = await store.get(Stores.meta, "spk_current")
@@ -440,35 +476,26 @@ export class SignalClient {
 
     store.put(Stores.meta, "spk_counter", keyId)
     store.put(Stores.meta, "spk_current", { keyId, createdAt })
-    store.put(Stores.signedPrekeys, keyId, {
-      keyId,
-      keyPair: signed.keyPair,
-      signature: signed.signature,
-      createdAt,
-    })
+    store.put(Stores.signedPrekeys, keyId, { keyId, createdAt })
 
-    return {
-      key_id: keyId,
-      public_key: bufferToBase64(signed.keyPair.pubKey),
-      signature: bufferToBase64(signed.signature),
-    }
+    return { signed_prekey: signedPrekey, kyber_prekey: kyberPrekey }
   }
 
   /**
    * Reserves `count` new one-time prekey ids, above any id ever used locally or
    * accepted by the server. Ids are never reused; gaps are harmless.
    * @param {SignalStore} store
+   * @param {Protocol} protocol
    * @param {number} count
    * @param {number} [serverMaxId]
+   * @returns {Promise<PublishedKey[]>}
    */
-  async createOneTimePreKeys(store, count, serverMaxId = 0) {
+  async createOneTimePreKeys(store, protocol, count, serverMaxId = 0) {
     const start = Math.max((await store.get(Stores.meta, "opk_counter")) || 0, serverMaxId || 0)
     const prekeys = []
 
     for (let keyId = start + 1; keyId <= start + count; keyId++) {
-      const prekey = await KeyHelper.generatePreKey(keyId)
-      store.put(Stores.prekeys, keyId, prekey.keyPair)
-      prekeys.push({ key_id: keyId, public_key: bufferToBase64(prekey.keyPair.pubKey) })
+      prekeys.push(publishedKey(protocol.generatePreKey(keyId), false))
     }
 
     store.put(Stores.meta, "opk_counter", start + count)
@@ -496,7 +523,7 @@ export class SignalClient {
 
   /**
    * @param {number | string} peerId
-   * @returns {Promise<ArrayBuffer | undefined>} A changed, not yet approved identity key.
+   * @returns {Promise<Uint8Array | undefined>} A changed, not yet approved identity key.
    */
   async pendingIdentity(peerId) {
     return (await this.operation().getTrust(String(peerId)))?.pendingKey
@@ -504,7 +531,7 @@ export class SignalClient {
 
   /**
    * @param {number | string} peerId
-   * @param {ArrayBuffer} identityKey
+   * @param {Uint8Array} identityKey
    */
   async recordPendingIdentity(peerId, identityKey) {
     const store = this.operation()
@@ -520,15 +547,22 @@ export class SignalClient {
    * @param {number | string} peerId
    */
   approveIdentity(peerId) {
-    return this.withPeerLock(peerId, async () => {
+    return this.withKeysLock("exclusive", async () => {
       const store = this.operation()
-      const trust = await store.getTrust(String(peerId))
+      const name = String(peerId)
+      const trust = await store.getTrust(name)
       if (!trust?.pendingKey) return
-      store.put(Stores.trustedIdentities, String(peerId), { publicKey: trust.pendingKey })
-      await store.removeSession(addressOf(peerId).toString())
-      const meta = (await store.get(Stores.meta, peerMetaKey(peerId))) || {}
-      store.put(Stores.meta, peerMetaKey(peerId), { ...meta, sessionEpoch: null })
-      await store.commit()
+      const pendingKey = trust.pendingKey
+
+      await this.withProtocol(store, async (protocol) => {
+        protocol.trustIdentity(name, DEVICE_ID, pendingKey)
+        protocol.removeSession(name, DEVICE_ID)
+        store.saveProtocol(protocol)
+        store.put(Stores.trustedIdentities, name, { publicKey: pendingKey })
+        const meta = (await store.get(Stores.meta, peerMetaKey(peerId))) || {}
+        store.put(Stores.meta, peerMetaKey(peerId), { ...meta, sessionEpoch: null })
+        await store.commit()
+      })
     })
   }
 
@@ -537,19 +571,17 @@ export class SignalClient {
    * @param {number | string} peerId
    * @returns {Promise<string | null>}
    */
-  async safetyNumber(peerId) {
-    const store = this.operation()
-    const identity = await store.getIdentityKeyPair()
-    const trust = await store.getTrust(String(peerId))
-    const peerKey = trust?.pendingKey || trust?.publicKey
-    if (!identity || !peerKey) return null
+  safetyNumber(peerId) {
+    return this.withKeysLock("exclusive", async () => {
+      const store = this.operation()
+      const trust = await store.getTrust(String(peerId))
+      const peerKey = trust?.pendingKey || trust?.publicKey
+      if (!peerKey || !(await store.publicIdentityKey())) return null
 
-    return new FingerprintGenerator(5200).createFor(
-      String(this.ownId),
-      identity.pubKey,
-      String(peerId),
-      peerKey,
-    )
+      return this.withProtocol(store, (protocol) =>
+        Promise.resolve(protocol.fingerprint(String(this.ownId), String(peerId), peerKey)),
+      )
+    })
   }
 
   // -- Sessions --------------------------------------------------------------
@@ -562,39 +594,55 @@ export class SignalClient {
   }
 
   /**
+   * Starts a new PQXDH session from the peer's published bundle.
    * @param {SignalStore} store
+   * @param {Protocol} protocol
    * @param {number | string} peerId
    */
-  async buildSession(store, peerId) {
+  async buildSession(store, protocol, peerId) {
     const reply = await this.call("request_peer_bundle")
-    if (reply.error || !reply.bundle) throw new NoPeerKeysError()
-
     const bundle = reply.bundle
-    const identityKey = base64ToBuffer(bundle.identity_key)
+    if (reply.error || !bundle?.kyber_prekey) throw new NoPeerKeysError()
 
-    if (!(await store.isTrustedIdentity(String(peerId), identityKey))) {
-      await this.recordPendingIdentity(peerId, identityKey)
-      throw new IdentityChangedError(String(peerId), identityKey)
-    }
+    const name = String(peerId)
+    const identityKey = base64ToBytes(bundle.identity_key)
+    await this.assertTrusted(store, protocol, peerId, identityKey)
 
-    const address = addressOf(peerId)
-    await store.removeSession(address.toString())
-
-    await new SessionBuilder(store, address).processPreKey({
+    const { signed_prekey: spk, kyber_prekey: kyber, one_time_prekey: opk } = bundle
+    protocol.removeSession(name, DEVICE_ID)
+    protocol.processPreKeyBundle(
+      name,
+      DEVICE_ID,
+      bundle.registration_id,
+      opk ? opk.key_id : undefined,
+      opk ? base64ToBytes(opk.public_key) : undefined,
+      spk.key_id,
+      base64ToBytes(spk.public_key),
+      base64ToBytes(spk.signature),
+      kyber.key_id,
+      base64ToBytes(kyber.public_key),
+      base64ToBytes(kyber.signature),
       identityKey,
-      registrationId: bundle.registration_id,
-      signedPreKey: {
-        keyId: bundle.signed_prekey.key_id,
-        publicKey: base64ToBuffer(bundle.signed_prekey.public_key),
-        signature: base64ToBuffer(bundle.signed_prekey.signature),
-      },
-      preKey: bundle.one_time_prekey
-        ? {
-            keyId: bundle.one_time_prekey.key_id,
-            publicKey: base64ToBuffer(bundle.one_time_prekey.public_key),
-          }
-        : undefined,
-    })
+      this.now(),
+    )
+    await store.pinIdentity(name, identityKey)
+  }
+
+  /**
+   * Throws `IdentityChangedError` (recording the key as pending) unless the
+   * user trusts `identityKey`; libsignal is then told to accept it too.
+   * @param {SignalStore} store
+   * @param {Protocol} protocol
+   * @param {number | string} peerId
+   * @param {Uint8Array} identityKey
+   */
+  async assertTrusted(store, protocol, peerId, identityKey) {
+    const name = String(peerId)
+    if (!(await store.isTrustedIdentity(name, identityKey))) {
+      await this.recordPendingIdentity(peerId, identityKey)
+      throw new IdentityChangedError(name, identityKey)
+    }
+    protocol.trustIdentity(name, DEVICE_ID, identityKey)
   }
 
   /**
@@ -617,40 +665,45 @@ export class SignalClient {
    * @returns {Promise<OutboxRow | null>}
    */
   encryptMessage(peerId, plaintext, epoch, { replaceNonce, ts, rebuild = false } = {}) {
-    return this.withPeerLock(peerId, async () => {
+    return this.withKeysLock("exclusive", async () => {
       const store = this.operation()
       await this.assertCanSend(store)
       if (replaceNonce && !(await store.get(Stores.pendingOutbox, replaceNonce))) return null
 
-      const identity = await store.getIdentityKeyPair()
-      if (!identity) throw new DeviceNotReadyError(undefined)
-      const address = addressOf(peerId)
-      const meta = (await store.get(Stores.meta, peerMetaKey(peerId))) || {}
-      const session = await store.loadSession(address.toString())
+      return this.withProtocol(store, async (protocol) => {
+        const name = String(peerId)
+        const meta = (await store.get(Stores.meta, peerMetaKey(peerId))) || {}
+        const hasSession = protocol.hasSession(name, DEVICE_ID, this.now())
 
-      if (rebuild || !session || meta.sessionEpoch !== epoch) {
-        await this.buildSession(store, peerId)
-      }
+        if (rebuild || !hasSession || meta.sessionEpoch !== epoch) {
+          await this.buildSession(store, protocol, peerId)
+        }
 
-      const ciphertext = await new SessionCipher(store, address).encrypt(utf8(plaintext))
+        const ciphertext = protocol.encrypt(name, DEVICE_ID, encoder.encode(plaintext), this.now())
+        /** @type {OutboxRow} */
+        let row
+        try {
+          row = {
+            nonce: crypto.randomUUID(),
+            peerId: Number(peerId),
+            type: /** @type {2 | 3} */ (ciphertext.messageType),
+            body: bufferToBase64(ciphertext.body),
+            epoch,
+            identityKey: bufferToBase64(protocol.identityKey()),
+            plaintext,
+            ts: ts ?? this.now(),
+          }
+        } finally {
+          ciphertext.free()
+        }
 
-      /** @type {OutboxRow} */
-      const row = {
-        nonce: crypto.randomUUID(),
-        peerId: Number(peerId),
-        type: /** @type {1 | 3} */ (ciphertext.type),
-        body: btoa(/** @type {string} */ (ciphertext.body)),
-        epoch,
-        identityKey: bufferToBase64(identity.pubKey),
-        plaintext,
-        ts: ts ?? this.now(),
-      }
-
-      store.put(Stores.pendingOutbox, row.nonce, row)
-      if (replaceNonce) store.delete(Stores.pendingOutbox, replaceNonce)
-      store.put(Stores.meta, peerMetaKey(peerId), { ...meta, sessionEpoch: epoch })
-      await store.commit()
-      return row
+        store.saveProtocol(protocol)
+        store.put(Stores.pendingOutbox, row.nonce, row)
+        if (replaceNonce) store.delete(Stores.pendingOutbox, replaceNonce)
+        store.put(Stores.meta, peerMetaKey(peerId), { ...meta, sessionEpoch: epoch })
+        await store.commit()
+        return row
+      })
     })
   }
 
@@ -664,7 +717,7 @@ export class SignalClient {
    * @returns {Promise<string | null>}
    */
   decryptMessage(peerId, message) {
-    return this.withPeerLock(peerId, async () => {
+    return this.withKeysLock("exclusive", async () => {
       const store = this.operation()
       /** @type {HistoryRow | undefined} */
       const cached = await store.get(Stores.history, message.id)
@@ -674,33 +727,38 @@ export class SignalClient {
         throw new DeviceNotReadyError("resetting")
       }
 
-      const address = addressOf(peerId)
+      const name = String(peerId)
       const meta = (await store.get(Stores.meta, peerMetaKey(peerId))) || {}
       const type = Number(message.type)
 
-      // A PreKey message from a newer epoch starts a new session.
-      if (type === 3 && meta.sessionEpoch && meta.sessionEpoch !== message.epoch) {
-        await store.removeSession(address.toString())
-      }
-
       /** @type {string | null} */
-      let plaintext = null
-      try {
-        const cipher = new SessionCipher(store, address)
-        const body = atob(message.body)
-        const decrypted =
-          type === 3
-            ? await cipher.decryptPreKeyWhisperMessage(body, "binary")
-            : await cipher.decryptWhisperMessage(body, "binary")
-        plaintext = decoder.decode(decrypted)
-      } catch (e) {
-        store.discard()
-        if (e instanceof IdentityChangedError) {
-          await this.recordPendingIdentity(peerId, e.identityKey)
-          throw e
+      const plaintext = await this.withProtocol(store, async (protocol) => {
+        try {
+          const body = base64ToBytes(message.body)
+
+          if (type === MessageType.preKey) {
+            const identityKey = preKeyMessageIdentity(body)
+            await this.assertTrusted(store, protocol, peerId, identityKey)
+            // A PreKey message from a newer epoch starts a new session.
+            if (meta.sessionEpoch && meta.sessionEpoch !== message.epoch) {
+              protocol.removeSession(name, DEVICE_ID)
+            }
+            const decrypted = protocol.decrypt(name, DEVICE_ID, type, body)
+            await store.pinIdentity(name, identityKey)
+            store.saveProtocol(protocol)
+            return decoder.decode(decrypted)
+          }
+
+          const decrypted = protocol.decrypt(name, DEVICE_ID, type, body)
+          store.saveProtocol(protocol)
+          return decoder.decode(decrypted)
+        } catch (e) {
+          if (e instanceof IdentityChangedError) throw e
+          store.discard()
+          console.warn("Unable to decrypt message", message.id, e)
+          return null
         }
-        console.warn("Unable to decrypt message", message.id, e)
-      }
+      })
 
       const cursor =
         meta.cursor?.epoch === message.epoch
@@ -722,7 +780,9 @@ export class SignalClient {
       store.put(Stores.meta, peerMetaKey(peerId), {
         ...meta,
         cursor,
-        ...(type === 3 && plaintext !== null ? { sessionEpoch: message.epoch } : {}),
+        ...(type === MessageType.preKey && plaintext !== null
+          ? { sessionEpoch: message.epoch }
+          : {}),
       })
       await store.commit()
       return plaintext
@@ -758,7 +818,8 @@ export class SignalClient {
       range: IDBKeyRange.bound([id, -Infinity], [id, Infinity]),
       filter: (row) => row.peerId === id,
     })
-    return rows.sort((a, b) => a.ts - b.ts)
+    // Rows stored in the same millisecond are ordered by the server sequence.
+    return rows.sort((a, b) => a.ts - b.ts || (a.epoch === b.epoch ? a.seq - b.seq : 0))
   }
 
   /**

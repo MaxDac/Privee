@@ -9,7 +9,7 @@ defmodule PriveeWeb.SignalKeysLive do
     * `signal_status` - `%{identity_key, opk_count, max_opk_id, max_age_ms}`
     * `publish_identity` - initial bundle
     * `reset_identity` - replaces the bundle; other devices become superseded
-    * `rotate_signed_prekey` - `%{identity_key, signed_prekey}`
+    * `rotate_signed_prekey` - `%{identity_key, signed_prekey, kyber_prekey}`
     * `add_prekeys` - `%{identity_key, one_time_prekeys}`
 
   Server pushes:
@@ -117,7 +117,8 @@ defmodule PriveeWeb.SignalKeysLive do
            PreKeyStore.rotate_signed_prekey(
              session_id,
              params["identity_key"],
-             params["signed_prekey"]
+             params["signed_prekey"],
+             params["kyber_prekey"]
            ) do
       {:ok, %{ok: true}, socket}
     end

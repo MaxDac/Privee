@@ -45,4 +45,16 @@ describe("createLazyHook", () => {
     await mounting
     expect(impl.mounted).not.toHaveBeenCalled()
   })
+
+  it("mounts on LiveView hook instances, which define a __destroyed method", async () => {
+    const impl = { mounted: vi.fn() }
+    /** @type {any} */
+    const hook = Object.assign(
+      Object.create({ __destroyed() {} }),
+      createLazyHook(() => moduleWith(impl), "addHooks", "Test"),
+    )
+
+    await hook.mounted()
+    expect(impl.mounted).toHaveBeenCalledOnce()
+  })
 })
