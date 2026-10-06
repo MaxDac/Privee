@@ -57,7 +57,9 @@ defmodule Privee.PreKeyStoreTest do
            quote(do: &put_in(&1, ["signed_prekey", "signature"], Base.encode64("short")))},
           {"registration id out of range", quote(do: &Map.put(&1, "registration_id", 0x4000))},
           {"zero opk id",
-           quote(do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([0])))},
+           quote(
+             do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([0]))
+           )},
           {"duplicate opk ids",
            quote(
              do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([1, 1]))

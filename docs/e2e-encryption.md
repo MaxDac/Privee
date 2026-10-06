@@ -54,7 +54,10 @@ route was removed.
   rebuilt. The "Safety number" button compares numbers at any time.
 - **New device.** A browser without local keys for a session that already has a
   published bundle must *reset the encryption identity*. Devices still holding
-  the old identity become **superseded** and stop sending.
+  the old identity become **superseded** and stop sending. A reset also ends
+  every server-side conversation of the session (and drops its ciphertext, which
+  the new identity cannot decrypt), so peers start a new epoch and rebuild their
+  sessions against the new bundle on their next message.
 
 ## Deliberate trade-offs
 

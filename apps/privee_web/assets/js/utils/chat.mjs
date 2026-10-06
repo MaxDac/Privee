@@ -7,7 +7,12 @@
  * All plaintext reaches the DOM through `textContent`.
  */
 
-import { DeviceNotReadyError, IdentityChangedError, NoPeerKeysError } from "./signal-client.mjs"
+import {
+  DeviceNotReadyError,
+  IdentityChangedError,
+  NoPeerKeysError,
+  wasQueued,
+} from "./signal-client.mjs"
 
 export const Selectors = Object.freeze({
   entry: "[data-signal-message]",
@@ -26,6 +31,7 @@ export const Texts = Object.freeze({
   unavailable: "Sent from another device.",
   noPeerKeys: "Your contact has not set up encryption yet. Try again once they are online.",
   sendFailed: "The message could not be sent. Please try again.",
+  sendQueued: "The message could not be delivered yet. It will be sent automatically.",
   identityChanged:
     "Your contact's security code changed. They may have reset their device, or someone may be intercepting the conversation. Verify the safety number with them before continuing.",
   superseded:
@@ -327,11 +333,12 @@ export class ChatController {
       await this.client.send(this.peerId, text)
       this.clearBanner(["notice"])
     } catch (e) {
+      const queued = wasQueued(e)
+      if (!queued && !input.value) input.value = text
       if (e instanceof NoPeerKeysError) {
-        input.value = text
         this.showBanner("notice", Texts.noPeerKeys)
       } else if (!this.handleError(e)) {
-        this.showBanner("notice", Texts.sendFailed)
+        this.showBanner("notice", queued ? Texts.sendQueued : Texts.sendFailed)
         console.error("Unable to send message", e)
       }
     }

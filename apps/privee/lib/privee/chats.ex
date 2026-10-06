@@ -294,6 +294,31 @@ defmodule Privee.Chats do
   end
 
   @doc """
+  Ends every conversation of `session_id`, deleting its messages.
+
+  Called when the session resets its Signal identity: the peers' sessions are bound
+  to the old identity, so their next send fails with `:stale_epoch` and they
+  rebuild against the new bundle. History encrypted to the old identity could
+  not be decrypted anymore and is dropped.
+  """
+  @spec end_conversations(non_neg_integer()) :: :ok
+  def end_conversations(session_id) do
+    if available?() do
+      @conversations
+      |> :ets.select([
+        {{{:"$1", :"$2"}, :_, :_, :_, :_},
+         [{:orelse, {:==, :"$1", session_id}, {:==, :"$2", session_id}}], [:"$_"]}
+      ])
+      |> Enum.each(fn {key, epoch, _, _, _} = row ->
+        :ets.delete_object(@conversations, row)
+        :ets.select_delete(@messages, [{{{key, epoch, :_}, :_, :_}, [], [true]}])
+      end)
+    end
+
+    :ok
+  end
+
+  @doc """
   Deletes expired conversations, their messages and nonces, and abandoned claims.
   """
   def sweep(now \\ now()) do

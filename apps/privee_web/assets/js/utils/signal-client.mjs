@@ -97,6 +97,21 @@ export class DeviceNotReadyError extends Error {
   }
 }
 
+/** Errors thrown by `send` after the message was stored in the outbox. */
+const queuedErrors = new WeakSet()
+
+/** @param {unknown} error */
+const markQueued = (error) => {
+  if (error && typeof error === "object") queuedErrors.add(error)
+}
+
+/**
+ * Whether `send` failed after queuing the message, which is then delivered by a
+ * later `flushOutbox` and must not be sent again.
+ * @param {unknown} error
+ */
+export const wasQueued = (error) => !!error && typeof error === "object" && queuedErrors.has(error)
+
 // -- Encoding helpers ---------------------------------------------------------
 
 /**
@@ -828,7 +843,12 @@ export class SignalClient {
   async send(peerId, plaintext) {
     const epoch = await this.openConversation()
     const row = /** @type {OutboxRow} */ (await this.encryptMessage(peerId, plaintext, epoch))
-    return this.deliver(row)
+    try {
+      return await this.deliver(row)
+    } catch (e) {
+      if (!(e instanceof ServerError && e.reason === "invalid")) markQueued(e)
+      throw e
+    }
   }
 
   /**

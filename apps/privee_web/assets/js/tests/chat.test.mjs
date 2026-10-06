@@ -142,6 +142,43 @@ describe("ChatController", () => {
     expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.noPeerKeys)
   })
 
+  it("keeps the text when sending fails before the message is queued", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    server.intercept.set("open_conversation", () => ({ error: "unavailable" }))
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "retry me"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("retry me")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.sendFailed)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(0)
+  })
+
+  it("does not ask to retry a queued message, which is delivered once later", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    server.intercept.set("send_message", () => ({ error: "unavailable" }))
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "queued"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.sendQueued)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(1)
+
+    server.intercept.delete("send_message")
+    await alice.controller.flush()
+    expect(server.inbox(BOB, ALICE)).toHaveLength(1)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(0)
+  })
+
   it("renders own messages after a reload from the local history", async () => {
     const factory = new IDBFactory()
     const alice = await party(server, ALICE, BOB, factory)
@@ -200,7 +237,6 @@ describe("ChatController", () => {
     const alice2 = await party(server, ALICE, BOB)
     await alice2.client.ensureKeys()
     await alice2.client.resetIdentity()
-    server.rotateEpoch(ALICE, BOB)
     await alice2.client.send(BOB, "new device")
 
     stream(server, bob.doc, BOB)

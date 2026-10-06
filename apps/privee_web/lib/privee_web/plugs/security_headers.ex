@@ -45,8 +45,8 @@ defmodule PriveeWeb.Plugs.SecurityHeaders do
     form-action 'self';
     frame-ancestors 'self';
     """
-    |> String.replace("\n", " ")
-    |> String.trim()
+    |> String.split()
+    |> Enum.join(" ")
   end
 
   defp hsts_header do

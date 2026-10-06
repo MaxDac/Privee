@@ -427,7 +427,6 @@ describe("SignalClient", () => {
       await bob2.resetIdentity()
 
       // Alice's sessions stay bound to the old identity until she approves.
-      server.rotateEpoch(ALICE, BOB)
       await expect(alice.send(BOB, "to new device")).rejects.toThrow(IdentityChangedError)
       expect(await alice.pendingIdentity(BOB)).toBeDefined()
 
@@ -452,7 +451,6 @@ describe("SignalClient", () => {
       const alice2 = (await device(server, ALICE, BOB)).client
       await alice2.ensureKeys()
       await alice2.resetIdentity()
-      server.rotateEpoch(ALICE, BOB)
       await alice2.send(BOB, "impostor?")
 
       const message = server.inbox(BOB, ALICE).at(-1)

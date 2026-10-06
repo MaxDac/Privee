@@ -196,6 +196,21 @@ defmodule PriveeWeb.ChatLiveTest do
       assert_push_event(other, "identity_superseded", %{identity_key: ^new_ik})
       assert PreKeyStore.identity_key(me.id) == new_ik
     end
+
+    test "reset_identity ends the conversations of the session", %{
+      conn: conn,
+      me: me,
+      peer: peer
+    } do
+      {:ok, epoch} = Privee.Chats.open_conversation(me.id, peer.id)
+      {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
+
+      render_hook(lv, "reset_identity", bundle_attrs())
+      assert_reply(lv, %{ok: true})
+
+      assert {:ok, new_epoch} = Privee.Chats.open_conversation(peer.id, me.id)
+      assert new_epoch != epoch
+    end
   end
 
   describe "send_message" do

@@ -101,6 +101,7 @@ defmodule PriveeWeb.SignalKeysLive do
   defp run("reset_identity", session_id, params, socket) do
     with :ok <- PreKeyStore.reset_identity(session_id, params) do
       identity_key = params["identity_key"]
+      :ok = Chats.end_conversations(session_id)
 
       Endpoint.broadcast(owner_topic(session_id), @identity_reset_event, %{
         identity_key: identity_key

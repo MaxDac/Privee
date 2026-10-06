@@ -82,6 +82,11 @@ export class FakeServer {
 
       case "reset_identity": {
         this.store(ownId, p)
+        // Like the real server, end every conversation of the reset session.
+        for (const key of this.epochs.keys()) {
+          if (key.split(":").includes(String(ownId)))
+            this.epochs.set(key, `e${++this.epochCounter}`)
+        }
         this.pushed.push({ to: ownId, event: "identity_superseded", payload: p.identity_key })
         return { ok: true }
       }

@@ -20,20 +20,20 @@ export const createLazyHook = (load, registrar, name) => ({
     /** @type {Record<string, any>} */
     const hooks = {}
     module[registrar](hooks)
-    this.__impl = hooks[name] || {}
-    if (this.__destroyed) return
-    await this.__impl.mounted?.call(this)
+    this.lazyImpl = hooks[name] || {}
+    if (this.lazyDestroyed) return
+    await this.lazyImpl.mounted?.call(this)
   },
 
   /** @this {Record<string, any>} */
   updated() {
-    return this.__impl?.updated?.call(this)
+    return this.lazyImpl?.updated?.call(this)
   },
 
   /** @this {Record<string, any>} */
   destroyed() {
-    this.__destroyed = true
-    return this.__impl?.destroyed?.call(this)
+    this.lazyDestroyed = true
+    return this.lazyImpl?.destroyed?.call(this)
   },
 })
 

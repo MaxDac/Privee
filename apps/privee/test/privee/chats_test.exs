@@ -230,6 +230,27 @@ defmodule Privee.ChatsTest do
     end
   end
 
+  describe "end_conversations/1" do
+    test "ends every conversation of the session and drops its messages" do
+      c = 1_000_003
+      e_ab = open!(@a, @b)
+      e_bc = open!(@b, c)
+      e_ac = open!(@a, c)
+      {:ok, _} = Chats.create_message(msg(@a, @b), e_ab)
+      {:ok, _} = Chats.create_message(msg(c, @b), e_bc)
+      {:ok, _} = Chats.create_message(msg(@a, c), e_ac)
+
+      assert :ok = Chats.end_conversations(@b)
+
+      assert Chats.current_epoch(@a, @b) == nil
+      assert Chats.current_epoch(@b, c) == nil
+      assert Chats.current_epoch(@a, c) == e_ac
+      assert {:error, {:stale_epoch, _}} = Chats.create_message(msg(@a, @b), e_ab)
+      assert {_, []} = Chats.latest_messages(@a, @b)
+      assert {^e_ac, [_]} = Chats.latest_messages(@a, c)
+    end
+  end
+
   describe "sweep/1" do
     test "drops expired conversations with their messages and nonces" do
       put_config(ttl_ms: 1000)

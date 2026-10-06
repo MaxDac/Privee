@@ -18,6 +18,23 @@ describe("createLazyHook", () => {
     expect(impl.destroyed).toHaveBeenCalledOnce()
   })
 
+  it("does not clash with LiveView's internal hook members", async () => {
+    const impl = { mounted: vi.fn(), destroyed: vi.fn() }
+    const lifecycle = { __destroyed() {}, __mounted() {} }
+    // LiveView binds hook callbacks to a ViewHook that has `__`-prefixed internals.
+    /** @type {any} */
+    const hook = Object.assign(
+      Object.create(lifecycle),
+      createLazyHook(() => moduleWith(impl), "addHooks", "Test"),
+    )
+
+    await hook.mounted()
+    hook.destroyed()
+    expect(impl.mounted).toHaveBeenCalledOnce()
+    expect(impl.destroyed).toHaveBeenCalledOnce()
+    expect(hook.__destroyed).toBe(lifecycle.__destroyed)
+  })
+
   it("does not mount a hook destroyed while loading", async () => {
     const impl = { mounted: vi.fn(), destroyed: vi.fn() }
     /** @type {any} */
