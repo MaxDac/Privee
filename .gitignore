@@ -25,5 +25,8 @@ erl_crash.dump
 # LSPs
 /.expert/
 
+# Dialyzer PLTs
+/priv/plts/
+
 # Node modules
 */node_modules
