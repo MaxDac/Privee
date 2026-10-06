@@ -1,1 +1,1 @@
-call "%~dp0\bauta_umbrella" eval BautaWeb.Release.migrate
+call "%~dp0\privee_umbrella" eval PriveeWeb.Release.migrate

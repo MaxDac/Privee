@@ -1,3 +1,0 @@
-# Bauta
-
-**TODO: Add description**

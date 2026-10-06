@@ -20,7 +20,7 @@ ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-$
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 # Build argument for PHX_HOST with Fly.io as default
-ARG PHX_HOST=bauta.fly.dev
+ARG PHX_HOST=privee.fly.dev
 
 FROM ${BUILDER_IMAGE} AS builder
 
@@ -49,8 +49,8 @@ ENV PHX_HOST=${PHX_HOST}
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
-COPY apps/bauta/mix.exs ./apps/bauta/mix.exs
-COPY apps/bauta_web/mix.exs ./apps/bauta_web/mix.exs
+COPY apps/privee/mix.exs ./apps/privee/mix.exs
+COPY apps/privee_web/mix.exs ./apps/privee_web/mix.exs
 
 RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
@@ -62,19 +62,19 @@ COPY config/config.exs config/${MIX_ENV}.exs config/
 RUN mix deps.compile
 
 # Copy application code
-COPY apps/bauta/priv apps/bauta/priv
-COPY apps/bauta_web/priv apps/bauta_web/priv
+COPY apps/privee/priv apps/privee/priv
+COPY apps/privee_web/priv apps/privee_web/priv
 
-COPY apps/bauta/lib apps/bauta/lib
-COPY apps/bauta_web/lib apps/bauta_web/lib
+COPY apps/privee/lib apps/privee/lib
+COPY apps/privee_web/lib apps/privee_web/lib
 
 # Copy assets and compile them
-COPY apps/bauta_web/assets apps/bauta_web/assets
+COPY apps/privee_web/assets apps/privee_web/assets
 
 # compile assets
-RUN npm ci --prefix apps/bauta_web/assets && \
-    npm run --prefix apps/bauta_web/assets check && \
-    mix assets.deploy --app apps/bauta_web
+RUN npm ci --prefix apps/privee_web/assets && \
+    npm run --prefix apps/privee_web/assets check && \
+    mix assets.deploy --app apps/privee_web
 
 # Compile the release
 RUN mix compile
@@ -86,7 +86,7 @@ COPY rel rel
 RUN mix release
 
 # Verify the release was built successfully
-RUN ls -la _build/${MIX_ENV}/rel/bauta_umbrella/ && \
+RUN ls -la _build/${MIX_ENV}/rel/privee_umbrella/ && \
     echo "Release built successfully"
 
 # start a new build stage so that the final image will only contain
@@ -115,7 +115,7 @@ RUN chown nobody /app
 ENV MIX_ENV="prod"
 
 # Only copy the final release from the build stage
-COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/bauta_umbrella ./
+COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./
 
 USER nobody
 

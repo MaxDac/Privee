@@ -1,7 +1,7 @@
-# Bauta
-[![Bauta Main CI/CD pipeline](https://github.com/MaxDac/Bauta/actions/workflows/main-ci.yml/badge.svg)](https://github.com/MaxDac/Bauta/actions/workflows/main-ci.yml)
-[![Deploy to Fly.io](https://github.com/MaxDac/Bauta/actions/workflows/fly-deploy.yml/badge.svg)](https://github.com/MaxDac/Bauta/actions/workflows/fly-deploy.yml)
-[![Deploy to Azure](https://github.com/MaxDac/Bauta/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/MaxDac/Bauta/actions/workflows/azure-deploy.yml)
+# Privee
+[![Privee Main CI/CD pipeline](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/main-ci.yml)
+[![Deploy to Fly.io](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/fly-deploy.yml)
+[![Deploy to Azure](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/azure-deploy.yml)
 
 [Architecture & Azure deployment details](docs/architecture.md)
 
@@ -66,7 +66,7 @@ This will start the application, that will listen to the port 4000.
 To start development, run the database in a Docker container with this command:
 
 ```bash
-docker run --name bauta-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+docker run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
 ```
 
 Also, instead of relying on IDE tools, the PGAdmin tool can be started on Docker to explore the database:
@@ -75,7 +75,7 @@ Also, instead of relying on IDE tools, the PGAdmin tool can be started on Docker
 docker run --name pgadmin -e "PGADMIN_DEFAULT_EMAIL=admin@admin.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" --restart=unless-stopped -p 5050:80 -d dpage/pgadmin4
 docker network create --driver bridge pgnetwork
 docker network connect pgnetwork pgadmin
-docker network connect pgnetwork bauta-database
+docker network connect pgnetwork privee-database
 ```
 
 ### Local development with Podman
@@ -85,7 +85,7 @@ For those who prefer Podman over Docker, you can use these equivalent commands:
 To start the PostgreSQL database with Podman:
 
 ```bash
-podman run --name bauta-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
+podman run --name privee-database -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres --restart=unless-stopped -p 5432:5432 -d postgres
 ```
 
 To start PGAdmin with Podman:
@@ -94,7 +94,7 @@ To start PGAdmin with Podman:
 podman run --name pgadmin -e "PGADMIN_DEFAULT_EMAIL=admin@admin.com" -e "PGADMIN_DEFAULT_PASSWORD=admin" --restart=unless-stopped -p 5050:80 -d dpage/pgadmin4
 podman network create pgnetwork
 podman network connect pgnetwork pgadmin
-podman network connect pgnetwork bauta-database
+podman network connect pgnetwork privee-database
 ```
 
 ## IDE support
@@ -168,10 +168,10 @@ For Azure Kubernetes Service deployment:
 1. **Build and push the Docker image:**
    ```bash
    # Build the image
-   docker build -t bauta.azurecr.io/bauta:latest .
+   docker build -t privee.azurecr.io/privee:latest .
 
    # Push to Azure Container Registry
-   docker push bauta.azurecr.io/bauta:latest
+   docker push privee.azurecr.io/privee:latest
    ```
 
 2. **Create necessary Kubernetes secrets:**
@@ -183,7 +183,7 @@ For Azure Kubernetes Service deployment:
      --from-literal=POSTGRES_DB=your_database
 
    # Create application secret
-   kubectl create secret generic bauta-app-secret \
+   kubectl create secret generic privee-app-secret \
      --from-literal=SECRET_KEY_BASE=$(mix phx.gen.secret)
    ```
 
@@ -202,9 +202,9 @@ For Azure Kubernetes Service deployment:
 4. **Check deployment status:**
 
    ```bash
-   kubectl get pods -l app=bauta
+   kubectl get pods -l app=privee
    kubectl get services
-   kubectl logs -l app=bauta --tail=50
+   kubectl logs -l app=privee --tail=50
    ```
 
    Or use the status check script:

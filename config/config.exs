@@ -10,8 +10,8 @@
 import Config
 
 # Configure Mix tasks and generators
-config :bauta,
-  ecto_repos: [Bauta.Repo]
+config :privee,
+  ecto_repos: [Privee.Repo]
 
 # Configures the mailer
 #
@@ -20,45 +20,45 @@ config :bauta,
 #
 # For production it's recommended to configure a different adapter
 # at the `config/runtime.exs`.
-config :bauta, Bauta.Mailer, adapter: Swoosh.Adapters.Local
+config :privee, Privee.Mailer, adapter: Swoosh.Adapters.Local
 
 # Selecting the session name provider implementation
-config :bauta, :session_name_provider, Bauta.SessionNameProvider.Impl
+config :privee, :session_name_provider, Privee.SessionNameProvider.Impl
 
-config :bauta_web,
-  ecto_repos: [Bauta.Repo],
-  generators: [context_app: :bauta]
+config :privee_web,
+  ecto_repos: [Privee.Repo],
+  generators: [context_app: :privee]
 
 # Configures the endpoint
-config :bauta_web, BautaWeb.Endpoint,
+config :privee_web, PriveeWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: BautaWeb.ErrorHTML, json: BautaWeb.ErrorJSON],
+    formats: [html: PriveeWeb.ErrorHTML, json: PriveeWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: Bauta.PubSub,
+  pubsub_server: Privee.PubSub,
   live_view: [signing_salt: "d5jJFJ3f"]
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
-  bauta_web: [
+  privee_web: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets --external:/fonts/* --external:/images/* --alias:@=. --tree-shaking=true),
-    cd: Path.expand("../apps/bauta_web/assets", __DIR__),
+    cd: Path.expand("../apps/privee_web/assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.7",
-  bauta_web: [
+  privee_web: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/app.css
     ),
-    cd: Path.expand("../apps/bauta_web", __DIR__)
+    cd: Path.expand("../apps/privee_web", __DIR__)
   ]
 
 # Configures Elixir's Logger

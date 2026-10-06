@@ -19,7 +19,7 @@ if config_env() == :prod do
   # Enable DB SSL only when ENABLE_DB_SSL is exactly the string "true"; otherwise disabled.
   ssl_enabled = System.get_env("ENABLE_DB_SSL") == "true"
 
-  config :bauta, Bauta.Repo,
+  config :privee, Privee.Repo,
     ssl: ssl_enabled,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
@@ -41,7 +41,7 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  config :bauta_web, BautaWeb.Endpoint,
+  config :privee_web, PriveeWeb.Endpoint,
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
@@ -56,7 +56,7 @@ if config_env() == :prod do
   # If you are doing OTP releases, you need to instruct Phoenix
   # to start each relevant endpoint:
   #
-  #     config :bauta_web, BautaWeb.Endpoint, server: true
+  #     config :privee_web, PriveeWeb.Endpoint, server: true
   #
   # Then you can assemble a release by calling `mix release`.
   # See `mix help release` for more information.
@@ -66,7 +66,7 @@ if config_env() == :prod do
   # To get SSL working, you will need to add the `https` key
   # to your endpoint configuration:
   #
-  #     config :bauta_web, BautaWeb.Endpoint,
+  #     config :privee_web, PriveeWeb.Endpoint,
   #       https: [
   #         ...,
   #         port: 443,
@@ -88,7 +88,7 @@ if config_env() == :prod do
   # We also recommend setting `force_ssl` in your config/prod.exs,
   # ensuring no data is ever sent via http, always redirecting to https:
   #
-  #     config :bauta_web, BautaWeb.Endpoint,
+  #     config :privee_web, PriveeWeb.Endpoint,
   #       force_ssl: [hsts: true]
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
@@ -99,7 +99,7 @@ if config_env() == :prod do
   # Also, you may need to configure the Swoosh API client of your choice if you
   # are not using SMTP. Here is an example of the configuration:
   #
-  #     config :bauta, Bauta.Mailer,
+  #     config :privee, Privee.Mailer,
   #       adapter: Swoosh.Adapters.Mailgun,
   #       api_key: System.get_env("MAILGUN_API_KEY"),
   #       domain: System.get_env("MAILGUN_DOMAIN")
@@ -116,7 +116,7 @@ if config_env() == :prod do
     cond do
       System.get_env("KUBERNETES_SERVICE_HOST") ->
         # Azure AKS: Use headless service for DNS-based clustering
-        System.get_env("DNS_CLUSTER_QUERY") || "bauta-app-svc-headless.default.svc.cluster.local"
+        System.get_env("DNS_CLUSTER_QUERY") || "privee-app-svc-headless.default.svc.cluster.local"
 
       System.get_env("FLY_APP_NAME") ->
         # Fly.io: Use internal domain for clustering
@@ -127,5 +127,5 @@ if config_env() == :prod do
         System.get_env("DNS_CLUSTER_QUERY")
     end
 
-  config :bauta, :dns_cluster_query, dns_cluster_query
+  config :privee, :dns_cluster_query, dns_cluster_query
 end

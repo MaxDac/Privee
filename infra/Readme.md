@@ -1,6 +1,6 @@
 # Infrastructure and Deployment
 
-This directory contains infrastructure configuration and deployment scripts for the Bauta application.
+This directory contains infrastructure configuration and deployment scripts for the Privee application.
 
 ## Files
 
@@ -45,5 +45,5 @@ This directory contains infrastructure configuration and deployment scripts for 
 az network private-dns record-set list --resource-group <ResourceGroupName> --zone-name <PrivateDNSZoneName> --query "[].fqdn"
 ```
 
-This gets all the qualified DNSs. The DB entry should use the Private DNS Zone name as a suffix, i.e. `bauta-db.private.postgres.database.azure.com` where the Private DNS Zone name is `bauta-db.private.postgres.database.azure.com`
+This gets all the qualified DNSs. The DB entry should use the Private DNS Zone name as a suffix, i.e. `privee-db.private.postgres.database.azure.com` where the Private DNS Zone name is `privee-db.private.postgres.database.azure.com`
 

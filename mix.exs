@@ -1,4 +1,4 @@
-defmodule Bauta.Umbrella.MixProject do
+defmodule Privee.Umbrella.MixProject do
   use Mix.Project
 
   def project do
@@ -10,10 +10,10 @@ defmodule Bauta.Umbrella.MixProject do
       aliases: aliases(),
       listeners: [Phoenix.CodeReloader],
       releases: [
-        bauta_umbrella: [
+        privee_umbrella: [
           applications: [
-            bauta: :permanent,
-            bauta_web: :permanent
+            privee: :permanent,
+            privee_web: :permanent
           ]
         ]
       ]
@@ -64,7 +64,7 @@ defmodule Bauta.Umbrella.MixProject do
         "deps.unlock --unused",
         "format",
         "test",
-        "do --app bauta_web cmd --cd assets npm run check"
+        "do --app privee_web cmd --cd assets npm run check"
       ]
     ]
   end
