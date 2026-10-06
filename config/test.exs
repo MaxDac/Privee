@@ -19,6 +19,9 @@ config :privee, Privee.Repo,
 # Selecting the session name provider implementation
 config :privee, :session_name_provider, Privee.SessionNameProvider.Test
 
+# Push deliveries are served by Req.Test stubs
+config :privee, Privee.Push, req_options: [plug: {Req.Test, Privee.Push}]
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :privee_web, PriveeWeb.Endpoint,

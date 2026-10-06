@@ -64,6 +64,7 @@ defmodule PriveeWeb.Events do
 
     Endpoint.broadcast(chat_topic, @chat_created_event, message)
     Endpoint.broadcast(receiver_topic, @message_received_event, message)
+    Privee.Push.notify(to)
   end
 
   @doc "Topic of the conversation between two sessions."

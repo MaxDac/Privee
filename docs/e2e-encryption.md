@@ -34,6 +34,7 @@ Phoenix channels socket instead of LiveView:
 | `POST /api/app/sessions` | Registers a session (`recovery_phrase`, or `is_quick: true`; the name is generated unless `session_name` is given) and logs in. |
 | `POST /api/app/sessions/log_in` | `session_name` with `recovery_phrase`, or with `is_quick: true` for a quick session never logged into. Failures are a generic `401`. |
 | `GET` / `DELETE /api/app/session` | The authenticated session; log out revokes the token and disconnects the app sockets. |
+| `PUT` / `DELETE /api/app/push` | Registers / removes the app's UnifiedPush endpoint (see below). |
 | `/app/socket` | WebSocket authenticated with the channels `auth_token`. Topic `session`: the `SignalKeys` events, plus `replenish_prekeys`, `identity_superseded` and content-free `message_received %{message_id, from_session_name}` pushes. Topic `chat:<peer session name>`: the `ChatActions` events, plus `new_message` (serialized ciphertext) and `peer_keys_ready` pushes. |
 
 Log ins return `%{token, session}`. The token is the 60-day session token as
@@ -41,6 +42,16 @@ unpadded base64url, sent as `Authorization: Bearer <token>` and as the socket
 `auth_token`. Registration and log in are rate-limited to 10 attempts per
 minute per client address. Channel replies always have the `ok` status; failures
 carry an `error` field, as with LiveView.
+
+Background delivery uses [UnifiedPush](https://unifiedpush.org) (`Privee.Push`):
+`PUT /api/app/push %{endpoint}` stores the app's distributor endpoint, bound to
+its session token (log out removes it), and `DELETE /api/app/push` drops it.
+Endpoints must be public `https` URLs (no `localhost` or literal IPs; `dev`
+sets `allow_insecure` for a local ntfy). When a message is stored, each endpoint
+of the recipient receives a constant body (`1`), at most once every 2 seconds,
+so the push server never sees message metadata beyond timing; the app then
+fetches the ciphertext over its socket. Endpoints answering `404`/`410` are
+deleted.
 
 ### Client (`apps/privee_web/assets/js/utils`)
 

@@ -91,5 +91,7 @@ defmodule PriveeWeb.Router do
 
     get "/session", SessionController, :show
     delete "/session", SessionController, :delete
+    put "/push", PushController, :update
+    delete "/push", PushController, :delete
   end
 end
