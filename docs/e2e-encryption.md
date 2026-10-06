@@ -16,13 +16,31 @@ ever sees public keys and ciphertext.
 | Module | Role |
 | --- | --- |
 | `Privee.PreKeyStore` | Stores each session's public bundle (identity key, signed prekey, last-resort Kyber-1024 prekey, one-time prekeys) in `sessions.prekey_bundle`. Validates key sizes, keeps one-time prekey ids append-only and increasing, caps the pool at 100, and pops one-time prekeys under `SELECT ... FOR UPDATE`. |
-| `PriveeWeb.SignalKeysLive` | `on_mount` hook of every authenticated LiveView: `signal_status`, `publish_identity`, `reset_identity`, `rotate_signed_prekey` and `add_prekeys` events, scoped to the current session. Pushes `replenish_prekeys` when the pool runs low and `identity_superseded` when another device resets the identity. |
-| `PriveeWeb.ChatLive` | `open_conversation`, `request_peer_bundle` (rate-limited to 3 one-time prekey pops per 10 minutes per pair), `send_message` and `fetch_messages`. The sender, recipient and ids are always set by the server. |
+| `PriveeWeb.SignalKeysLive` | `on_mount` hook of every authenticated LiveView: `signal_status`, `publish_identity`, `reset_identity`, `rotate_signed_prekey` and `add_prekeys` events, scoped to the current session. Pushes `replenish_prekeys` when the pool runs low and `identity_superseded` when another device resets the identity. The events are implemented in `PriveeWeb.SignalKeys`. |
+| `PriveeWeb.ChatLive` | `open_conversation`, `request_peer_bundle` (rate-limited to 3 one-time prekey pops per 10 minutes per pair), `send_message` and `fetch_messages`, implemented in `PriveeWeb.ChatActions`. The sender, recipient and ids are always set by the server. |
 | `Privee.Chats` | Plain functions over public ETS tables owned by `Privee.Chats.TableOwner`. Stores ciphertext only, deduplicates by client nonce, and groups messages in conversation **epochs**. |
 | `Privee.RateLimiter` | Fixed-window ETS counters, shared across sockets. |
 
 There is no HTTP API for keys: the former unauthenticated `POST /api/prekeys/:id`
 route was removed.
+
+### Native app API (`PriveeWeb.App`)
+
+The Android app uses the same events, with the same reply payloads, over a
+Phoenix channels socket instead of LiveView:
+
+| Endpoint | Role |
+| --- | --- |
+| `POST /api/app/sessions` | Registers a session (`recovery_phrase`, or `is_quick: true`; the name is generated unless `session_name` is given) and logs in. |
+| `POST /api/app/sessions/log_in` | `session_name` with `recovery_phrase`, or with `is_quick: true` for a quick session never logged into. Failures are a generic `401`. |
+| `GET` / `DELETE /api/app/session` | The authenticated session; log out revokes the token and disconnects the app sockets. |
+| `/app/socket` | WebSocket authenticated with the channels `auth_token`. Topic `session`: the `SignalKeys` events, plus `replenish_prekeys`, `identity_superseded` and content-free `message_received %{message_id, from_session_name}` pushes. Topic `chat:<peer session name>`: the `ChatActions` events, plus `new_message` (serialized ciphertext) and `peer_keys_ready` pushes. |
+
+Log ins return `%{token, session}`. The token is the 60-day session token as
+unpadded base64url, sent as `Authorization: Bearer <token>` and as the socket
+`auth_token`. Registration and log in are rate-limited to 10 attempts per
+minute per client address. Channel replies always have the `ok` status; failures
+carry an `error` field, as with LiveView.
 
 ### Client (`apps/privee_web/assets/js/utils`)
 

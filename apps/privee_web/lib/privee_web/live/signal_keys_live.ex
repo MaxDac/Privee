@@ -23,19 +23,11 @@ defmodule PriveeWeb.SignalKeysLive do
   import Phoenix.LiveView
   import Phoenix.Component, only: [assign: 3]
 
-  alias Privee.Chats
   alias Privee.PreKeyStore
   alias PriveeWeb.Endpoint
+  alias PriveeWeb.SignalKeys
 
   require Logger
-
-  @events ~w(signal_status publish_identity reset_identity rotate_signed_prekey add_prekeys)
-
-  @opk_low_event "opk_low"
-  @identity_reset_event "identity_reset"
-  @prekeys_available_event "prekeys_available"
-
-  @opk_low_threshold 20
 
   def on_mount(:default, _params, _session, %{assigns: %{current_session: session}} = socket)
       when not is_nil(session) do
@@ -55,98 +47,55 @@ defmodule PriveeWeb.SignalKeysLive do
 
   def on_mount(:default, _params, _session, socket), do: {:cont, socket}
 
-  @doc "Topic on which the owner of `session_id` receives key management notifications."
-  def owner_topic(session_id), do: "prekeys_owner:#{session_id}"
+  @doc "See `PriveeWeb.SignalKeys.owner_topic/1`."
+  defdelegate owner_topic(session_id), to: SignalKeys
 
-  @doc "Topic on which peers of `session_id` learn that its keys became available."
-  def peer_topic(session_id), do: "prekeys:#{session_id}"
+  @doc "See `PriveeWeb.SignalKeys.peer_topic/1`."
+  defdelegate peer_topic(session_id), to: SignalKeys
 
-  @doc "Notifies the owner that its one-time prekeys are running low, if they are."
-  def maybe_notify_opk_low(session_id, remaining) when remaining < @opk_low_threshold do
-    Endpoint.broadcast(owner_topic(session_id), @opk_low_event, %{remaining: remaining})
-  end
-
-  def maybe_notify_opk_low(_session_id, _remaining), do: :ok
+  @doc "See `PriveeWeb.SignalKeys.maybe_notify_opk_low/2`."
+  defdelegate maybe_notify_opk_low(session_id, remaining), to: SignalKeys
 
   # Event hook
 
-  defp handle_event(event, params, socket) when event in @events do
-    session_id = socket.assigns.current_session.id
-    params = if is_map(params), do: params, else: %{}
+  defp handle_event(event, params, socket) do
+    if event in SignalKeys.events() do
+      session_id = socket.assigns.current_session.id
 
-    case run(event, session_id, params, socket) do
-      {:ok, reply, socket} ->
-        {:halt, reply, socket}
+      case SignalKeys.run(event, session_id, params) do
+        {:ok, reply, :unchanged} ->
+          {:halt, reply, socket}
 
-      {:error, reason} ->
-        Logger.debug("Signal key event #{event} failed: #{inspect(reason)}")
-        {:halt, %{error: to_string(reason)}, socket}
-    end
-  end
+        {:ok, reply, identity_key} ->
+          {:halt, reply, assign(socket, :signal_identity_key, identity_key)}
 
-  defp handle_event(_event, _params, socket), do: {:cont, socket}
-
-  defp run("signal_status", session_id, _params, socket) do
-    status = PreKeyStore.status(session_id)
-    {:ok, Map.put(status, :max_age_ms, Chats.config().max_age_ms), socket}
-  end
-
-  defp run("publish_identity", session_id, params, socket) do
-    with :ok <- PreKeyStore.publish_identity(session_id, params) do
-      Endpoint.broadcast(peer_topic(session_id), @prekeys_available_event, %{})
-      {:ok, %{ok: true}, assign(socket, :signal_identity_key, params["identity_key"])}
-    end
-  end
-
-  defp run("reset_identity", session_id, params, socket) do
-    with :ok <- PreKeyStore.reset_identity(session_id, params) do
-      identity_key = params["identity_key"]
-      :ok = Chats.end_conversations(session_id)
-
-      Endpoint.broadcast(owner_topic(session_id), @identity_reset_event, %{
-        identity_key: identity_key
-      })
-
-      Endpoint.broadcast(peer_topic(session_id), @prekeys_available_event, %{})
-      {:ok, %{ok: true}, assign(socket, :signal_identity_key, identity_key)}
-    end
-  end
-
-  defp run("rotate_signed_prekey", session_id, params, socket) do
-    with :ok <-
-           PreKeyStore.rotate_signed_prekey(
-             session_id,
-             params["identity_key"],
-             params["signed_prekey"],
-             params["kyber_prekey"]
-           ) do
-      {:ok, %{ok: true}, socket}
-    end
-  end
-
-  defp run("add_prekeys", session_id, params, socket) do
-    with :ok <-
-           PreKeyStore.add_one_time_prekeys(
-             session_id,
-             params["identity_key"],
-             params["one_time_prekeys"]
-           ) do
-      Endpoint.broadcast(peer_topic(session_id), @prekeys_available_event, %{})
-      {:ok, %{ok: true}, socket}
+        {:error, reason} ->
+          Logger.debug("Signal key event #{event} failed: #{inspect(reason)}")
+          {:halt, %{error: to_string(reason)}, socket}
+      end
+    else
+      {:cont, socket}
     end
   end
 
   # Info hook
 
-  defp handle_info(%{event: @opk_low_event}, socket) do
-    {:halt, push_event(socket, "replenish_prekeys", %{})}
-  end
+  defp handle_info(%{event: event} = message, socket) do
+    cond do
+      event == SignalKeys.opk_low_event() ->
+        {:halt, push_event(socket, "replenish_prekeys", %{})}
 
-  defp handle_info(%{event: @identity_reset_event, payload: %{identity_key: key}}, socket) do
-    {:halt,
-     socket
-     |> assign(:signal_identity_key, key)
-     |> push_event("identity_superseded", %{identity_key: key})}
+      event == SignalKeys.identity_reset_event() ->
+        key = message.payload.identity_key
+
+        {:halt,
+         socket
+         |> assign(:signal_identity_key, key)
+         |> push_event("identity_superseded", %{identity_key: key})}
+
+      true ->
+        {:cont, socket}
+    end
   end
 
   defp handle_info(_message, socket), do: {:cont, socket}
