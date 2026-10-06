@@ -83,26 +83,31 @@ defmodule Privee.Chats do
 
   defp do_open(key, now, retries) do
     case :ets.lookup(@conversations, key) do
-      [] ->
-        epoch = new_epoch()
+      [] -> open_new(key, now, retries)
+      [{^key, epoch, _, _, _} = row] -> maybe_rotate(row, epoch, now, retries)
+    end
+  end
 
-        if :ets.insert_new(@conversations, {key, epoch, now, now, 0}) or retries == 0 do
-          epoch
-        else
-          do_open(key, now, retries - 1)
-        end
+  defp open_new(key, now, retries) do
+    epoch = new_epoch()
 
-      [{^key, epoch, _, _, _} = row] ->
-        if expired?(row, now, config()) and retries > 0 do
-          rotated = {key, new_epoch(), now, now, 0}
+    if :ets.insert_new(@conversations, {key, epoch, now, now, 0}) or retries == 0 do
+      epoch
+    else
+      do_open(key, now, retries - 1)
+    end
+  end
 
-          case :ets.select_replace(@conversations, [{row, [], [{:const, rotated}]}]) do
-            1 -> elem(rotated, 1)
-            0 -> do_open(key, now, retries - 1)
-          end
-        else
-          epoch
-        end
+  defp maybe_rotate({key, _, _, _, _} = row, epoch, now, retries) do
+    if expired?(row, now, config()) and retries > 0 do
+      rotated = {key, new_epoch(), now, now, 0}
+
+      case :ets.select_replace(@conversations, [{row, [], [{:const, rotated}]}]) do
+        1 -> elem(rotated, 1)
+        0 -> do_open(key, now, retries - 1)
+      end
+    else
+      epoch
     end
   end
 
@@ -161,7 +166,7 @@ defmodule Privee.Chats do
   end
 
   defp resolve_existing(message, existing, key, epoch, now, retries) do
-    {nonce_key, state, c_key, c_epoch, _id, c_seq, owner, _at} = existing
+    {_nonce_key, state, c_key, c_epoch, _id, c_seq, _owner, _at} = existing
 
     case {state, find_message(c_key, c_epoch, c_seq)} do
       {:committed, {:ok, stored}} ->
@@ -172,23 +177,29 @@ defmodule Privee.Chats do
         claim_and_insert(message, key, epoch, now, retries - 1)
 
       {:pending, found} ->
-        cond do
-          owner != self() and Process.alive?(owner) ->
-            {:error, :in_flight}
+        resolve_pending(message, existing, found, key, epoch, now, retries)
+    end
+  end
 
-          match?({:ok, _}, found) ->
-            committed = put_elem(existing, 1, :committed)
-            :ets.select_replace(@nonces, [{existing, [], [{:const, committed}]}])
-            {:ok, stored} = found
-            {:duplicate, stored}
+  defp resolve_pending(message, existing, found, key, epoch, now, retries) do
+    {nonce_key, _state, _key, _epoch, _id, _seq, owner, _at} = existing
 
-          true ->
-            reclaimed = new_claim(nonce_key, key, epoch, now)
+    cond do
+      owner != self() and Process.alive?(owner) ->
+        {:error, :in_flight}
 
-            case :ets.select_replace(@nonces, [{existing, [], [{:const, reclaimed}]}]) do
-              1 -> insert_claimed(message, reclaimed, now)
-              0 -> claim_and_insert(message, key, epoch, now, retries - 1)
-            end
+      match?({:ok, _}, found) ->
+        committed = put_elem(existing, 1, :committed)
+        :ets.select_replace(@nonces, [{existing, [], [{:const, committed}]}])
+        {:ok, stored} = found
+        {:duplicate, stored}
+
+      true ->
+        reclaimed = new_claim(nonce_key, key, epoch, now)
+
+        case :ets.select_replace(@nonces, [{existing, [], [{:const, reclaimed}]}]) do
+          1 -> insert_claimed(message, reclaimed, now)
+          0 -> claim_and_insert(message, key, epoch, now, retries - 1)
         end
     end
   end

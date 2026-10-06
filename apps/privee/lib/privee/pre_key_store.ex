@@ -95,24 +95,26 @@ defmodule Privee.PreKeyStore do
   @spec add_one_time_prekeys(non_neg_integer(), String.t(), list()) :: :ok | {:error, error()}
   def add_one_time_prekeys(session_id, identity_key, prekeys) do
     with {:ok, new} <- validate_one_time_prekeys(prekeys) do
-      with_identity(session_id, identity_key, fn bundle ->
-        existing = bundle["one_time_prekeys"]
-        max_id = bundle["max_opk_id"]
+      with_identity(session_id, identity_key, &append_one_time_prekeys(&1, new))
+    end
+  end
 
-        cond do
-          Enum.any?(new, &(&1["key_id"] <= max_id)) ->
-            {:error, :stale_prekey_ids}
+  defp append_one_time_prekeys(bundle, new) do
+    existing = bundle["one_time_prekeys"]
+    max_id = bundle["max_opk_id"]
 
-          length(existing) + length(new) > @max_one_time_prekeys ->
-            {:error, :too_many_prekeys}
+    cond do
+      Enum.any?(new, &(&1["key_id"] <= max_id)) ->
+        {:error, :stale_prekey_ids}
 
-          true ->
-            {:write,
-             bundle
-             |> Map.put("one_time_prekeys", existing ++ new)
-             |> Map.put("max_opk_id", max_key_id(new, max_id))}
-        end
-      end)
+      length(existing) + length(new) > @max_one_time_prekeys ->
+        {:error, :too_many_prekeys}
+
+      true ->
+        {:write,
+         bundle
+         |> Map.put("one_time_prekeys", existing ++ new)
+         |> Map.put("max_opk_id", max_key_id(new, max_id))}
     end
   end
 
@@ -128,25 +130,26 @@ defmodule Privee.PreKeyStore do
 
     Repo.transaction(fn ->
       case lock_bundle(session_id) do
-        nil ->
-          Repo.rollback(:not_found)
-
-        bundle ->
-          {opk, remaining} =
-            case {pop?, bundle["one_time_prekeys"]} do
-              {true, [first | rest]} -> {first, rest}
-              {_, all} -> {nil, all}
-            end
-
-          if opk, do: persist(session_id, Map.put(bundle, "one_time_prekeys", remaining))
-
-          {to_public(bundle, opk), length(remaining)}
+        nil -> Repo.rollback(:not_found)
+        bundle -> pop_one_time_prekey(session_id, bundle, pop?)
       end
     end)
     |> case do
       {:ok, {bundle, count}} -> {:ok, bundle, count}
       {:error, :not_found} -> {:error, :not_found}
     end
+  end
+
+  defp pop_one_time_prekey(session_id, bundle, pop?) do
+    {opk, remaining} =
+      case {pop?, bundle["one_time_prekeys"]} do
+        {true, [first | rest]} -> {first, rest}
+        {_, all} -> {nil, all}
+      end
+
+    if opk, do: persist(session_id, Map.put(bundle, "one_time_prekeys", remaining))
+
+    {to_public(bundle, opk), length(remaining)}
   end
 
   @doc """
@@ -314,26 +317,32 @@ defmodule Privee.PreKeyStore do
     if length(prekeys) > @max_one_time_prekeys do
       {:error, :too_many_prekeys}
     else
-      prekeys
-      |> Enum.reduce_while({:ok, []}, fn prekey, {:ok, acc} ->
-        case validate_one_time_prekey(prekey) do
-          {:ok, valid} -> {:cont, {:ok, [valid | acc]}}
-          error -> {:halt, error}
-        end
-      end)
-      |> case do
-        {:ok, valid} ->
-          valid = Enum.reverse(valid)
-          ids = Enum.map(valid, & &1["key_id"])
-          if Enum.uniq(ids) == ids, do: {:ok, valid}, else: {:error, :invalid_bundle}
-
-        error ->
-          error
+      with {:ok, valid} <- validate_each_one_time_prekey(prekeys) do
+        ensure_unique_key_ids(valid)
       end
     end
   end
 
   defp validate_one_time_prekeys(_), do: {:error, :invalid_bundle}
+
+  defp validate_each_one_time_prekey(prekeys) do
+    prekeys
+    |> Enum.reduce_while({:ok, []}, fn prekey, {:ok, acc} ->
+      case validate_one_time_prekey(prekey) do
+        {:ok, valid} -> {:cont, {:ok, [valid | acc]}}
+        error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, valid} -> {:ok, Enum.reverse(valid)}
+      error -> error
+    end
+  end
+
+  defp ensure_unique_key_ids(valid) do
+    ids = Enum.map(valid, & &1["key_id"])
+    if Enum.uniq(ids) == ids, do: {:ok, valid}, else: {:error, :invalid_bundle}
+  end
 
   defp validate_one_time_prekey(%{} = attrs) do
     with {:ok, key_id} <- validate_key_id(field(attrs, "key_id")),
