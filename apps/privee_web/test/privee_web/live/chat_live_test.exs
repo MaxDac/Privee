@@ -133,7 +133,11 @@ defmodule PriveeWeb.ChatLiveTest do
       end
 
       render_hook(lv, "request_peer_bundle", %{})
-      assert_reply(lv, %{bundle: %{one_time_prekey: nil, signed_prekey: %{key_id: 1}}})
+
+      assert_reply(lv, %{
+        bundle: %{one_time_prekey: nil, signed_prekey: %{key_id: 1}, kyber_prekey: %{key_id: 1}}
+      })
+
       assert PreKeyStore.count_one_time_prekeys(peer.id) == 7
     end
 
@@ -173,6 +177,26 @@ defmodule PriveeWeb.ChatLiveTest do
 
       render_hook(lv, "add_prekeys", %{"identity_key" => ik, "one_time_prekeys" => opks})
       assert_reply(lv, %{ok: true})
+    end
+
+    test "rotate_signed_prekey replaces the signed and Kyber prekeys", %{
+      conn: conn,
+      me: me,
+      peer: peer,
+      identity_key: ik
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
+      spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
+      params = %{"identity_key" => ik, "signed_prekey" => spk}
+
+      render_hook(lv, "rotate_signed_prekey", params)
+      assert_reply(lv, %{error: "invalid_bundle"})
+
+      render_hook(lv, "rotate_signed_prekey", Map.put(params, "kyber_prekey", kyber_prekey(2)))
+      assert_reply(lv, %{ok: true})
+
+      assert {:ok, %{signed_prekey: %{key_id: 2}, kyber_prekey: %{key_id: 2}}, _} =
+               PreKeyStore.fetch_bundle(me.id, pop_one_time_prekey: false)
     end
 
     test "an opk_low notification asks the owner to replenish", %{
@@ -317,7 +341,7 @@ defmodule PriveeWeb.ChatLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
       epoch = open_conversation(lv)
 
-      for overrides <- [%{"type" => 2}, %{"body" => "not base64!"}, %{"client_nonce" => "x"}] do
+      for overrides <- [%{"type" => 1}, %{"body" => "not base64!"}, %{"client_nonce" => "x"}] do
         render_hook(lv, "send_message", send_params(epoch, ik, overrides))
         assert_reply(lv, %{error: "invalid"})
       end
@@ -347,7 +371,7 @@ defmodule PriveeWeb.ChatLiveTest do
                 from: from,
                 to: to,
                 sender_session_name: "x",
-                type: 1,
+                type: 2,
                 body: Base.encode64("c"),
                 client_nonce: Ecto.UUID.generate()
               },

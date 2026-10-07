@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto"
+import "./signal-wasm-setup.mjs"
 import { IDBFactory } from "fake-indexeddb"
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
@@ -210,7 +211,7 @@ describe("SignalClient", () => {
       expect(await receiveAll(server, alice, ALICE, BOB)).toEqual(["hi alice"])
 
       await alice.send(BOB, "second")
-      expect(server.messages[2].type).toBe(1)
+      expect(server.messages[2].type).toBe(2)
       expect(await receiveAll(server, bob, BOB, ALICE)).toEqual(["hello bob", "second"])
     })
 

@@ -13,8 +13,8 @@ defmodule Privee.Sessions.Message do
 
   alias Privee.Sessions.Message
 
-  # Signal Protocol message types: 1 = WhisperMessage, 3 = PreKeyWhisperMessage.
-  @message_types [1, 3]
+  # libsignal CiphertextMessageType: 2 = Whisper (SignalMessage), 3 = PreKey.
+  @message_types [2, 3]
   @max_body_bytes 16_384
 
   @typedoc """
@@ -24,7 +24,7 @@ defmodule Privee.Sessions.Message do
     * `client_nonce` - Client-generated idempotency key.
     * `from` / `to` - Sender / recipient session ids.
     * `sender_session_name` - Sender session name (for notifications).
-    * `type` - Signal message type (1 or 3).
+    * `type` - Signal message type (2 or 3).
     * `body` - Base64 encoded Signal ciphertext.
     * `in_thread` - UI flag: same sender as the previous message.
   """
@@ -36,7 +36,7 @@ defmodule Privee.Sessions.Message do
           from: non_neg_integer() | nil,
           to: non_neg_integer() | nil,
           sender_session_name: String.t() | nil,
-          type: 1 | 3 | nil,
+          type: 2 | 3 | nil,
           body: String.t() | nil,
           in_thread: boolean()
         }

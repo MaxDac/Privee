@@ -12,5 +12,12 @@
   },
   "include": ["**/*.js", "**/*.mjs"],
   // Excluding tests as vitest is giving compilation errors
-  "exclude": ["node_modules", "vendor/topbar.js", "js/tests", "playwright-report", "test-results"]
+  "exclude": [
+    "node_modules",
+    "vendor/topbar.js",
+    "vendor/libsignal-wasm",
+    "js/tests",
+    "playwright-report",
+    "test-results"
+  ]
 }

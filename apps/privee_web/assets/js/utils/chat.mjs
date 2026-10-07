@@ -195,17 +195,12 @@ export class ChatController {
     if (!id) return Texts.undecryptable
 
     if (direction === "out") {
-      const cached = await this.client.historyEntry(id)
-      if (cached) return cached.plaintext ?? Texts.unavailable
-      if (clientNonce && (await this.client.outboxEntry(clientNonce))) {
-        const row = await this.client.acknowledge(clientNonce, {
-          id,
-          seq: Number(seq),
-          epoch: String(epoch),
-        })
-        return row?.plaintext ?? Texts.unavailable
-      }
-      return Texts.unavailable
+      // The outbox is checked before the history: the send reply moves the row
+      // between them in one transaction, so the opposite order could miss it.
+      const row = clientNonce
+        ? await this.client.acknowledge(clientNonce, { id, seq: Number(seq), epoch: String(epoch) })
+        : await this.client.historyEntry(id)
+      return row?.plaintext ?? Texts.unavailable
     }
 
     try {

@@ -15,6 +15,13 @@ defmodule PriveeWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
+  # Native app socket, authenticated with the channels `auth_token`
+  # (see `PriveeWeb.App.AppAuth`).
+  socket "/app/socket", PriveeWeb.App.AppSocket,
+    auth_token: true,
+    websocket: true,
+    longpoll: false
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),
@@ -41,6 +48,7 @@ defmodule PriveeWeb.Endpoint do
     param_key: "request_logger",
     cookie_key: "request_logger"
 
+  plug PriveeWeb.Plugs.ForwardedRemoteIp
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 

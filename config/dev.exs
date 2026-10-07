@@ -10,6 +10,9 @@ config :privee, Privee.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# Accept local (http) UnifiedPush endpoints, e.g. a self-hosted ntfy
+config :privee, Privee.Push, allow_insecure: true
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

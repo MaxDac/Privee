@@ -29,7 +29,7 @@ defmodule Privee.ChatsTest do
       from: from,
       to: to,
       sender_session_name: "s#{from}",
-      type: 1,
+      type: 2,
       body: Base.encode64("ct"),
       client_nonce: nonce
     }

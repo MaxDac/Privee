@@ -15,6 +15,12 @@ defmodule PriveeWeb.SessionRegistrationLiveTest do
       assert render(lv) =~ "Create a new session"
     end
 
+    test "links to the instance source code (AGPL-3.0)", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/")
+
+      assert has_element?(lv, "#source-code-link[href='https://github.com/MaxDac/Privee']")
+    end
+
     test "redirects if already logged in", %{conn: conn} do
       result =
         conn

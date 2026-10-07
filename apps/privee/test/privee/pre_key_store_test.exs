@@ -34,6 +34,7 @@ defmodule Privee.PreKeyStoreTest do
         identity_key: public_key(),
         registration_id: 1,
         signed_prekey: %{key_id: 1, public_key: public_key(), signature: signature()},
+        kyber_prekey: %{key_id: 1, public_key: kyber_public_key(), signature: signature()},
         one_time_prekeys: []
       }
 
@@ -64,7 +65,32 @@ defmodule Privee.PreKeyStoreTest do
            quote(
              do: &Map.put(&1, "one_time_prekeys", Privee.PreKeyFixtures.one_time_prekeys([1, 1]))
            )},
-          {"string key id", quote(do: &put_in(&1, ["signed_prekey", "key_id"], "1"))}
+          {"string key id", quote(do: &put_in(&1, ["signed_prekey", "key_id"], "1"))},
+          {"missing kyber prekey", quote(do: &Map.delete(&1, "kyber_prekey"))},
+          {"curve25519 key as kyber prekey",
+           quote(
+             do: &put_in(&1, ["kyber_prekey", "public_key"], Privee.PreKeyFixtures.public_key())
+           )},
+          {"kyber key without 0x08 prefix",
+           quote(
+             do:
+               &put_in(
+                 &1,
+                 ["kyber_prekey", "public_key"],
+                 Base.encode64(<<5>> <> :crypto.strong_rand_bytes(1568))
+               )
+           )},
+          {"oversized kyber key",
+           quote(
+             do:
+               &put_in(
+                 &1,
+                 ["kyber_prekey", "public_key"],
+                 Base.encode64(<<8>> <> :crypto.strong_rand_bytes(1569))
+               )
+           )},
+          {"bad kyber signature",
+           quote(do: &put_in(&1, ["kyber_prekey", "signature"], Base.encode64("short")))}
         ] do
       test "rejects #{name}", %{session: s} do
         attrs = unquote(mutate).(bundle_attrs())
@@ -94,14 +120,34 @@ defmodule Privee.PreKeyStoreTest do
     end
   end
 
-  describe "rotate_signed_prekey/3" do
-    test "replaces the signed prekey for the current identity", %{session: s} do
+  describe "rotate_signed_prekey/4" do
+    test "replaces the signed and Kyber prekeys for the current identity", %{session: s} do
+      attrs = bundle_attrs()
+      :ok = PreKeyStore.publish_identity(s.id, attrs)
+      spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
+      kyber = kyber_prekey(2)
+
+      assert :ok = PreKeyStore.rotate_signed_prekey(s.id, attrs["identity_key"], spk, kyber)
+
+      assert {:ok, %{signed_prekey: %{key_id: 2}, kyber_prekey: served}, _} =
+               PreKeyStore.fetch_bundle(s.id)
+
+      assert served == %{
+               key_id: 2,
+               public_key: kyber["public_key"],
+               signature: kyber["signature"]
+             }
+    end
+
+    test "requires a valid Kyber prekey", %{session: s} do
       attrs = bundle_attrs()
       :ok = PreKeyStore.publish_identity(s.id, attrs)
       spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
 
-      assert :ok = PreKeyStore.rotate_signed_prekey(s.id, attrs["identity_key"], spk)
-      assert {:ok, %{signed_prekey: %{key_id: 2}}, _} = PreKeyStore.fetch_bundle(s.id)
+      assert {:error, :invalid_bundle} =
+               PreKeyStore.rotate_signed_prekey(s.id, attrs["identity_key"], spk, nil)
+
+      assert {:ok, %{signed_prekey: %{key_id: 1}}, _} = PreKeyStore.fetch_bundle(s.id)
     end
 
     test "refuses a stale identity", %{session: s} do
@@ -109,7 +155,7 @@ defmodule Privee.PreKeyStoreTest do
       spk = %{"key_id" => 2, "public_key" => public_key(), "signature" => signature()}
 
       assert {:error, :identity_mismatch} =
-               PreKeyStore.rotate_signed_prekey(s.id, public_key(), spk)
+               PreKeyStore.rotate_signed_prekey(s.id, public_key(), spk, kyber_prekey(2))
     end
   end
 
