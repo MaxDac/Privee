@@ -11,7 +11,8 @@ Privee is a Phoenix LiveView umbrella application:
 Chats are end-to-end encrypted with the Signal Protocol. See
 [End-to-end encryption](docs/e2e-encryption.md) for the design, its trade-offs
 (local plaintext history, node-local ciphertext, one device per session) and the
-manual release checklist.
+manual release checklist, and the [E2EE audit](docs/security/e2ee-audit.md) for
+the independent review of the web, server and Android implementations.
 
 Anyone can run their own Privee server. See [Self-hosting](docs/self-hosting.md)
 to deploy it with Docker Compose, Fly.io or a bare release, and
