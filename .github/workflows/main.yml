@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: production
-      url: https://privee.fly.dev
+      url: https://bauta.fly.dev
     concurrency:
       group: deploy-production
       cancel-in-progress: false
