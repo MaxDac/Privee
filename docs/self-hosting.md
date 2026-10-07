@@ -25,7 +25,7 @@ app's server screen. Other clients can use the [Client API](client-api.md).
 | `DATABASE_URL` | yes | `ecto://user:password@host/database` |
 | `PORT` | no | HTTP port the app listens on, default `4000`. |
 | `PHX_PORT` | no | Public HTTPS port used in generated URLs, default `443`. |
-| `PROXY_HOPS` | no | Number of trusted reverse proxies in front of the app that append to `X-Forwarded-For`, default `0`. `fly.toml` sets it to `1` for Fly's proxy; otherwise every client shares the proxy's address in the login rate limit. Never set it higher than the real number of proxies, or clients can spoof their address. |
+| `PROXY_HOPS` | no | Position, from the right of `X-Forwarded-For`, of the client address added by trusted proxies; default `0` (header ignored). `fly.toml` sets it to `2`, because Fly appends the client address followed by the app's own IP. If it is wrong, every client shares one address in the login rate limit. Never set it higher than the real number of entries appended by trusted proxies, or clients can spoof their address. |
 | `PRIVEE_INSTANCE_NAME` | no | Display name shown to clients by `GET /api/app/info`. |
 | `PRIVEE_SOURCE_URL` | no | Source code of the version you run, default `https://github.com/MaxDac/Privee`. |
 | `POOL_SIZE` | no | Database pool size, default `10`. |
@@ -71,5 +71,6 @@ Only Fly.io is supported by this repository. You can run the release built by
 the [Dockerfile](../Dockerfile) elsewhere, but then TLS termination, the
 reverse proxy (forwarding WebSocket upgrades on `/live` and `/app/socket` and
 setting `X-Forwarded-Proto`), PostgreSQL and migrations (`bin/migrate`) are
-your responsibility. Set `PROXY_HOPS` to the number of proxies in front of
-the app.
+your responsibility. Set `PROXY_HOPS` to the position of the client address
+from the right of `X-Forwarded-For` (usually the number of proxies in front of
+the app).

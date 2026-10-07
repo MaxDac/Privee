@@ -118,7 +118,7 @@ Required variables: `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST` (the public
 Optional variables:
 
 - `PHX_PORT`: public HTTPS port used in generated URLs, defaults to `443`.
-- `PROXY_HOPS`: trusted reverse proxies appending to `X-Forwarded-For` (`1` on Fly.io, set in `fly.toml`), used for per-client rate limits.
+- `PROXY_HOPS`: position of the client address from the right of `X-Forwarded-For` (`2` on Fly.io, set in `fly.toml`), used for per-client rate limits.
 - `PRIVEE_INSTANCE_NAME`: display name reported by `GET /api/app/info`.
 - `PRIVEE_SOURCE_URL`: link to the source code of the running version, defaults to `https://github.com/MaxDac/Privee`. Forks must point it to their own repository.
 - `POOL_SIZE`: database pool size.

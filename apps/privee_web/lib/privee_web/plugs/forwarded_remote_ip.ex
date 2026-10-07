@@ -4,10 +4,11 @@ defmodule PriveeWeb.Plugs.ForwardedRemoteIp do
   proxies, so per-client rate limits work behind Fly.io's proxy.
 
   Configured with `config :privee_web, :proxy_hops, n` (`PROXY_HOPS` at
-  runtime): the number of trusted proxies in front of the app. The client is
-  the `n`-th address from the right of `X-Forwarded-For`, because each proxy
-  appends the address it received the request from and anything further left
-  is supplied by the client. With `0` (the default) the header is ignored.
+  runtime): the client is the `n`-th address from the right of
+  `X-Forwarded-For`, because each trusted proxy appends to the header and
+  anything further left is supplied by the client. On Fly.io the rightmost
+  address is the app's own IP, so `fly.toml` sets `2`. With `0` (the default)
+  the header is ignored.
   """
 
   @behaviour Plug
