@@ -41,6 +41,35 @@ defmodule Privee.PushTest do
     end
   end
 
+  describe "public_address?/1" do
+    test "accepts public addresses" do
+      for address <- [{93, 184, 216, 34}, {1, 1, 1, 1}, {0x2606, 0x4700, 0, 0, 0, 0, 0, 0x1111}] do
+        assert Push.public_address?(address), "expected #{inspect(address)} to be public"
+      end
+    end
+
+    test "rejects internal, reserved and mapped internal addresses" do
+      for address <- [
+            {127, 0, 0, 1},
+            {10, 1, 2, 3},
+            {172, 20, 0, 1},
+            {192, 168, 1, 1},
+            {169, 254, 169, 254},
+            {100, 64, 0, 1},
+            {0, 0, 0, 0},
+            {224, 0, 0, 1},
+            {0, 0, 0, 0, 0, 0, 0, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0},
+            {0xFD00, 0, 0, 0, 0, 0, 0, 1},
+            {0xFE80, 0, 0, 0, 0, 0, 0, 1},
+            {0xFF02, 0, 0, 0, 0, 0, 0, 1},
+            {0, 0, 0, 0, 0, 0xFFFF, 0x7F00, 1}
+          ] do
+        refute Push.public_address?(address), "expected #{inspect(address)} to be rejected"
+      end
+    end
+  end
+
   describe "register_endpoint/2 and unregister_endpoint/1" do
     test "registers and replaces the endpoint of a token", %{session: session, token: token} do
       assert :ok = Push.register_endpoint(token, @endpoint_url)

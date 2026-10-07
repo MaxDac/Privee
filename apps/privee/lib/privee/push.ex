@@ -12,9 +12,12 @@ defmodule Privee.Push do
   Configuration (`config :privee, Privee.Push`):
 
     * `:allow_insecure` - accept `http` and local endpoints (development only)
+    * `:resolve_hosts` - check, before each delivery, that the endpoint host
+      resolves only to public addresses (default `true`; disabled in tests)
     * `:req_options` - extra `Req` options (used by the tests)
   """
 
+  import Bitwise
   import Ecto.Query
 
   alias Privee.Push.PushEndpoint
@@ -97,6 +100,15 @@ defmodule Privee.Push do
 
   @doc false
   def deliver(endpoint) do
+    if public_destination?(endpoint) do
+      post(endpoint)
+    else
+      Logger.info("Push delivery skipped: the endpoint does not resolve to public addresses")
+      :error
+    end
+  end
+
+  defp post(endpoint) do
     options =
       [
         body: @body,
@@ -106,6 +118,7 @@ defmodule Privee.Push do
           {"urgency", "high"}
         ],
         retry: false,
+        redirect: false,
         connect_options: [timeout: 5_000],
         receive_timeout: 5_000
       ]
@@ -168,6 +181,72 @@ defmodule Privee.Push do
   defp ip_literal?(host) do
     String.starts_with?(host, "[") or
       match?({:ok, _}, :inet.parse_address(String.to_charlist(host)))
+  end
+
+  # Host names can resolve to internal addresses: every address must be public
+  # right before delivering. Skipped with `:allow_insecure` and when
+  # `:resolve_hosts` is false (tests).
+  defp public_destination?(endpoint) do
+    config = config()
+
+    if config[:allow_insecure] == true or config[:resolve_hosts] == false do
+      true
+    else
+      case resolve(URI.parse(endpoint).host) do
+        [] -> false
+        addresses -> Enum.all?(addresses, &public_address?/1)
+      end
+    end
+  end
+
+  defp resolve(host) when is_binary(host) do
+    host = String.to_charlist(host)
+
+    for family <- [:inet, :inet6],
+        {:ok, addresses} <- [:inet.getaddrs(host, family)],
+        address <- addresses,
+        do: address
+  end
+
+  defp resolve(_host), do: []
+
+  @non_public_ipv4 for {{a, b, c, d}, bits} <- [
+                         {{0, 0, 0, 0}, 8},
+                         {{10, 0, 0, 0}, 8},
+                         {{100, 64, 0, 0}, 10},
+                         {{127, 0, 0, 0}, 8},
+                         {{169, 254, 0, 0}, 16},
+                         {{172, 16, 0, 0}, 12},
+                         {{192, 0, 0, 0}, 16},
+                         {{192, 168, 0, 0}, 16},
+                         {{198, 18, 0, 0}, 15},
+                         {{224, 0, 0, 0}, 3}
+                       ],
+                       do: {a <<< 24 ||| b <<< 16 ||| c <<< 8 ||| d, bits}
+
+  @doc """
+  Whether `address` is a publicly routable IPv4 or IPv6 address, i.e. not
+  loopback, private, link-local, shared, multicast, reserved or unspecified.
+  """
+  @spec public_address?(:inet.ip_address()) :: boolean()
+  def public_address?({a, b, c, d}) do
+    ip = a <<< 24 ||| b <<< 16 ||| c <<< 8 ||| d
+
+    not Enum.any?(@non_public_ipv4, fn {network, bits} ->
+      ip >>> (32 - bits) == network >>> (32 - bits)
+    end)
+  end
+
+  def public_address?({0, 0, 0, 0, 0, 0xFFFF, high, low}) do
+    public_address?({high >>> 8, high &&& 0xFF, low >>> 8, low &&& 0xFF})
+  end
+
+  def public_address?({first, second, _, _, _, _, _, _}) do
+    not (first == 0 or first == 0x64 or
+           first in 0xFC00..0xFDFF or
+           first in 0xFE80..0xFEBF or
+           first >= 0xFF00 or
+           (first == 0x2001 and second == 0xDB8))
   end
 
   defp get_session_token(token) when is_binary(token) do

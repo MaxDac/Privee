@@ -164,6 +164,22 @@ defmodule PriveeWeb.App.ChannelsTest do
       assert_reply ref, :ok, %{error: "superseded"}
     end
 
+    test "rejects the old identity after another device resets it", %{
+      me: me,
+      channel: channel,
+      identity_key: old_key
+    } do
+      new_bundle = bundle_attrs()
+      assert {:ok, _, _} = PriveeWeb.SignalKeys.run("reset_identity", me.id, new_bundle)
+
+      epoch = open(channel)
+      ref = push(channel, "send_message", send_params(epoch, old_key))
+      assert_reply ref, :ok, %{error: "superseded"}
+
+      ref = push(channel, "send_message", send_params(epoch, new_bundle["identity_key"]))
+      assert_reply ref, :ok, %{id: _, epoch: ^epoch}
+    end
+
     test "rejects malformed requests", %{channel: channel} do
       ref = push(channel, "send_message", %{})
       assert_reply ref, :ok, %{error: "invalid"}

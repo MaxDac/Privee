@@ -15,6 +15,7 @@ kill_signal = 'SIGTERM'
 [env]
   PHX_HOST = 'privee.fly.dev'
   PORT = '8080'
+  PROXY_HOPS = '1'
 
 [http_service]
   internal_port = 8080

@@ -26,6 +26,7 @@ app's server screen. Other clients can use the [Client API](client-api.md).
 | `DATABASE_URL` | yes | `ecto://user:password@host/database` |
 | `PORT` | no | HTTP port the app listens on, default `4000`. |
 | `PHX_PORT` | no | Public HTTPS port used in generated URLs, default `443`. |
+| `PROXY_HOPS` | no | Number of trusted reverse proxies in front of the app that append to `X-Forwarded-For`, default `0`. Set it to `1` behind a single proxy (Caddy, nginx, Fly.io), otherwise every client shares the proxy's address in the login rate limit. Never set it higher than the real number of proxies, or clients can spoof their address. |
 | `PRIVEE_INSTANCE_NAME` | no | Display name shown to clients by `GET /api/app/info`. |
 | `PRIVEE_SOURCE_URL` | no | Source code of the version you run, default `https://github.com/MaxDac/Privee`. |
 | `POOL_SIZE` | no | Database pool size, default `10`. |
@@ -102,5 +103,6 @@ _build/prod/rel/privee_umbrella/bin/migrate
 _build/prod/rel/privee_umbrella/bin/server
 ```
 
-Put a TLS-terminating reverse proxy in front of `PORT`. It must forward
+Put a TLS-terminating reverse proxy in front of `PORT` and set `PROXY_HOPS=1`.
+It must forward
 WebSocket upgrades (`/live` and `/app/socket`) and set `X-Forwarded-Proto`.

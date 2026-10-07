@@ -36,6 +36,9 @@ defmodule PriveeWeb.App.ChatChannel do
       {:ok, peer} ->
         :ok = Endpoint.subscribe(Events.chat_topic(me.id, peer.id))
         :ok = Endpoint.subscribe(SignalKeys.peer_topic(peer.id))
+        # Tracks identity resets made by another device, so sends with the
+        # superseded identity are rejected.
+        :ok = Endpoint.subscribe(SignalKeys.owner_topic(me.id))
 
         {:ok, %{peer_id: peer.id, peer_session_name: peer.session_name},
          socket
@@ -85,12 +88,18 @@ defmodule PriveeWeb.App.ChatChannel do
     {:noreply, socket}
   end
 
-  def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket) do
-    if event == SignalKeys.prekeys_available_event() do
-      push(socket, "peer_keys_ready", %{})
-    end
+  def handle_info(%Phoenix.Socket.Broadcast{event: event, payload: payload}, socket) do
+    cond do
+      event == SignalKeys.prekeys_available_event() ->
+        push(socket, "peer_keys_ready", %{})
+        {:noreply, socket}
 
-    {:noreply, socket}
+      event == SignalKeys.identity_reset_event() ->
+        {:noreply, assign(socket, :signal_identity_key, payload.identity_key)}
+
+      true ->
+        {:noreply, socket}
+    end
   end
 
   def handle_info(_message, socket), do: {:noreply, socket}

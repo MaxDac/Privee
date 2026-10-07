@@ -20,7 +20,7 @@ config :privee, Privee.Repo,
 config :privee, :session_name_provider, Privee.SessionNameProvider.Test
 
 # Push deliveries are served by Req.Test stubs
-config :privee, Privee.Push, req_options: [plug: {Req.Test, Privee.Push}]
+config :privee, Privee.Push, req_options: [plug: {Req.Test, Privee.Push}], resolve_hosts: false
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
