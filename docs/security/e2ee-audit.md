@@ -67,7 +67,7 @@ status. Findings 1–8 come from the baseline, 9–16 from the final round.
 | 12 | Low | Share links were not bound to the server (same root cause as 10). | Opus | **Fixed** with 10. |
 | 13 | Medium / Low | Push DNS rebinding: the destination was checked, then resolved again when connecting. | GPT-6.1, Opus, Grok | **Fixed.** Delivery connects to the checked address and keeps the host name for SNI, certificate checks and `Host`. |
 | 14 | Medium | On Fly the rightmost `X-Forwarded-For` entry is the app's own IP, so `PROXY_HOPS=1` still put all clients in one rate-limit bucket. | Grok | **Fixed.** `fly.toml` sets `PROXY_HOPS=2`, verified against Fly's documentation. |
-| 15 | Medium | The app's authenticated client followed redirects, so a redirect from the selected server could send the session token (WebSocket) or the recovery phrase (307 login) to another host. | Astra | Fixing in PriveeApp#13: redirects disabled on the authenticated client. |
+| 15 | Medium | The app's authenticated client followed redirects, so a redirect from the selected server could send the session token (WebSocket) or the recovery phrase (307 login) to another host. | Astra | **Fixed** in PriveeApp#13. API, socket and server-validation requests never follow redirects; tests show a redirect target receives no request. |
 | 16 | Info | Message sends and key-management events have no per-event rate limit (login, prekey consumption and pushes do). | Astra | Accepted. Abuse is limited to authenticated accounts; a future hardening item. |
 
 ## Self-hosting and server selection
