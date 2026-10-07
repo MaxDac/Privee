@@ -86,6 +86,10 @@ route was removed.
 
 ## Manual browser checklist
 
+The Playwright specs in `apps/privee_web/assets/e2e` (`npm run e2e`), which CI runs
+against a production build, cover the core of items 1–3 (live exchange both ways,
+an offline recipient, reloads) and item 10. The rest still need a manual pass.
+
 Run against `mix assets.deploy` output (minified, production CSP) before releasing.
 
 1. [ ] **Two browsers.** Register A (browser 1) and B (browser 2). A opens a chat

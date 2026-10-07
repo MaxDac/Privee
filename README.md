@@ -50,7 +50,20 @@ mix precommit
 It compiles with `--warnings-as-errors`, unlocks unused deps, formats the code, then runs `credo --strict`, the tests and `npm run check` for the assets (prettier, tsc, eslint, vitest). CI runs the same checks in check-only mode, plus:
 
 - `mix dialyzer` (PLTs are stored in `priv/plts`)
+- browser end-to-end tests (below)
 - a Docker image build
+
+### Browser end-to-end tests
+
+[Playwright](https://playwright.dev) specs in [`apps/privee_web/assets/e2e`](apps/privee_web/assets/e2e) drive real browsers through registration and encrypted chats: messages both ways, bursts, an offline recipient, reloads, and a check that no plaintext crosses the WebSocket. Each simulated user gets its own browser context, so it is a separate Signal device.
+
+```bash
+cd apps/privee_web/assets
+npm run e2e:install   # once: downloads Chromium
+npm run e2e           # starts `mix phx.server` and runs the specs
+```
+
+To reuse a running server, set `E2E_BASE_URL` (e.g. `E2E_BASE_URL=http://localhost:4000 npm run e2e`). To use an installed browser instead of the downloaded Chromium, set `E2E_BROWSER_CHANNEL` (e.g. `msedge` or `chrome`). CI runs the specs against a production build (`MIX_ENV=prod`, `mix assets.deploy`) and uploads the report and traces when they fail.
 
 Enable the pre-commit hook, which runs `mix precommit`:
 
@@ -66,7 +79,7 @@ All workflows live in [`.github/workflows`](./.github/workflows):
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Docker build |
+| [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Playwright browser tests, Docker build |
 | [`main.yml`](./.github/workflows/main.yml) | Push to `main`, manual | Runs `ci.yml`, then deploys to Fly.io when it passes |
 
 The deploy job targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
