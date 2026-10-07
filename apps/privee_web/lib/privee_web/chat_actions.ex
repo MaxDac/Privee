@@ -66,13 +66,14 @@ defmodule PriveeWeb.ChatActions do
   @doc """
   Stores an encrypted message from `me` to `peer` and broadcasts it.
 
-  `known_identity_key` is the identity key the caller believes is published for
-  `me`. It is refreshed from the store when it differs from the claimed one.
-  Returns `{reply, identity_key}`, with the possibly refreshed identity key.
+  `known_identity_key` is the identity key the caller last saw for `me`. The
+  claimed key is always checked against the store, so a send racing an identity
+  reset from another device is rejected even before the reset broadcast arrives.
+  Returns `{reply, identity_key}`, with the current identity key.
   """
-  def send_message(me, peer, %{"epoch" => epoch} = params, known_identity_key)
+  def send_message(me, peer, %{"epoch" => epoch} = params, _known_identity_key)
       when is_binary(epoch) do
-    identity_key = refresh_identity_key(me, known_identity_key, params["identity_key"])
+    identity_key = PreKeyStore.identity_key(me.id)
 
     changeset =
       Sessions.change_message(
@@ -124,10 +125,4 @@ defmodule PriveeWeb.ChatActions do
   defp sent_reply(message) do
     %{id: message.id, seq: message.seq, epoch: message.epoch, client_nonce: message.client_nonce}
   end
-
-  # The known key can lag behind the store (e.g. another device published the
-  # identity after this socket connected): re-read it before rejecting a send as
-  # superseded.
-  defp refresh_identity_key(_me, key, key) when is_binary(key), do: key
-  defp refresh_identity_key(me, _known, _claimed), do: PreKeyStore.identity_key(me.id)
 end

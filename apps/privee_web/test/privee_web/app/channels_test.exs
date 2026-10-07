@@ -180,6 +180,19 @@ defmodule PriveeWeb.App.ChannelsTest do
       assert_reply ref, :ok, %{id: _, epoch: ^epoch}
     end
 
+    test "rejects the old identity before the reset broadcast arrives", %{
+      me: me,
+      channel: channel,
+      identity_key: old_key
+    } do
+      epoch = open(channel)
+      # Only the store changes: the channel still caches the old identity.
+      assert :ok = Privee.PreKeyStore.reset_identity(me.id, bundle_attrs())
+
+      ref = push(channel, "send_message", send_params(epoch, old_key))
+      assert_reply ref, :ok, %{error: "superseded"}
+    end
+
     test "rejects malformed requests", %{channel: channel} do
       ref = push(channel, "send_message", %{})
       assert_reply ref, :ok, %{error: "invalid"}
