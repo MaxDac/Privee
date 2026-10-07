@@ -79,5 +79,5 @@ module.exports = defineConfig([
 
     files: ["**/*.mjs"],
   },
-  globalIgnores(["**/types/**/*.d.ts", "**/*.cjs"]),
+  globalIgnores(["**/types/**/*.d.ts", "**/*.cjs", "playwright-report/**", "test-results/**"]),
 ])

@@ -30,3 +30,7 @@ erl_crash.dump
 
 # Node modules
 */node_modules
+
+# Playwright reports and traces
+playwright-report/
+test-results/
