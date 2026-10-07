@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'privee'
+app = 'bauta'
 primary_region = 'ams'
 kill_signal = 'SIGTERM'
 
@@ -13,7 +13,7 @@ kill_signal = 'SIGTERM'
   release_command = '/app/bin/migrate'
 
 [env]
-  PHX_HOST = 'privee.fly.dev'
+  PHX_HOST = 'bauta.fly.dev'
   PORT = '8080'
   # Fly's X-Forwarded-For ends with "<client>, <app IP>": the client is the
   # second address from the right.
