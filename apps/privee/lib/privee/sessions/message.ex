@@ -1,8 +1,11 @@
 defmodule Privee.Sessions.Message do
   @moduledoc """
-  Represents a single message in a chat session.
-  Purposefully, the message is an embedded entity, as it will not be saved in the
-  database.
+  Represents a single end-to-end encrypted message in a chat session.
+  The message is an embedded entity: it is never saved in the database, only in
+  the ephemeral `Privee.Chats` storage.
+
+  Only `type`, `body` and `client_nonce` come from the client. Every other field
+  is set by the server.
   """
   use Ecto.Schema
 
@@ -10,41 +13,74 @@ defmodule Privee.Sessions.Message do
 
   alias Privee.Sessions.Message
 
-  @doc """
-  Represents a message session.
+  # Signal Protocol message types: 1 = WhisperMessage, 3 = PreKeyWhisperMessage.
+  @message_types [1, 3]
+  @max_body_bytes 16_384
 
-  Fields:
-    * `text_from` - The original text of the message.
-    * `text_to` - The translated or target text of the message.
-    * `from` - The sender's identifier (non-negative integer).
-    * `to` - The recipient's identifier or name (string).
-    * `in_thread` - Indicates if the message is part of a thread, i.e. if the 
-    *   sender/receiver is the same for all the messages (boolean).
-    * `sender_session_name` - The name of the sender's session (string).
+  @typedoc """
+    * `id` - Server-assigned message id (UUID).
+    * `seq` - Server-assigned ordering value, meaningful within `{conversation, epoch}`.
+    * `epoch` - Conversation epoch the message belongs to.
+    * `client_nonce` - Client-generated idempotency key.
+    * `from` / `to` - Sender / recipient session ids.
+    * `sender_session_name` - Sender session name (for notifications).
+    * `type` - Signal message type (1 or 3).
+    * `body` - Base64 encoded Signal ciphertext.
+    * `in_thread` - UI flag: same sender as the previous message.
   """
   @type t :: %__MODULE__{
-          text_from: String.t(),
-          text_to: String.t(),
-          from: non_neg_integer(),
-          to: non_neg_integer(),
-          in_thread: boolean(),
-          sender_session_name: String.t()
+          id: String.t() | nil,
+          seq: integer() | nil,
+          epoch: String.t() | nil,
+          client_nonce: String.t() | nil,
+          from: non_neg_integer() | nil,
+          to: non_neg_integer() | nil,
+          sender_session_name: String.t() | nil,
+          type: 1 | 3 | nil,
+          body: String.t() | nil,
+          in_thread: boolean()
         }
 
+  @primary_key false
   embedded_schema do
-    field :text_from, :string
-    field :text_to, :string
+    field :id, :string
+    field :seq, :integer
+    field :epoch, :string
+    field :client_nonce, :string
     field :from, :id
     field :to, :id
-    field :in_thread, :boolean, default: false
-    # Added to simplify notification handling
     field :sender_session_name, :string
+    field :type, :integer
+    field :body, :string
+    field :in_thread, :boolean, default: false
   end
 
-  @doc false
+  @doc """
+  Casts the client-provided fields only. `from`, `to` and `sender_session_name`
+  must already be set on the struct by the server.
+  """
   def changeset(%Message{} = message, attrs) do
     message
-    |> cast(attrs, [:text_from, :text_to, :from, :to, :sender_session_name])
-    |> validate_required([:text_from, :text_to, :from, :to, :sender_session_name])
+    |> cast(attrs, [:type, :body, :client_nonce])
+    |> validate_required([:type, :body, :client_nonce, :from, :to, :sender_session_name])
+    |> validate_inclusion(:type, @message_types)
+    |> validate_length(:body, max: div(@max_body_bytes * 4, 3) + 4)
+    |> validate_change(:body, fn :body, body ->
+      case Base.decode64(body) do
+        {:ok, _} -> []
+        :error -> [body: "must be base64 encoded"]
+      end
+    end)
+    |> validate_length(:client_nonce, min: 16, max: 64)
+    |> validate_format(:client_nonce, ~r/^[A-Za-z0-9-]+$/)
+    |> validate_distinct_parties()
+  end
+
+  defp validate_distinct_parties(changeset) do
+    if get_field(changeset, :from) == get_field(changeset, :to) do
+      add_error(changeset, :to, "cannot be the sender")
+    else
+      changeset
+    end
   end
 end

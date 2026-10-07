@@ -3,37 +3,6 @@ import { handleSessionNameCopyToClipboardRegistrationEvent } from "../utils/clip
 import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
 
-// Cache for lazy-loaded handlers to avoid re-importing on every event
-/** @type {typeof import("../utils/chat.mjs").handleSendingPublicKey | null} */
-let cachedHandleSendingPublicKey = null
-/** @type {typeof import("../utils/security.mjs").handleSessionNamePrivateKeyRegistrationEvent | null} */
-let cachedHandleSessionNamePrivateKeyRegistrationEvent = null
-
-/**
- * Lazy-loads and caches the chat utilities.
- * @returns {Promise<Function>} The handleSendingPublicKey function.
- */
-const getChatHandler = async () => {
-  if (!cachedHandleSendingPublicKey) {
-    const chatModule = await import("../utils/chat.mjs")
-    cachedHandleSendingPublicKey = chatModule.handleSendingPublicKey
-  }
-  return cachedHandleSendingPublicKey
-}
-
-/**
- * Lazy-loads and caches the security utilities.
- * @returns {Promise<Function>} The handleSessionNamePrivateKeyRegistrationEvent function.
- */
-const getSecurityHandler = async () => {
-  if (!cachedHandleSessionNamePrivateKeyRegistrationEvent) {
-    const securityModule = await import("../utils/security.mjs")
-    cachedHandleSessionNamePrivateKeyRegistrationEvent =
-      securityModule.handleSessionNamePrivateKeyRegistrationEvent
-  }
-  return cachedHandleSessionNamePrivateKeyRegistrationEvent
-}
-
 /**
  * Adds the event handlers to the front end, to handle events fired from the back-end.
  * @returns {void}
@@ -63,21 +32,11 @@ export const addBackEndEventHandlers = () => {
     ),
   )
 
-  // Post registration handlers - lazy-loaded with caching
+  // Post registration handler - copies session name to clipboard
   window.addEventListener("phx:handle_new_session_registration", async (event) => {
-    const handleSessionNamePrivateKeyRegistrationEvent = await getSecurityHandler()
     const registrationEvent =
       /** @type {import("../utils/back-end-event-handlers.mjs").PhoenixSessionNameEvent} */ (event)
     await handleSessionNameCopyToClipboardRegistrationEvent(registrationEvent)
-    await handleSessionNamePrivateKeyRegistrationEvent(registrationEvent)
-  })
-
-  // Adding the crypto keys handling for the chat - lazy-loaded with caching
-  window.addEventListener("phx:sending_keys", async (event) => {
-    const handleSendingPublicKey = await getChatHandler()
-    handleSendingPublicKey(
-      /** @type {import("../utils/chat.mjs").SessionsPublicKeyEvent} */ (event),
-    )
   })
 
   // Close session dropdown when any menu item is clicked

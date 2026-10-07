@@ -12,28 +12,29 @@
 >
   <div class={[
     "chat-bubble",
-    if @message.from == @current_session.id do
-      "chat-bubble-neutral"
-    else
-      "chat-bubble-primary"
-    end
+    if(@message.from == @current_session.id,
+      do: "chat-bubble-neutral",
+      else: "chat-bubble-primary"
+    )
   ]}>
+    <%!-- The ChatScreen hook decrypts `data-body` (or reads local history) into this element --%>
     <p
-      data-message={if @message.from == @current_session.id, do: "from", else: "to"}
-      data-converted="false"
       id={"chat-message-#{@message.id}"}
+      data-signal-message
+      data-id={@message.id}
+      data-seq={@message.seq}
+      data-epoch={@message.epoch}
+      data-type={@message.type}
+      data-body={@message.body}
+      data-direction={if @message.from == @current_session.id, do: "out", else: "in"}
+      data-client-nonce={if @message.from == @current_session.id, do: @message.client_nonce}
+      data-converted="false"
       class={[
         "text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal hidden",
-        if @message.from == @current_session.id do
-          "text-zinc-50"
-        else
-          "text-zinc-900"
-        end
+        if(@message.from == @current_session.id, do: "text-zinc-50", else: "text-zinc-900")
       ]}
     >
-      {if @message.from == @current_session.id,
-        do: @message.text_from,
-        else: @message.text_to}&lrm;
+      &lrm;
     </p>
   </div>
 </div>

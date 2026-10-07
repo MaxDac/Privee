@@ -5,9 +5,6 @@ import {
   pushBackEndNotification,
   setNotificationCoordinator,
 } from "../utils/push-notifications.mjs"
-import { generateNewKeyPair } from "../utils/security.mjs"
-import { encryptMessage } from "../utils/message-encryption.mjs"
-import * as security from "../utils/security.mjs"
 
 const addRequiredMockedMethod = (window) => ({
   ...window,
@@ -127,38 +124,20 @@ describe("pushBackEndNotification", () => {
     })
     vi.stubGlobal("Notification", NotificationMock)
 
-    // Mocking getting the private key
-    const { privateKey, publicKey } = await generateNewKeyPair()
-    const receiverSessionName = "sesssion-name"
-
-    const getPrivateKeyMock = vi.spyOn(security, "getPrivateKey").mockImplementation((sn) => {
-      if (sn === receiverSessionName) {
-        return Promise.resolve(privateKey)
-      }
-
-      return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
-    })
-
-    const notificationText = "notification text"
-
-    const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
-
     const notification = await pushBackEndNotification({
       detail: {
         check_focus: true,
-        receiver_session_name: receiverSessionName,
-        text: encryptedNotificationText,
+        session_name: "session-abc",
       },
     })
 
     expect(notification).toBeTruthy()
     expect(notification.title).toBe("Privee - Text received")
-    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
-    expect(notification.body).toBe(notificationText)
+    expect(notification.body).toBe("New message received")
     expect(notification.icon).toBe("/favicon.ico")
   })
 
-  it("not checking focus, does trigger notification independent of the document visibility", async () => {
+  it("not checking focus, does trigger notification with generic message", async () => {
     setNotificationCoordinator(alwaysAllowCoordinator)
     const dom = getDom()
 
@@ -175,118 +154,16 @@ describe("pushBackEndNotification", () => {
     })
     vi.stubGlobal("Notification", NotificationMock)
 
-    // Mocking getting the private key
-    const { privateKey, publicKey } = await generateNewKeyPair()
-    const receiverSessionName = "sesssion-name"
-
-    const getPrivateKeyMock = vi.spyOn(security, "getPrivateKey").mockImplementation((sn) => {
-      if (sn === receiverSessionName) {
-        return Promise.resolve(privateKey)
-      }
-
-      return Promise.reject(`Not the right session name. Session name passed '${sn}'.`)
-    })
-
-    const notificationText = "notification text"
-
-    const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
-
     const notification = await pushBackEndNotification({
       detail: {
         check_focus: false,
-        receiver_session_name: receiverSessionName,
-        text: encryptedNotificationText,
+        session_name: "session-abc",
       },
     })
 
     expect(notification).toBeTruthy()
     expect(notification.title).toBe("Privee - Text received")
-    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
-    expect(notification.body).toBe(notificationText)
-    expect(notification.icon).toBe("/favicon.ico")
-  })
-
-  it("The browser did not store the private key, text is empty", async () => {
-    setNotificationCoordinator(alwaysAllowCoordinator)
-    const dom = getDom()
-
-    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
-    vi.stubGlobal("document", {
-      ...dom.window.document,
-      hidden: false,
-      visibilityState: "visible",
-      addEventListener: (type, callback) => {
-        if (type === "visibilitychange") {
-          callback()
-        }
-      },
-    })
-    vi.stubGlobal("Notification", NotificationMock)
-
-    // Mocking getting the private key
-    const { publicKey } = await generateNewKeyPair()
-    const receiverSessionName = "sesssion-name"
-
-    const getPrivateKeyMock = vi
-      .spyOn(security, "getPrivateKey")
-      .mockImplementation(() => Promise.resolve(undefined))
-
-    const notificationText = "notification text"
-
-    const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
-
-    const notification = await pushBackEndNotification({
-      detail: {
-        check_focus: false,
-        receiver_session_name: receiverSessionName,
-        text: encryptedNotificationText,
-      },
-    })
-
-    expect(notification).toBeTruthy()
-    expect(notification.text).toBeFalsy()
-    expect(getPrivateKeyMock).toHaveBeenCalledOnce()
-  })
-
-  it("The browser does not receive the receiver session id, text is empty", async () => {
-    setNotificationCoordinator(alwaysAllowCoordinator)
-    const dom = getDom()
-
-    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
-    vi.stubGlobal("document", {
-      ...dom.window.document,
-      hidden: false,
-      visibilityState: "visible",
-      addEventListener: (type, callback) => {
-        if (type === "visibilitychange") {
-          callback()
-        }
-      },
-    })
-    vi.stubGlobal("Notification", NotificationMock)
-
-    // Mocking getting the private key
-    const { publicKey } = await generateNewKeyPair()
-
-    const getPrivateKeyMock = vi
-      .spyOn(security, "getPrivateKey")
-      .mockImplementation(() => Promise.resolve(undefined))
-
-    const notificationText = "notification text"
-
-    const encryptedNotificationText = await encryptMessage(notificationText, publicKey)
-
-    const notification = await pushBackEndNotification({
-      detail: {
-        check_focus: false,
-        text: encryptedNotificationText,
-      },
-    })
-
-    expect(notification).toBeTruthy()
-    expect(notification.title).toBe("Privee - Text received")
-    expect(getPrivateKeyMock).toHaveBeenCalledTimes(0)
-    expect(notification.body).toBeFalsy()
+    expect(notification.body).toBe("New message received")
     expect(notification.icon).toBe("/favicon.ico")
   })
 

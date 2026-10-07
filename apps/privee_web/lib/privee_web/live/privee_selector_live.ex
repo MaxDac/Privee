@@ -51,6 +51,8 @@ defmodule PriveeWeb.PriveeSelectorLive do
     {:noreply, Events.send_notification_event_to_client(socket, payload)}
   end
 
+  def handle_info(_message, socket), do: {:noreply, socket}
+
   defp assign_form(socket, params \\ %{}) do
     changeset = get_privee_form_changeset(params, socket)
 

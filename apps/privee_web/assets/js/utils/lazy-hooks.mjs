@@ -1,104 +1,55 @@
 /**
  * Lazy loading utilities for Phoenix LiveView hooks.
- * This module provides functions to create lazy-loaded hook wrappers
- * that only load their dependencies when the hook is actually mounted.
+ * Page-specific hooks (and their dependencies, such as the Signal library) are
+ * only loaded when the hook is mounted.
  */
 
 /**
- * Creates a lazy-loaded wrapper for the ChatScreen hook.
- * Only loads chat functionality when the hook is mounted on a page.
- * @returns {object} The lazy-loaded ChatScreen hook
+ * Creates a hook that imports its implementation on mount and forwards the
+ * lifecycle callbacks to it. `destroyed` may run before the import resolves:
+ * the implementation is then never mounted.
+ * @param {() => Promise<any>} load Dynamic import of the hook module.
+ * @param {string} registrar Name of the exported `add*Hooks(Hooks)` function.
+ * @param {string} name Hook name.
+ * @returns {object} The lazy hook.
  */
-export const createLazyChatScreenHook = () => ({
+export const createLazyHook = (load, registrar, name) => ({
   /** @this {Record<string, any>} */
   async mounted() {
-    // Dynamic import - only loads when this hook is used
-    const { addChatHooks } = await import("../hooks/chat-hooks.mjs")
-
-    // Create temporary hooks object
+    const module = await load()
     /** @type {Record<string, any>} */
-    const tempHooks = {}
-    addChatHooks(tempHooks)
-
-    // Transfer the ChatScreen methods to this instance
-    const chatScreenHook = tempHooks.ChatScreen
-    if (chatScreenHook) {
-      // Copy mounted, updated, and other lifecycle methods
-      this.__mounted = chatScreenHook.mounted
-      this.__updated = chatScreenHook.updated
-      this.__handleChat = chatScreenHook.handleChat
-
-      // Call the actual mounted function
-      if (this.__mounted) {
-        await this.__mounted.call(this)
-      }
-    }
+    const hooks = {}
+    module[registrar](hooks)
+    this.lazyImpl = hooks[name] || {}
+    if (this.lazyDestroyed) return
+    await this.lazyImpl.mounted?.call(this)
   },
 
   /** @this {Record<string, any>} */
-  async updated() {
-    if (this.__updated) {
-      await this.__updated.call(this)
-    }
+  updated() {
+    return this.lazyImpl?.updated?.call(this)
   },
 
   /** @this {Record<string, any>} */
-  async handleChat() {
-    if (this.__handleChat) {
-      await this.__handleChat.call(this)
-    }
+  destroyed() {
+    this.lazyDestroyed = true
+    return this.lazyImpl?.destroyed?.call(this)
   },
 })
 
-/**
- * Creates a lazy-loaded wrapper for the RegistrationScreen hook.
- * Only loads registration functionality when the hook is mounted on a page.
- * @returns {object} The lazy-loaded RegistrationScreen hook
- */
-export const createLazyRegistrationScreenHook = () => ({
-  async mounted() {
-    const { addRegistrationHooks } = await import("../hooks/registration-hooks.mjs")
+export const createLazyChatScreenHook = () =>
+  createLazyHook(() => import("../hooks/chat-hooks.mjs"), "addChatHooks", "ChatScreen")
 
-    /** @type {Record<string, any>} */
-    const tempHooks = {}
-    addRegistrationHooks(tempHooks)
+export const createLazyRegistrationScreenHook = () =>
+  createLazyHook(
+    () => import("../hooks/registration-hooks.mjs"),
+    "addRegistrationHooks",
+    "RegistrationScreen",
+  )
 
-    const regScreenHook = tempHooks.RegistrationScreen
-    if (regScreenHook && regScreenHook.mounted) {
-      await regScreenHook.mounted.call(this)
-    }
-  },
-})
-
-/**
- * Creates a lazy-loaded wrapper for the PriveeSelectorScreen hook.
- * Only loads selector functionality when the hook is mounted on a page.
- * @returns {object} The lazy-loaded PriveeSelectorScreen hook
- */
-export const createLazyPriveeSelectorScreenHook = () => ({
-  /** @this {Record<string, any>} */
-  async mounted() {
-    const { addPriveeSelectorHooks } = await import("../hooks/privee-selector-hooks.mjs")
-
-    /** @type {Record<string, any>} */
-    const tempHooks = {}
-    addPriveeSelectorHooks(tempHooks)
-
-    const selectorHook = tempHooks.PriveeSelectorScreen
-    if (selectorHook) {
-      this.__mounted = selectorHook.mounted
-      this.__updated = selectorHook.updated
-
-      if (this.__mounted) {
-        await this.__mounted.call(this)
-      }
-    }
-  },
-
-  /** @this {Record<string, any>} */
-  async updated() {
-    if (this.__updated) {
-      await this.__updated.call(this)
-    }
-  },
-})
+export const createLazyPriveeSelectorScreenHook = () =>
+  createLazyHook(
+    () => import("../hooks/privee-selector-hooks.mjs"),
+    "addPriveeSelectorHooks",
+    "PriveeSelectorScreen",
+  )

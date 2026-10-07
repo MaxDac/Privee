@@ -16,7 +16,8 @@ defmodule Privee.Application do
       Privee.Repo,
       {DNSCluster,
        query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
-      {Phoenix.PubSub, name: Privee.PubSub}
+      {Phoenix.PubSub, name: Privee.PubSub},
+      Privee.Chats.TableOwner
       # Start a worker by calling: Privee.Worker.start_link(arg)
       # {Privee.Worker, arg}
     ]

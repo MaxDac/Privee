@@ -8,6 +8,11 @@ Privee is a Phoenix LiveView umbrella application:
 - `apps/privee` holds the domain logic and Ecto schemas.
 - `apps/privee_web` holds the web layer: LiveViews, components and assets.
 
+Chats are end-to-end encrypted with the Signal Protocol. See
+[End-to-end encryption](docs/e2e-encryption.md) for the design, its trade-offs
+(local plaintext history, node-local ciphertext, one device per session) and the
+manual release checklist.
+
 ## Toolchain
 
 Versions are pinned in [`.tool-versions`](./.tool-versions) for Erlang/OTP, Elixir and Node.js. CI reads the same file, so use [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/) to install matching versions:
@@ -71,6 +76,11 @@ fly tokens create deploy -a privee
 ```
 
 ## Deployment (Fly.io)
+
+> **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
+> serving the conversation and are lost on restart, so the chat must run as a
+> single Fly machine. See
+> [End-to-end encryption](docs/e2e-encryption.md#deliberate-trade-offs).
 
 [`fly.toml`](./fly.toml) configures the app. Fly builds the [`Dockerfile`](./Dockerfile) remotely. Each deploy runs migrations through the `release_command` (`/app/bin/migrate`).
 

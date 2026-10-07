@@ -127,7 +127,6 @@ defmodule Privee.SessionsTest do
       {:ok, session} =
         Sessions.register_session(%{
           session_name: session_name,
-          public_key: default_public_key(),
           is_quick: true
         })
 
@@ -144,7 +143,6 @@ defmodule Privee.SessionsTest do
         Sessions.register_session(%{
           session_name: session_name,
           recovery_phrase: "Some recovery phrase here",
-          public_key: default_public_key(),
           is_quick: true
         })
 
@@ -159,7 +157,6 @@ defmodule Privee.SessionsTest do
       {:error, changeset} =
         Sessions.register_session(%{
           session_name: session_name,
-          public_key: default_public_key(),
           is_quick: false
         })
 
@@ -194,7 +191,6 @@ defmodule Privee.SessionsTest do
         Sessions.register_session(%{
           session_name: session_name,
           recovery_phrase: "",
-          public_key: default_public_key(),
           is_quick: true
         })
 
@@ -208,7 +204,7 @@ defmodule Privee.SessionsTest do
   describe "change_session_registration/2" do
     test "returns a changeset" do
       assert %Ecto.Changeset{} = changeset = Sessions.change_session_registration(%Session{})
-      assert changeset.required == [:public_key, :recovery_phrase, :session_name]
+      assert changeset.required == [:recovery_phrase, :session_name]
     end
 
     test "allows fields to be set" do

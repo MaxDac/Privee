@@ -3,13 +3,43 @@
     <.header class="h-10 pt-5 pb-10 text-center">
       {@selected_session_name}
     </.header>
+    <div class="flex justify-center gap-2 px-5 text-xs">
+      <button
+        id="chat-safety-number"
+        type="button"
+        class="rounded-full px-3 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+      >
+        Safety number
+      </button>
+      <button
+        id="chat-clear-history"
+        type="button"
+        class="rounded-full px-3 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+      >
+        Clear history on this device
+      </button>
+      <button
+        id="chat-forget-device"
+        type="button"
+        class="rounded-full px-3 py-1 text-red-500 transition hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+      >
+        Forget this device
+      </button>
+    </div>
+    <%!-- Client-rendered notices (identity change, superseded device, unsupported browser) --%>
+    <div id="chat-banner" phx-update="ignore" class="px-5"></div>
     <main
       id="chat-screen"
       class="flex-grow overflow-auto"
       phx-hook="ChatScreen"
+      data-own-session-id={@current_session.id}
+      data-peer-session-id={@selected_session.id}
       data-session-name={@current_session.session_name}
       data-selected-session-name={@selected_session_name}
+      data-epoch={@epoch}
     >
+      <%!-- Messages decrypted earlier on this device that are no longer on the server --%>
+      <div id="chat-local-history" phx-update="ignore"></div>
       <.chat_screen
         current_session={@current_session}
         selected_session={@selected_session}
@@ -17,25 +47,7 @@
       />
     </main>
     <footer class="px-5 py-5">
-      <.simple_form
-        for={@form}
-        id="chat-form"
-        phx-change="validate"
-        phx-submit="create"
-        class="space-y-4"
-      >
-        <.input type="hidden" field={@form[:from]} value={@current_session.id} />
-
-        <.input type="hidden" field={@form[:to]} value={@selected_session.id} />
-
-        <.input
-          type="hidden"
-          field={@form[:sender_session_name]}
-          value={@current_session.session_name}
-        />
-
-        <.chat_input form={@form} />
-      </.simple_form>
+      <.chat_input />
     </footer>
   </section>
 </Layouts.chat>

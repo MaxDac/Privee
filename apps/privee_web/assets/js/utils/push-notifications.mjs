@@ -1,5 +1,3 @@
-import { getPrivateKey } from "./security.mjs"
-import { decryptMessage } from "./message-encryption.mjs"
 import { createNotificationCoordinator } from "./notification-coordinator.mjs"
 
 /** @type {import("./notification-coordinator.mjs").NotificationCoordinator} */
@@ -32,7 +30,8 @@ export const askNotificationPermission = async () => {
  * @property {string} [text] The text of the message that triggered the notification.
  * @property {string} [body] The body text associated with the event.
  * @property {string} [session_name] The session name that sent the message.
- * @property {string} [receiver_session_name] The receiver session name used for decryption.
+ * @property {string} [message_id] The id of the received message, used for cross-tab dedup.
+ * @property {number} [to] The receiver session id.
  * @property {boolean} [check_focus] Whether to check if the window is in focus before triggering the notification.
  */
 
@@ -54,7 +53,9 @@ export const pushBackEndNotification = async (event) => {
     const sessionName = /** @type {string} */ (event.detail.session_name)
 
     // Cross-tab deduplication: only one tab should show the notification
-    const allowed = await coordinator.shouldShowNotification(sessionName)
+    const { message_id: messageId, to } = event.detail
+    const dedupKey = messageId ? `${to}:${messageId}` : sessionName
+    const allowed = await coordinator.shouldShowNotification(sessionName, dedupKey)
     if (!allowed) return undefined
 
     const title = "Privee - Text received"
@@ -92,25 +93,13 @@ export const pushBackEndNotification = async (event) => {
 
 /**
  * Handles the decryption of the notification message.
- * @param {PhoenixEvent} event The event triggered from the back-end.
- * @returns {Promise<string>} The decrypted message.
+ * With Signal Protocol, we cannot decrypt outside the ratchet session context,
+ * so notifications show a generic message.
+ * @param {PhoenixEvent} _event The event triggered from the back-end.
+ * @returns {Promise<string>} The notification message.
  */
-const getNotificationMessage = async (event) => {
-  const encryptedMessage = event.detail.text
-  const receiverSessionName = event.detail.receiver_session_name
-
-  let decryptedMessage = ""
-
-  if (receiverSessionName != null && receiverSessionName != "") {
-    // Getting the private key to decrypt the message in the user notification.
-    const privateKey = await getPrivateKey(/** @type {string} */ (receiverSessionName))
-
-    if (privateKey && encryptedMessage) {
-      decryptedMessage = await decryptMessage(encryptedMessage, privateKey)
-    }
-  }
-
-  return decryptedMessage
+const getNotificationMessage = (_event) => {
+  return Promise.resolve("New message received")
 }
 
 /**

@@ -1,385 +1,292 @@
-import { describe, it, expect, vi, afterEach } from "vitest"
+import "fake-indexeddb/auto"
+import { IDBFactory } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
-import { indexedDB } from "fake-indexeddb"
-import {
-  testExports,
-  handleSendingPublicKey,
-  handleChatInput,
-  decryptChatEntriesText,
-} from "../utils/chat.mjs"
-import { convertPublicKeyToString, generateNewKeyPair } from "../utils/security.mjs"
-import { decryptMessage, encryptMessage } from "../utils/message-encryption.mjs"
-import { storeObject } from "../utils/front-end-database.mjs"
-import { querySelectorArrayOf } from "../utils/dom-utils.mjs"
-import { Constants } from "../utils/constants.mjs"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import { ChatController, Texts } from "../utils/chat.mjs"
+import { SignalClient } from "../utils/signal-client.mjs"
+import { createMemoryLocks } from "../utils/signal-locks.mjs"
+import { FakeServer } from "./signal-fake-server.mjs"
 
-const html = `
-  <form id="chat-form">
-    <input type="hidden" id="text-from" />
-    <input type="hidden" id="text-to" />
-    <input type-"text" id="chat-text" />
-  </form>
+const ALICE = 1
+const BOB = 2
+
+const layout = (/** @type {string} */ epoch) => `
+  <div id="chat-banner"></div>
+  <button id="chat-safety-number"></button>
+  <button id="chat-clear-history"></button>
+  <button id="chat-forget-device"></button>
+  <main id="chat-screen" data-epoch="${epoch}">
+    <div id="chat-local-history"></div>
+    <div id="chat-screen-container"></div>
+  </main>
+  <input id="chat-text" disabled />
+  <button id="chat-send" disabled></button>
 `
 
-describe("handleSendingPublicKey", () => {
-  it("should return an error when the keys are not present", async () => {
-    const event = {
-      detail: {},
-    }
-
-    try {
-      await handleSendingPublicKey(event)
-      expect.fail("It should have thrown an exception")
-    } catch {
-      /* test passing */
-    }
+/**
+ * Renders a server message like `chat_entry.html.heex`.
+ * @param {Document} doc
+ * @param {any} message Serialized server message.
+ */
+const appendEntry = (doc, message) => {
+  const p = doc.createElement("p")
+  p.id = `chat-message-${message.id}`
+  p.setAttribute("data-signal-message", "")
+  Object.assign(p.dataset, {
+    id: message.id,
+    seq: String(message.seq),
+    epoch: message.epoch,
+    type: String(message.type),
+    body: message.body,
+    direction: message.direction,
+    converted: "false",
   })
+  if (message.client_nonce) p.dataset.clientNonce = message.client_nonce
+  p.className = "hidden"
+  p.innerHTML = "&lrm;"
+  doc.getElementById("chat-screen-container")?.append(p)
+  return p
+}
 
-  it("handleSendingPublicKey should store the public key", async () => {
-    const { publicKey: currentPublicKey } = await generateNewKeyPair()
-    const { publicKey: selectedPublicKey } = await generateNewKeyPair()
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
-
-    const event = {
-      detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
-      },
-    }
-
-    await handleSendingPublicKey(event)
-
-    const currentPublicKeyFromModule = testExports.getCurrentPublicKey()
-    const selectedPublicKeyFromModule = testExports.getSelectedPublicKey()
-
-    expect(currentPublicKeyFromModule).toBeTruthy()
-    expect(currentPublicKeyFromModule).toBeTruthy()
-    expect(selectedPublicKeyFromModule).toBeTruthy()
-
-    expect(await convertPublicKeyToString(currentPublicKeyFromModule)).toBe(currentPublicKeyString)
-    expect(await convertPublicKeyToString(selectedPublicKeyFromModule)).toBe(
-      selectedPublicKeyString,
-    )
+/**
+ * @param {FakeServer} server
+ * @param {number} ownId
+ * @param {number} peerId
+ * @param {IDBFactory} [factory]
+ */
+const party = async (server, ownId, peerId, factory = new IDBFactory()) => {
+  const dom = new JSDOM(`<body>${layout(server.currentEpoch(ownId, peerId))}</body>`)
+  const doc = dom.window.document
+  const client = await SignalClient.open({
+    ownId,
+    push: server.connect(ownId, peerId),
+    locks: createMemoryLocks(),
+    factory,
   })
-})
-
-describe("handleChatInput", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
+  const el = /** @type {HTMLElement} */ (doc.getElementById("chat-screen"))
+  const controller = new ChatController({
+    el,
+    client,
+    peerId,
+    confirm: () => true,
+    reload: vi.fn(),
   })
+  return { doc, client, controller, factory }
+}
 
-  it(" should encrypt and set the values of hidden inputs", async () => {
-    const { publicKey: currentPublicKey, privateKey: currentPrivateKey } =
-      await generateNewKeyPair()
-
-    const { publicKey: selectedPublicKey, privateKey: selectedPrivateKey } =
-      await generateNewKeyPair()
-
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
-
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("Event", dom.window.Event)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    // Simulating the event from the back end which sends the public keys
-    const publicKeysSendingEvent = {
-      detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
-      },
-    }
-
-    await handleSendingPublicKey(publicKeysSendingEvent)
-
-    // @ts-ignore
-    /** @type {HTMLFormElement} */ const form = document.querySelector("#chat-form")
-    /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
-    /** @type {HTMLInputElement} */ const hiddenTextFrom = document.querySelector("#text-from")
-    /** @type {HTMLInputElement} */ const hiddenTextTo = document.querySelector("#text-to")
-
-    // Simulating filling the input with a message
-    const inputText = "Hello, world!"
-
-    textbox.value = inputText
-
-    // Workaround for the event listener to be added and fired from the form.
-    // This function will later be bound to the `Promise` that will resolve the test.
-    let testResolve = null
-
-    // Adding a submit event listener for the form to check the values of the hidden inputs
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault()
-
-      expect(hiddenTextFrom.value).not.toBe("")
-      expect(hiddenTextTo.value).not.toBe("")
-
-      const fromMessage = await decryptMessage(hiddenTextFrom.value, currentPrivateKey)
-      const toMessage = await decryptMessage(hiddenTextTo.value, selectedPrivateKey)
-
-      expect(fromMessage).toBe(inputText)
-      expect(toMessage).toBe(inputText)
-
-      expect(textbox.value).toBe("")
-
-      testResolve()
-    })
-
-    await handleChatInput(new KeyboardEvent("keypress", { key: "Enter" }))
-
-    await new Promise((resolve) => {
-      // Binding the resolve function to the testResolve variable.
-      // This will be resolved when the submit event is fired and handled by the
-      // test event listener.
-      testResolve = resolve
-    })
-  })
-
-  it("handleChatInput should do nothing when the chat input is empty", async () => {
-    const { publicKey: currentPublicKey } = await generateNewKeyPair()
-
-    const { publicKey: selectedPublicKey } = await generateNewKeyPair()
-
-    const currentPublicKeyString = await convertPublicKeyToString(currentPublicKey)
-    const selectedPublicKeyString = await convertPublicKeyToString(selectedPublicKey)
-
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-    vi.stubGlobal("Event", dom.window.Event)
-    vi.stubGlobal("KeyboardEvent", dom.window.KeyboardEvent)
-
-    // Simulating the event from the back end which sends the public keys
-    const publicKeysSendingEvent = {
-      detail: {
-        current: currentPublicKeyString,
-        selected: selectedPublicKeyString,
-      },
-    }
-
-    await handleSendingPublicKey(publicKeysSendingEvent)
-
-    // @ts-ignore
-    /** @type {HTMLInputElement} */ const textbox = document.querySelector("#chat-text")
-    /** @type {HTMLInputElement} */ const hiddenTextFrom = document.querySelector("#text-from")
-    /** @type {HTMLInputElement} */ const hiddenTextTo = document.querySelector("#text-to")
-
-    textbox.value = ""
-
-    await handleChatInput(new KeyboardEvent("submit"))
-
-    expect(hiddenTextFrom.value).toBe("")
-    expect(hiddenTextTo.value).toBe("")
-  })
-})
-
-describe("Chat entries decryption", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  const messageHtml = (encryptedText, dataConverted) => `
-    <div>
-      <p
-        data-message="from"
-        data-converted="${dataConverted}"
-        class="text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal text-zinc-50"
-      >
-        ${encryptedText}&lrm;
-      </p>
-    </div>
-  `
-
-  it("decryptChatEntryText should decrypt the chat message inside the p element", async () => {
-    const { privateKey, publicKey } = await generateNewKeyPair()
-
-    const message = "some message"
-    const encryptedMessage = await encryptMessage(message, publicKey)
-
-    const html = messageHtml(encryptedMessage, "false")
-    const dom = new JSDOM(html)
-
-    vi.stubGlobal("document", dom.window.document)
-
-    // prettier-ignore
-    const element = document.querySelector("[data-converted=\"false\"]")
-
-    await testExports.decryptChatEntryText(element, privateKey)
-
-    // prettier-ignore
-    const unconvertedElement = document.querySelector("[data-converted=\"false\"]")
-    // prettier-ignore
-    const convertedElement = document.querySelector("[data-converted=\"true\"]")
-
-    expect(unconvertedElement).toBeNull()
-    expect(convertedElement.innerHTML).toEqual(testExports.reAddTrailingChar(message))
-    expect(convertedElement.dataset.converted).toEqual("true")
-  })
-
-  const chatEntriesContainer = (entries) => {
-    let string = "<div>"
-
-    for (const entry of entries) {
-      string = `${string}${entry}`
-    }
-
-    return `${string}</div>`
+/**
+ * Streams every message of the conversation not yet in the DOM.
+ * @param {FakeServer} server
+ * @param {Document} doc
+ * @param {number} viewer
+ */
+const stream = (server, doc, viewer) => {
+  for (const m of server.messages) {
+    if (doc.getElementById(`chat-message-${m.id}`)) continue
+    appendEntry(doc, server.serialize(m, viewer))
   }
+}
 
-  it("decryptChatEntriesText should decrypt the chat entries", async () => {
-    const sessionName = "some-other-session-name"
-    const { privateKey, publicKey } = await generateNewKeyPair()
+/** @param {Document} doc */
+const texts = (doc) =>
+  [...doc.querySelectorAll("[data-signal-message]")].map((el) => el.textContent)
 
-    vi.stubGlobal("indexedDB", indexedDB)
+describe("ChatController", () => {
+  /** @type {FakeServer} */
+  let server
 
-    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
+  beforeEach(() => {
+    server = new FakeServer()
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+  })
 
-    const messages = await Promise.all(
-      ["0", "1", "2", "3", "4"]
-        .map((i) => `Some message ${i}`)
-        .map((m) => encryptMessage(m, publicKey)),
+  it("enables the composer once keys are ready", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
+      false,
+    )
+  })
+
+  it("sends from the composer and renders both sides", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "  hello <b>bob</b>  "
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("")
+
+    stream(server, alice.doc, ALICE)
+    stream(server, bob.doc, BOB)
+    await alice.controller.processEntries()
+    await bob.controller.processEntries()
+
+    expect(texts(alice.doc)).toEqual(["hello <b>bob</b>"])
+    expect(texts(bob.doc)).toEqual(["hello <b>bob</b>"])
+    expect(bob.doc.querySelector("b")).toBeNull()
+    const entry = /** @type {HTMLElement} */ (bob.doc.querySelector("[data-signal-message]"))
+    expect(entry.dataset.converted).toBe("true")
+    expect(entry.classList.contains("hidden")).toBe(false)
+  })
+
+  it("keeps the text and warns when the peer has no keys", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "anyone?"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("anyone?")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.noPeerKeys)
+  })
+
+  it("keeps the text when sending fails before the message is queued", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    server.intercept.set("open_conversation", () => ({ error: "unavailable" }))
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "retry me"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("retry me")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.sendFailed)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(0)
+  })
+
+  it("does not ask to retry a queued message, which is delivered once later", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {})
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    server.intercept.set("send_message", () => ({ error: "unavailable" }))
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "queued"
+    await alice.controller.sendFromComposer()
+    expect(input.value).toBe("")
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.sendQueued)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(1)
+
+    server.intercept.delete("send_message")
+    await alice.controller.flush()
+    expect(server.inbox(BOB, ALICE)).toHaveLength(1)
+    expect(await alice.client.pendingOutbox(BOB)).toHaveLength(0)
+  })
+
+  it("renders own messages after a reload from the local history", async () => {
+    const factory = new IDBFactory()
+    const alice = await party(server, ALICE, BOB, factory)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "persisted")
+
+    const reloaded = await party(server, ALICE, BOB, factory)
+    stream(server, reloaded.doc, ALICE)
+    await reloaded.controller.start()
+    expect(texts(reloaded.doc)).toEqual(["persisted"])
+  })
+
+  it("shows a placeholder for own messages sent from another device", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "hi")
+
+    const otherDevice = await party(server, ALICE, BOB)
+    stream(server, otherDevice.doc, ALICE)
+    await otherDevice.controller.start()
+    expect(texts(otherDevice.doc)).toEqual([Texts.unavailable])
+  })
+
+  it("catches up with messages older than the server window into local history", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    const bob = await party(server, BOB, ALICE)
+    await bob.controller.start()
+
+    for (const text of ["1", "2", "3"]) await alice.client.send(BOB, text)
+    // The server stream only renders the latest message.
+    appendEntry(bob.doc, server.serialize(server.messages[2], BOB))
+    await bob.controller.start()
+
+    expect(texts(bob.doc)).toEqual(["3"])
+    const earlier = bob.doc.getElementById("chat-local-history")
+    expect(earlier?.textContent).toContain(Texts.earlier)
+    expect(
+      [...(earlier?.querySelectorAll("[data-local-history]") || [])].map((e) => e.textContent),
+    ).toEqual(["1", "2"])
+  })
+
+  it("blocks on an identity change until the user accepts it", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "hello")
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+
+    const alice2 = await party(server, ALICE, BOB)
+    await alice2.client.ensureKeys()
+    await alice2.client.resetIdentity()
+    await alice2.client.send(BOB, "new device")
+
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+    const banner = bob.doc.getElementById("chat-banner-identity")
+    expect(banner).not.toBeNull()
+    expect(banner?.textContent).toMatch(/\d{5} \d{5}/)
+    expect(/** @type {HTMLInputElement} */ (bob.doc.getElementById("chat-text")).disabled).toBe(
+      true,
     )
 
-    const messageEntries = messages.map((m) => messageHtml(m, "false"))
-
-    const html = chatEntriesContainer(messageEntries)
-
-    const dom = new JSDOM(html)
-
-    vi.stubGlobal("document", dom.window.document)
-
-    await decryptChatEntriesText(sessionName)
-
-    // prettier-ignore
-    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
-    // prettier-ignore
-    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
-
-    expect(convertedElements.length).toEqual(5)
-    expect(unconvertedElements.length).toEqual(0)
-
-    convertedElements.forEach((element, i) => {
-      const expectedMessage = `Some message ${String(i)}`
-      expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
-      expect(element.dataset.converted).toEqual("true")
-    })
+    await bob.controller.approveIdentity()
+    expect(bob.doc.getElementById("chat-banner-identity")).toBeNull()
+    expect(texts(bob.doc)).toEqual(["hello", "new device"])
   })
 
-  it("decryptChatEntriesText should decrypt only the chat entries not yet converted", async () => {
-    const sessionName = "some-session-name"
-    const { privateKey, publicKey } = await generateNewKeyPair()
+  it("shows the superseded banner when another device resets the identity", async () => {
+    const factory = new IDBFactory()
+    const alice = await party(server, ALICE, BOB, factory)
+    await alice.controller.start()
 
-    vi.stubGlobal("indexedDB", indexedDB)
+    const other = await party(server, ALICE, BOB)
+    await other.client.ensureKeys()
+    await other.client.resetIdentity()
 
-    await storeObject(Constants.dbName, Constants.tableName, sessionName, privateKey)
-
-    const messages = await Promise.all(
-      ["0", "1", "2", "3", "4"]
-        .map((i) => `Some message ${i}`)
-        .map((m) => encryptMessage(m, publicKey)),
+    await alice.controller.onIdentitySuperseded({ identity_key: await other.client.identityKey() })
+    expect(alice.doc.getElementById("chat-banner-superseded")).not.toBeNull()
+    expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
+      true,
     )
 
-    const messageEntries = messages.map((m, i) => messageHtml(m, i < 2 ? "false" : "true"))
-
-    const html = chatEntriesContainer(messageEntries)
-
-    const dom = new JSDOM(html)
-
-    vi.stubGlobal("document", dom.window.document)
-
-    await decryptChatEntriesText(sessionName)
-
-    // prettier-ignore
-    const convertedElements = querySelectorArrayOf("[data-converted=\"true\"]")
-    // prettier-ignore
-    const unconvertedElements = querySelectorArrayOf("[data-converted=\"false\"]")
-
-    expect(convertedElements.length).toEqual(5)
-    expect(unconvertedElements.length).toEqual(0)
-
-    convertedElements.forEach((element, i) => {
-      const expectedMessage = `Some message ${String(i)}`
-
-      if (i < 2) {
-        expect(element.innerHTML).toEqual(testExports.reAddTrailingChar(expectedMessage))
-      } else {
-        expect(element.innerHTML).not.toEqual(testExports.reAddTrailingChar(expectedMessage))
-      }
-
-      expect(element.dataset.converted).toEqual("true")
-    })
-  })
-})
-
-describe("cleanEncryptedString", () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
+    // Resetting on this device makes it the active one again.
+    alice.doc.getElementById("chat-banner-superseded-action")?.click()
+    await vi.waitFor(() => expect(alice.controller.state).toBe("ready"))
+    expect(alice.doc.getElementById("chat-banner-superseded")).toBeNull()
   })
 
-  it("should remove trailing left-to-right mark character", () => {
-    const html = "<div>encrypted-text\u200E</div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
+  it("clears the local history and forgets the device", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    await alice.client.send(BOB, "bye")
 
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
+    await alice.controller.clearHistory()
+    expect(await alice.client.history(BOB)).toEqual([])
 
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should return text as-is when no trailing left-to-right mark", () => {
-    const html = "<div>encrypted-text</div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should trim whitespace and remove trailing left-to-right mark", () => {
-    const html = "<div>  encrypted-text  \u200E  </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should only trim whitespace when no left-to-right mark present", () => {
-    const html = "<div>  encrypted-text  </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("encrypted-text")
-  })
-
-  it("should handle empty text", () => {
-    const html = "<div></div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("")
-  })
-
-  it("should handle text with only whitespace and left-to-right mark", () => {
-    const html = "<div>   \u200E   </div>"
-    const dom = new JSDOM(html)
-    vi.stubGlobal("document", dom.window.document)
-
-    const element = document.querySelector("div")
-    const result = testExports.cleanEncryptedString(element)
-
-    expect(result).toBe("")
+    await alice.controller.forgetDevice()
+    expect(alice.controller.reload).toHaveBeenCalled()
+    const names = (await alice.factory.databases()).map((d) => d.name)
+    expect(names).not.toContain(`privee-${ALICE}`)
   })
 })

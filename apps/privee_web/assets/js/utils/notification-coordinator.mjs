@@ -33,7 +33,7 @@ const FAILOVER_TIMEOUT_MS = 500
 
 /**
  * @typedef {object} NotificationCoordinator
- * @property {(sessionName: string) => Promise<boolean>} shouldShowNotification
+ * @property {(sessionName: string, dedupKey?: string) => Promise<boolean>} shouldShowNotification
  * @property {() => void} destroy
  */
 
@@ -50,13 +50,13 @@ export const createNotificationCoordinator = () => {
   const tabId = generateTabId()
 
   /**
-   * Active elections, keyed by sessionName.
+   * Active elections, keyed by dedup key.
    * @type {Map<string, {waiters: Array<(v: boolean) => void>, claimTimeout: ReturnType<typeof setTimeout>, failoverTimeout: ReturnType<typeof setTimeout> | null, claims: Array<{priority: number, claimantTabId: string}>, myClaim: {priority: number, claimantTabId: string}}>}
    */
   const elections = new Map()
 
   /**
-   * Recently shown notifications for dedup, keyed by sessionName.
+   * Recently shown notifications for dedup, keyed by dedup key.
    * @type {Map<string, number>}
    */
   const recentlyShown = new Map()
@@ -94,11 +94,13 @@ export const createNotificationCoordinator = () => {
   /**
    * Determines whether this tab should show the notification for a given
    * sender session.
-   * @param {string} sessionName The sender's session name.
+   * @param {string} sessionName The sender's session name (used for tab priority).
+   * @param {string} [dedupKey] Key identifying the notification across tabs, defaults to `sessionName`.
    * @returns {Promise<boolean>}
    */
-  const shouldShowNotification = (sessionName) => {
-    if (!sessionName) return Promise.resolve(false)
+  const shouldShowNotification = (sessionName, dedupKey = sessionName) => {
+    if (!sessionName || !dedupKey) return Promise.resolve(false)
+    const key = dedupKey
 
     // Prune expired dedup entries
     const now = Date.now()
@@ -106,14 +108,14 @@ export const createNotificationCoordinator = () => {
       if (now - ts >= DEDUP_WINDOW_MS) recentlyShown.delete(key)
     }
 
-    const lastShown = recentlyShown.get(sessionName)
+    const lastShown = recentlyShown.get(key)
     if (lastShown && Date.now() - lastShown < DEDUP_WINDOW_MS) {
       return Promise.resolve(false)
     }
 
-    // Coalesce: if an election for this sessionName is already in progress,
+    // Coalesce: if an election for this key is already in progress,
     // join it but always resolve false — only the initiating call should act.
-    const existing = elections.get(sessionName)
+    const existing = elections.get(key)
     if (existing) {
       return new Promise((resolve) => existing.waiters.push(() => resolve(false)))
     }
@@ -123,7 +125,7 @@ export const createNotificationCoordinator = () => {
 
     return new Promise((resolve) => {
       const claimTimeout = setTimeout(() => {
-        const election = elections.get(sessionName)
+        const election = elections.get(key)
         if (!election) return
 
         const allClaims = [myClaim, ...election.claims]
@@ -131,33 +133,33 @@ export const createNotificationCoordinator = () => {
 
         if (winner.claimantTabId === tabId) {
           // We won — show notification and announce
-          recentlyShown.set(sessionName, Date.now())
-          channel.postMessage({ type: "shown", sessionName, claimantTabId: tabId })
-          resolveElection(sessionName, true)
+          recentlyShown.set(key, Date.now())
+          channel.postMessage({ type: "shown", sessionName: key, claimantTabId: tabId })
+          resolveElection(key, true)
         } else {
           // We lost — wait for winner's "shown", with coordinated failover
           election.failoverTimeout = setTimeout(() => {
             // Winner didn't confirm — re-elect among remaining candidates
             const remaining = allClaims.filter((c) => c.claimantTabId !== winner.claimantTabId)
             if (remaining.length === 0) {
-              resolveElection(sessionName, false)
+              resolveElection(key, false)
               return
             }
 
             const nextWinner = electWinner(remaining)
             if (nextWinner.claimantTabId === tabId) {
-              recentlyShown.set(sessionName, Date.now())
-              channel.postMessage({ type: "shown", sessionName, claimantTabId: tabId })
-              resolveElection(sessionName, true)
+              recentlyShown.set(key, Date.now())
+              channel.postMessage({ type: "shown", sessionName: key, claimantTabId: tabId })
+              resolveElection(key, true)
             } else {
               // Not our turn in failover either — give up
-              resolveElection(sessionName, false)
+              resolveElection(key, false)
             }
           }, FAILOVER_TIMEOUT_MS)
         }
       }, CLAIM_TIMEOUT_MS)
 
-      elections.set(sessionName, {
+      elections.set(key, {
         waiters: [resolve],
         claimTimeout,
         failoverTimeout: null,
@@ -167,7 +169,7 @@ export const createNotificationCoordinator = () => {
 
       channel.postMessage({
         type: "claim",
-        sessionName,
+        sessionName: key,
         priority: myPriority,
         claimantTabId: tabId,
       })

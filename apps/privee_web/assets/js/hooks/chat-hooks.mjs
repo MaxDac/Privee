@@ -1,68 +1,91 @@
-import { addChatInputHandler, decryptChatEntriesText } from "../utils/chat.mjs"
+import { ChatController, Texts } from "../utils/chat.mjs"
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
-import { pushFlash } from "../hooks/flash-hooks.mjs"
+import { UnsupportedBrowserError } from "../utils/signal-locks.mjs"
+import { openClientFor } from "../utils/signal-hook-utils.mjs"
+import { pushFlash } from "./flash-hooks.mjs"
 
 /**
  * @typedef {object} ChatScreenHook
- * @property {HTMLElement} el - The DOM element the hook is attached to
- * @property {Function} pushEvent - Function for sending events back to the LiveView server
- * @property {Function} handleChat - Async handler that decrypts chat entries for the current session and scrolls the chat to the latest entry
+ * @property {HTMLElement} el The `#chat-screen` element.
+ * @property {Function} pushEvent
+ * @property {Function} handleEvent
+ * @property {ChatController | null} [controller]
+ * @property {boolean} [destroyedFlag]
  */
 
 /**
- * Adds hooks to the chat screen to automatically scroll to the bottom of the chat.
+ * Adds the ChatScreen hook.
  * @param {any} Hooks LiveView Hooks
  */
 export const addChatHooks = (Hooks) => {
   Hooks.ChatScreen = {
-    /**
-     * @this {ChatScreenHook}
-     */
-    mounted() {
-      const targetSessionName = this.el.dataset.selectedSessionName
-      if (targetSessionName) {
-        window.name = `privee-chat-${targetSessionName}`
-      }
+    /** @this {ChatScreenHook} */
+    async mounted() {
+      const { selectedSessionName, ownSessionId, peerSessionId } = this.el.dataset
+      if (selectedSessionName) window.name = `privee-chat-${selectedSessionName}`
 
-      // Readding the event listener for the chat menu buttons.
-      const pushEvent = this.pushEvent.bind(this)
-      addSessionNameCopyListener(pushFlash(pushEvent))
+      addSessionNameCopyListener(pushFlash(this.pushEvent.bind(this)))
       addDarkModeToggleHandlers()
-      addChatInputHandler()
-      this.handleChat()
-    },
 
-    /**
-     * @this {ChatScreenHook}
-     */
-    updated() {
-      this.handleChat()
-    },
+      if (!ownSessionId || !peerSessionId) return
 
-    /**
-     * @this {ChatScreenHook}
-     */
-    async handleChat() {
-      const sessionName = this.el.dataset.sessionName
-
-      if (!sessionName) {
+      let client
+      try {
+        client = await openClientFor(this, ownSessionId)
+      } catch (e) {
+        showStartupError(
+          this.el,
+          e instanceof UnsupportedBrowserError ? Texts.unsupported : Texts.failedToStart,
+        )
+        console.error("Unable to open the Signal store", e)
         return
       }
 
-      try {
-        await decryptChatEntriesText(sessionName)
-        scrollElementToEnd(this.el)
-        console.debug("Decryption done")
-      } catch (e) {
-        console.error("An error in the decryption of the chats happened", e)
+      if (this.destroyedFlag) {
+        client.close()
+        return
       }
+
+      const controller = new ChatController({ el: this.el, client, peerId: Number(peerSessionId) })
+      this.controller = controller
+
+      this.handleEvent("peer_keys_ready", () => controller.onPeerKeysReady())
+      this.handleEvent("replenish_prekeys", () => controller.onReplenish())
+      this.handleEvent("identity_superseded", (/** @type {any} */ payload) =>
+        controller.onIdentitySuperseded(payload),
+      )
+
+      await controller.start()
+    },
+
+    /** @this {ChatScreenHook} */
+    updated() {
+      this.controller?.processEntries()
+    },
+
+    /** @this {ChatScreenHook} */
+    destroyed() {
+      this.destroyedFlag = true
+      this.controller?.destroy()
+      this.controller?.client.close()
+      this.controller = null
     },
   }
 }
 
 /**
- * Scrolls the element to the end of the scroll.
- * @param {HTMLElement} element The element to scroll.
+ * @param {HTMLElement} el
+ * @param {string} message
  */
-const scrollElementToEnd = (element) => (element.scrollTop = element.scrollHeight)
+const showStartupError = (el, message) => {
+  const container = el.ownerDocument.getElementById("chat-banner")
+  if (!container) return
+  const banner = el.ownerDocument.createElement("div")
+  banner.id = "chat-banner-error"
+  banner.setAttribute("role", "alert")
+  banner.className =
+    "my-2 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100"
+  banner.textContent = message
+  container.replaceChildren(banner)
+}
