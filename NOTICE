@@ -1,0 +1,39 @@
+Privee
+Copyright (C) 2024-2026 Massimiliano D'Acunzo and the Privee contributors
+
+SPDX-License-Identifier: AGPL-3.0-only
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License, version 3 only, as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+The full licence text is in the LICENSE file.
+
+What this means for forks and self-hosted instances
+---------------------------------------------------
+
+Privee must stay free and open source software. The AGPL-3.0 guarantees it:
+
+* Any copy, fork or modified version you distribute must be licensed under the
+  AGPL-3.0 as a whole, with its complete corresponding source code.
+* If you run a (modified or unmodified) Privee server that other people use over
+  a network, you must offer them the complete source code of the version you
+  run (AGPL-3.0, section 13). Privee does this with the "Source code" link in
+  the web interface and the `source_url` field of `GET /api/app/info`: set the
+  PRIVEE_SOURCE_URL environment variable to your own repository when you deploy
+  a fork.
+* You may not add further restrictions, relicense the code under proprietary
+  or non-copyleft terms, or incorporate it into closed-source software.
+
+Third-party components
+----------------------
+
+* libsignal (https://github.com/signalapp/libsignal), shipped as a WebAssembly
+  build in apps/privee_web/assets/vendor/libsignal-wasm and
+  apps/privee_web/priv/static/wasm, is Copyright Signal Messenger, LLC and
+  licensed under the AGPL-3.0-only.
+* Other dependencies are listed in mix.lock and
+  apps/privee_web/assets/package-lock.json, each under its own licence.

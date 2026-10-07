@@ -13,6 +13,12 @@ Chats are end-to-end encrypted with the Signal Protocol. See
 (local plaintext history, node-local ciphertext, one device per session) and the
 manual release checklist.
 
+Anyone can run their own Privee server. See [Self-hosting](docs/self-hosting.md)
+to deploy it with Docker Compose, Fly.io or a bare release, and
+[Client API](docs/client-api.md) for the API that native clients (such as the
+[Privee Android app](https://github.com/MaxDac/PriveeApp)) use to talk to any
+instance through its DNS name.
+
 ## Toolchain
 
 Versions are pinned in [`.tool-versions`](./.tool-versions) for Erlang/OTP, Elixir and Node.js. CI reads the same file, so use [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/) to install matching versions:
@@ -82,13 +88,16 @@ All workflows live in [`.github/workflows`](./.github/workflows):
 | [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Playwright browser tests, Docker build |
 | [`main.yml`](./.github/workflows/main.yml) | Push to `main`, manual | Runs `ci.yml`, then deploys to Fly.io when it passes |
 
-The deploy job targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
+The deploy job only runs in the upstream `MaxDac/Privee` repository, so forks get CI without trying to deploy. It targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
 
 ```bash
 fly tokens create deploy -a privee
 ```
 
 ## Deployment (Fly.io)
+
+This section describes the upstream instance. To run your own, follow
+[Self-hosting](docs/self-hosting.md).
 
 > **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
 > serving the conversation and are lost on restart, so the chat must run as a
@@ -97,15 +106,19 @@ fly tokens create deploy -a privee
 
 [`fly.toml`](./fly.toml) configures the app. Fly builds the [`Dockerfile`](./Dockerfile) remotely. Each deploy runs migrations through the `release_command` (`/app/bin/migrate`).
 
-Set these runtime secrets on the Fly app:
+Set these runtime secrets on the Fly app (`PHX_HOST` is already set in `fly.toml`):
 
 ```bash
 fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret) DATABASE_URL=ecto://... -a privee
 ```
 
+Required variables: `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST` (the public DNS name of the instance).
+
 Optional variables:
 
-- `PHX_HOST`: defaults to `privee.fly.dev`.
+- `PHX_PORT`: public HTTPS port used in generated URLs, defaults to `443`.
+- `PRIVEE_INSTANCE_NAME`: display name reported by `GET /api/app/info`.
+- `PRIVEE_SOURCE_URL`: link to the source code of the running version, defaults to `https://github.com/MaxDac/Privee`. Forks must point it to their own repository.
 - `POOL_SIZE`: database pool size.
 - `ENABLE_DB_SSL`: enables SSL for the database connection.
 - `DNS_CLUSTER_QUERY`: e.g. `privee.internal`, to cluster multiple machines.
@@ -117,3 +130,12 @@ To deploy manually from a workstation:
 ```bash
 fly deploy --remote-only
 ```
+
+## License
+
+Privee is free software, licensed under the
+[GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`).
+Every fork, modified version or derived work must stay under the same licence,
+and anyone who runs a Privee server for other people must offer them the
+source code of the version they run. You cannot use this code in proprietary or
+non-FOSS software. See [NOTICE](NOTICE) for details and third-party components.

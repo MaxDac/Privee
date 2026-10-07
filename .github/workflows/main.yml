@@ -16,6 +16,8 @@ jobs:
   deploy:
     name: Deploy to Fly.io
     needs: ci
+    # Only the upstream instance deploys; forks run CI without deploying.
+    if: github.repository == 'MaxDac/Privee'
     runs-on: ubuntu-24.04
     environment:
       name: production

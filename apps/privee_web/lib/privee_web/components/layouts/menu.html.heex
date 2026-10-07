@@ -15,6 +15,33 @@
     </.link>
   </div>
   <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+    <a
+      id="source-code-link"
+      href={PriveeWeb.Instance.source_url()}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-zinc-900 dark:text-zinc-50 opacity-70 transition-opacity hover:opacity-100"
+      aria-label="Source code (AGPL-3.0)"
+      title="Source code (AGPL-3.0)"
+    >
+      <svg
+        class="w-6 h-6"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="m8 8-4 4 4 4m8 0 4-4-4-4m-2-3-4 14"
+        />
+      </svg>
+    </a>
     <.button
       id="theme-toggle"
       data-theme-toggle="theme-toggle"

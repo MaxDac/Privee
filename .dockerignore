@@ -10,3 +10,4 @@ apps/privee_web/priv/static/assets
 *.ez
 erl_crash.dump
 /tmp
+.env

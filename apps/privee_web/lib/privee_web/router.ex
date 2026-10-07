@@ -82,6 +82,7 @@ defmodule PriveeWeb.Router do
   scope "/api/app", PriveeWeb.App do
     pipe_through :api
 
+    get "/info", InfoController, :show
     post "/sessions", SessionController, :register
     post "/sessions/log_in", SessionController, :log_in
   end

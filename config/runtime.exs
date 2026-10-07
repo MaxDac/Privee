@@ -10,6 +10,12 @@ import Config
 config :privee_web, PriveeWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Public description of this instance (see `PriveeWeb.Instance`). Forks must
+# point PRIVEE_SOURCE_URL to their own source code (AGPL-3.0, section 13).
+config :privee_web, :instance,
+  name: System.get_env("PRIVEE_INSTANCE_NAME"),
+  source_url: System.get_env("PRIVEE_SOURCE_URL")
+
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :privee_web, PriveeWeb.Endpoint,
@@ -60,10 +66,21 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "privee.fly.dev"
+  # Public host name clients reach this instance at. Generated URLs and the
+  # WebSocket origin check use it, so it must match the DNS name users type.
+  host =
+    System.get_env("PHX_HOST") ||
+      raise """
+      environment variable PHX_HOST is missing.
+      Set it to the public DNS name of this instance, for example: chat.example.com
+      """
+
+  # Public HTTPS port, usually that of the TLS terminating reverse proxy.
+  # Production always requires HTTPS (`force_ssl` in config/prod.exs).
+  public_port = String.to_integer(System.get_env("PHX_PORT", "443"))
 
   config :privee_web, PriveeWeb.Endpoint,
-    url: [host: host, port: 443, scheme: "https"],
+    url: [host: host, port: public_port, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
