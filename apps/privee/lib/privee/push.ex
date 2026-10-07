@@ -100,15 +100,17 @@ defmodule Privee.Push do
 
   @doc false
   def deliver(endpoint) do
-    if public_destination?(endpoint) do
-      post(endpoint)
-    else
-      Logger.info("Push delivery skipped: the endpoint does not resolve to public addresses")
-      :error
+    case destination(endpoint) do
+      {:ok, url, connect_options} ->
+        post(endpoint, url, connect_options)
+
+      :error ->
+        Logger.info("Push delivery skipped: the endpoint does not resolve to public addresses")
+        :error
     end
   end
 
-  defp post(endpoint) do
+  defp post(endpoint, url, connect_options) do
     options =
       [
         body: @body,
@@ -119,12 +121,12 @@ defmodule Privee.Push do
         ],
         retry: false,
         redirect: false,
-        connect_options: [timeout: 5_000],
+        connect_options: [timeout: 5_000] ++ connect_options,
         receive_timeout: 5_000
       ]
       |> Keyword.merge(config()[:req_options] || [])
 
-    case Req.post(endpoint, options) do
+    case Req.post(url, options) do
       {:ok, %Req.Response{status: status}} when status in [404, 410] ->
         PushEndpoint |> where([p], p.endpoint == ^endpoint) |> Repo.delete_all()
         :gone
@@ -184,19 +186,30 @@ defmodule Privee.Push do
   end
 
   # Host names can resolve to internal addresses: every address must be public
-  # right before delivering. Skipped with `:allow_insecure` and when
-  # `:resolve_hosts` is false (tests).
-  defp public_destination?(endpoint) do
+  # right before delivering, and the connection goes to a checked address so a
+  # second DNS answer cannot redirect it. The host name is kept for SNI,
+  # certificate verification and the Host header. Skipped with
+  # `:allow_insecure` and when `:resolve_hosts` is false (tests).
+  defp destination(endpoint) do
     config = config()
 
     if config[:allow_insecure] == true or config[:resolve_hosts] == false do
-      true
+      {:ok, endpoint, []}
     else
-      case resolve(URI.parse(endpoint).host) do
-        [] -> false
-        addresses -> Enum.all?(addresses, &public_address?/1)
+      uri = URI.parse(endpoint)
+
+      with [address | _] = addresses <- resolve(uri.host),
+           true <- Enum.all?(addresses, &public_address?/1) do
+        {:ok, pinned_url(uri, address), [hostname: uri.host]}
+      else
+        _ -> :error
       end
     end
+  end
+
+  @doc false
+  def pinned_url(%URI{} = uri, address) do
+    URI.to_string(%{uri | host: address |> :inet.ntoa() |> to_string()})
   end
 
   defp resolve(host) when is_binary(host) do

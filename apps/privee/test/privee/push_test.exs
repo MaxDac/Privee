@@ -70,6 +70,17 @@ defmodule Privee.PushTest do
     end
   end
 
+  describe "pinned_url/2" do
+    test "replaces the host with the checked address" do
+      uri = URI.parse("https://push.example.com/send/abc?x=1")
+
+      assert Push.pinned_url(uri, {93, 184, 216, 34}) == "https://93.184.216.34/send/abc?x=1"
+
+      assert Push.pinned_url(uri, {0x2606, 0x2800, 0, 0, 0, 0, 0, 1}) ==
+               "https://[2606:2800::1]/send/abc?x=1"
+    end
+  end
+
   describe "register_endpoint/2 and unregister_endpoint/1" do
     test "registers and replaces the endpoint of a token", %{session: session, token: token} do
       assert :ok = Push.register_endpoint(token, @endpoint_url)
