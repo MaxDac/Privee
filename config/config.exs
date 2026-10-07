@@ -40,12 +40,13 @@ config :privee_web, PriveeWeb.Endpoint,
   pubsub_server: Privee.PubSub,
   live_view: [signing_salt: "d5jJFJ3f"]
 
-# Configure esbuild (the version is required)
+# Configure esbuild (the version is required). The libsignal-wasm glue references
+# `import.meta.url` only as a fallback; the client always passes the binary URL.
 config :esbuild,
   version: "0.28.2",
   privee_web: [
     args:
-      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --tree-shaking=true),
+      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=. --tree-shaking=true --log-override:empty-import-meta=silent),
     cd: Path.expand("../apps/privee_web/assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]

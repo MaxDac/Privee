@@ -79,5 +79,11 @@ module.exports = defineConfig([
 
     files: ["**/*.mjs"],
   },
-  globalIgnores(["**/types/**/*.d.ts", "**/*.cjs", "playwright-report/**", "test-results/**"]),
+  globalIgnores([
+    "**/types/**/*.d.ts",
+    "**/*.cjs",
+    "vendor/libsignal-wasm/**",
+    "playwright-report/**",
+    "test-results/**",
+  ]),
 ])

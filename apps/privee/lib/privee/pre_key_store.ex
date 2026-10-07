@@ -8,13 +8,15 @@ defmodule Privee.PreKeyStore do
         "identity_key" => base64,        # 33 bytes, 0x05-prefixed Curve25519 key
         "registration_id" => 0..16383,
         "signed_prekey" => %{"key_id" => id, "public_key" => base64, "signature" => base64},
+        "kyber_prekey" => %{"key_id" => id, "public_key" => base64, "signature" => base64},
         "one_time_prekeys" => [%{"key_id" => id, "public_key" => base64}],
         "max_opk_id" => id               # highest one-time prekey id ever accepted
       }
 
   Invariants, enforced on every write:
 
-    * all keys are valid Curve25519 public keys, signatures are 64 bytes;
+    * all keys are valid Curve25519 public keys, the last-resort Kyber prekey is a
+      Kyber-1024 public key (1569 bytes, 0x08-prefixed), signatures are 64 bytes;
     * one-time prekey ids are unique, positive and strictly greater than any id
       previously accepted for the current identity, so an id that has already been
       served can never be advertised again;
@@ -31,11 +33,13 @@ defmodule Privee.PreKeyStore do
   @max_one_time_prekeys 100
   @max_key_id 0xFFFFFF
   @max_registration_id 0x3FFF
+  @kyber_key_size 1568
 
   @type public_bundle :: %{
           identity_key: String.t(),
           registration_id: non_neg_integer(),
           signed_prekey: %{key_id: pos_integer(), public_key: String.t(), signature: String.t()},
+          kyber_prekey: %{key_id: pos_integer(), public_key: String.t(), signature: String.t()},
           one_time_prekey: %{key_id: pos_integer(), public_key: String.t()} | nil
         }
 
@@ -78,12 +82,17 @@ defmodule Privee.PreKeyStore do
     end
   end
 
-  @doc "Replaces the signed prekey, provided `identity_key` is the current identity."
-  @spec rotate_signed_prekey(non_neg_integer(), String.t(), map()) :: :ok | {:error, error()}
-  def rotate_signed_prekey(session_id, identity_key, attrs) do
-    with {:ok, spk} <- validate_signed_prekey(attrs) do
+  @doc """
+  Replaces the signed prekey and the last-resort Kyber prekey, provided
+  `identity_key` is the current identity.
+  """
+  @spec rotate_signed_prekey(non_neg_integer(), String.t(), map(), map()) ::
+          :ok | {:error, error()}
+  def rotate_signed_prekey(session_id, identity_key, spk_attrs, kyber_attrs) do
+    with {:ok, spk} <- validate_signed_prekey(spk_attrs),
+         {:ok, kyber} <- validate_kyber_prekey(kyber_attrs) do
       with_identity(session_id, identity_key, fn bundle ->
-        {:write, Map.put(bundle, "signed_prekey", spk)}
+        {:write, bundle |> Map.put("signed_prekey", spk) |> Map.put("kyber_prekey", kyber)}
       end)
     end
   end
@@ -266,6 +275,7 @@ defmodule Privee.PreKeyStore do
 
   defp to_public(bundle, opk) do
     spk = bundle["signed_prekey"]
+    kyber = bundle["kyber_prekey"]
 
     %{
       identity_key: bundle["identity_key"],
@@ -274,6 +284,11 @@ defmodule Privee.PreKeyStore do
         key_id: spk["key_id"],
         public_key: spk["public_key"],
         signature: spk["signature"]
+      },
+      kyber_prekey: %{
+        key_id: kyber["key_id"],
+        public_key: kyber["public_key"],
+        signature: kyber["signature"]
       },
       one_time_prekey: opk && %{key_id: opk["key_id"], public_key: opk["public_key"]}
     }
@@ -289,12 +304,14 @@ defmodule Privee.PreKeyStore do
     with {:ok, identity_key} <- validate_public_key(field(attrs, "identity_key")),
          {:ok, registration_id} <- validate_registration_id(field(attrs, "registration_id")),
          {:ok, spk} <- validate_signed_prekey(field(attrs, "signed_prekey")),
+         {:ok, kyber} <- validate_kyber_prekey(field(attrs, "kyber_prekey")),
          {:ok, opks} <- validate_one_time_prekeys(field(attrs, "one_time_prekeys") || []) do
       {:ok,
        %{
          "identity_key" => identity_key,
          "registration_id" => registration_id,
          "signed_prekey" => spk,
+         "kyber_prekey" => kyber,
          "one_time_prekeys" => opks,
          "max_opk_id" => max_key_id(opks, 0)
        }}
@@ -312,6 +329,16 @@ defmodule Privee.PreKeyStore do
   end
 
   defp validate_signed_prekey(_), do: {:error, :invalid_bundle}
+
+  defp validate_kyber_prekey(%{} = attrs) do
+    with {:ok, key_id} <- validate_key_id(field(attrs, "key_id")),
+         {:ok, public_key} <- validate_kyber_key(field(attrs, "public_key")),
+         {:ok, signature} <- validate_signature(field(attrs, "signature")) do
+      {:ok, %{"key_id" => key_id, "public_key" => public_key, "signature" => signature}}
+    end
+  end
+
+  defp validate_kyber_prekey(_), do: {:error, :invalid_bundle}
 
   defp validate_one_time_prekeys(prekeys) when is_list(prekeys) do
     if length(prekeys) > @max_one_time_prekeys do
@@ -354,14 +381,21 @@ defmodule Privee.PreKeyStore do
   defp validate_one_time_prekey(_), do: {:error, :invalid_bundle}
 
   defp validate_public_key(value) do
-    case decode(value) do
+    case decode(value, 33) do
       {:ok, <<5, _::binary-size(32)>>} -> {:ok, value}
       _ -> {:error, :invalid_bundle}
     end
   end
 
+  defp validate_kyber_key(value) do
+    case decode(value, @kyber_key_size + 1) do
+      {:ok, <<8, _::binary-size(@kyber_key_size)>>} -> {:ok, value}
+      _ -> {:error, :invalid_bundle}
+    end
+  end
+
   defp validate_signature(value) do
-    case decode(value) do
+    case decode(value, 64) do
       {:ok, <<_::binary-size(64)>>} -> {:ok, value}
       _ -> {:error, :invalid_bundle}
     end
@@ -376,8 +410,12 @@ defmodule Privee.PreKeyStore do
 
   defp validate_registration_id(_), do: {:error, :invalid_bundle}
 
-  defp decode(value) when is_binary(value) and byte_size(value) <= 128, do: Base.decode64(value)
-  defp decode(_), do: :error
+  # Rejects oversized input before decoding it.
+  defp decode(value, max_bytes)
+       when is_binary(value) and byte_size(value) <= div(max_bytes + 2, 3) * 4,
+       do: Base.decode64(value)
+
+  defp decode(_value, _max_bytes), do: :error
 
   # Accepts string or atom keys without creating atoms.
   defp field(map, key) do

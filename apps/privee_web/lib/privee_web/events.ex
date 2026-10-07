@@ -64,7 +64,15 @@ defmodule PriveeWeb.Events do
 
     Endpoint.broadcast(chat_topic, @chat_created_event, message)
     Endpoint.broadcast(receiver_topic, @message_received_event, message)
+    Privee.Push.notify(to)
   end
+
+  @doc "Topic of the conversation between two sessions."
+  def chat_topic(session_id_1, session_id_2),
+    do: get_chat_subscription_topic(session_id_1, session_id_2)
+
+  @doc "Topic on which `session_id` is notified of the messages it receives."
+  def receiver_topic(session_id), do: get_receiver_subscription_topic(session_id)
 
   defp get_chat_subscription_topic(session_id_1, session_id_2) do
     if session_id_1 > session_id_2 do

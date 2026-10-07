@@ -10,7 +10,7 @@ defmodule PriveeWeb.ChatHelpersTest do
   import PriveeWeb.Chat.ChatHelpers
 
   defp msg(from, to, id \\ Ecto.UUID.generate()) do
-    %Message{id: id, from: from, to: to, type: 1, body: "YQ==", client_nonce: "n-#{id}"}
+    %Message{id: id, from: from, to: to, type: 2, body: "YQ==", client_nonce: "n-#{id}"}
   end
 
   describe "parse_messages/1" do

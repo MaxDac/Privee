@@ -10,7 +10,6 @@
     "e2e:install": "playwright install --with-deps chromium"
   },
   "dependencies": {
-    "@privacyresearch/libsignal-protocol-typescript": "0.0.16",
     "daisyui": "^5.7.47"
   },
   "devDependencies": {

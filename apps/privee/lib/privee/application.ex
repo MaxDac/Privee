@@ -17,9 +17,8 @@ defmodule Privee.Application do
       {DNSCluster,
        query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
       {Phoenix.PubSub, name: Privee.PubSub},
-      Privee.Chats.TableOwner
-      # Start a worker by calling: Privee.Worker.start_link(arg)
-      # {Privee.Worker, arg}
+      Privee.Chats.TableOwner,
+      {Task.Supervisor, name: Privee.TaskSupervisor}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Privee.Supervisor)
