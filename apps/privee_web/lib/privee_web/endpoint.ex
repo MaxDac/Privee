@@ -25,7 +25,8 @@ defmodule PriveeWeb.Endpoint do
     from: :privee_web,
     gzip: not code_reloading?,
     cache_control_for_etags: "public, max-age=31536000, immutable",
-    only: PriveeWeb.static_paths()
+    only: PriveeWeb.static_paths(),
+    raise_on_missing_only: code_reloading?
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

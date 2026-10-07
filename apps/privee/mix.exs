@@ -9,7 +9,7 @@ defmodule Privee.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.15",
+      elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -36,14 +36,14 @@ defmodule Privee.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:bcrypt_elixir, "~> 3.3.2"},
-      {:dns_cluster, "~> 0.2.0"},
-      {:phoenix_pubsub, "~> 2.2.0"},
-      {:ecto_sql, "~> 3.13.5"},
-      {:postgrex, "~> 0.22.0"},
-      {:jason, "~> 1.4.4"},
-      {:swoosh, "~> 1.25"},
-      {:req, "~> 0.5.17"}
+      {:bcrypt_elixir, "~> 3.3"},
+      {:dns_cluster, "~> 0.3.1"},
+      {:phoenix_pubsub, "~> 2.3"},
+      {:ecto_sql, "~> 3.14"},
+      {:postgrex, "~> 0.22.4"},
+      {:jason, "~> 1.4"},
+      {:swoosh, "~> 1.28"},
+      {:req, "~> 0.7.5"}
     ]
   end
 

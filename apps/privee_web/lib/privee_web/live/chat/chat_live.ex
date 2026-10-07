@@ -3,7 +3,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   This component represents a privee, or a chat where two sessions can actually talk.
   """
 
-  use PriveeWeb, :chat_live_view
+  use PriveeWeb, :live_view
 
   alias Privee.Chats
   alias Privee.Sessions

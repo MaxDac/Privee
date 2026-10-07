@@ -1,9 +1,9 @@
 defmodule PriveeWeb.SessionAuthTest do
   use PriveeWeb.ConnCase, async: true
 
+  alias Phoenix.LiveView
   alias Privee.Sessions
   alias PriveeWeb.SessionAuth
-  alias Phoenix.LiveView
 
   import Privee.SessionsFixtures
 

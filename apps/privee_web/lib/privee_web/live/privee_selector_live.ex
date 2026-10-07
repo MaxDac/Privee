@@ -55,9 +55,9 @@ defmodule PriveeWeb.PriveeSelectorLive do
     changeset = get_privee_form_changeset(params, socket)
 
     # Not showing the error when first accessing the page
-    changeset = if params == %{}, do: changeset, else: assign_changeset_action(changeset)
+    form_opts = if params == %{}, do: [], else: [action: :validate]
 
-    assign(socket, :form, to_form(changeset))
+    assign(socket, :form, to_form(changeset, form_opts))
   end
 
   defp get_privee_form_changeset(params, socket) do

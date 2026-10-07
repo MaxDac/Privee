@@ -6,7 +6,7 @@ defmodule Privee.Sessions do
   import Ecto.Query, warn: false
 
   alias Privee.Repo
-  alias Privee.Sessions.{PriveeForm, Message, Session, SessionToken}
+  alias Privee.Sessions.{Message, PriveeForm, Session, SessionToken}
 
   @doc """
   Gets a session by the recovery phrase and the password.

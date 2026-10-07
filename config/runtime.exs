@@ -6,6 +6,27 @@ import Config
 # and secrets from environment variables or elsewhere. Do not define
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
+
+config :privee_web, PriveeWeb.Endpoint,
+  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+
+if config_env() == :dev do
+  # Reload browser tabs when matching files change.
+  config :privee_web, PriveeWeb.Endpoint,
+    live_reload: [
+      web_console_logger: true,
+      patterns: [
+        # Static assets, except user uploads
+        ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,
+        # Gettext translations
+        ~r"priv/gettext/.*\.po$"E,
+        # Router, Controllers, LiveViews and LiveComponents
+        ~r"lib/privee_web/router\.ex$"E,
+        ~r"lib/privee_web/(controllers|live|components)/.*\.(ex|heex)$"E
+      ]
+    ]
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -27,8 +48,6 @@ if config_env() == :prod do
     # pool_count: 4,
     socket_options: maybe_ipv6
 
-  import Config
-
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
@@ -41,12 +60,14 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
+  host = System.get_env("PHX_HOST") || "privee.fly.dev"
+
   config :privee_web, PriveeWeb.Endpoint,
+    url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
-      port: String.to_integer(System.get_env("PORT") || "4000")
+      ip: {0, 0, 0, 0, 0, 0, 0, 0}
     ],
     secret_key_base: secret_key_base,
     server: true
@@ -111,21 +132,6 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  # Configure DNS cluster query based on deployment environment
-  dns_cluster_query =
-    cond do
-      System.get_env("KUBERNETES_SERVICE_HOST") ->
-        # Azure AKS: Use headless service for DNS-based clustering
-        System.get_env("DNS_CLUSTER_QUERY") || "privee-app-svc-headless.default.svc.cluster.local"
-
-      System.get_env("FLY_APP_NAME") ->
-        # Fly.io: Use internal domain for clustering
-        System.get_env("DNS_CLUSTER_QUERY") || "#{System.get_env("FLY_APP_NAME")}.internal"
-
-      true ->
-        # Default/local development
-        System.get_env("DNS_CLUSTER_QUERY")
-    end
-
-  config :privee, :dns_cluster_query, dns_cluster_query
+  # DNS_CLUSTER_QUERY is set by rel/env.sh.eex when running on Fly.io
+  config :privee, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 end

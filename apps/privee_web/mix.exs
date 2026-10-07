@@ -9,11 +9,12 @@ defmodule PriveeWeb.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.15",
+      elixir: "~> 1.20",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader]
     ]
   end
@@ -37,21 +38,21 @@ defmodule PriveeWeb.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.8.5"},
+      {:phoenix, "~> 1.8.15"},
       {:phoenix_ecto, "~> 4.7"},
-      {:phoenix_html, "~> 4.3.0"},
-      {:phoenix_live_reload, "~> 1.6.2", only: :dev},
-      {:phoenix_live_view, "~> 1.1.28"},
-      {:lazy_html, "~> 0.1.11", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.7"},
-      {:esbuild, "~> 0.10.0", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.4.1", runtime: Mix.env() == :dev},
-      {:telemetry_metrics, "~> 1.1.0"},
-      {:telemetry_poller, "~> 1.3.0"},
-      {:gettext, "~> 1.0.2"},
+      {:phoenix_html, "~> 4.3"},
+      {:phoenix_live_reload, "~> 1.7", only: :dev},
+      {:phoenix_live_view, "~> 1.2.12"},
+      {:lazy_html, "~> 0.1.13", only: :test},
+      {:phoenix_live_dashboard, "~> 0.9.1"},
+      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.5.1", runtime: Mix.env() == :dev},
+      {:telemetry_metrics, "~> 1.2"},
+      {:telemetry_poller, "~> 1.3"},
+      {:gettext, "~> 1.0"},
       {:privee, in_umbrella: true},
-      {:jason, "~> 1.4.4"},
-      {:bandit, "~> 1.10.4"}
+      {:jason, "~> 1.4"},
+      {:bandit, "~> 1.12"}
     ]
   end
 

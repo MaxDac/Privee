@@ -1,5 +1,5 @@
 defmodule Privee.Application do
-  # See https://hexdocs.pm/elixir/Application.html
+  # See https://elixir.hexdocs.pm/Application.html
   # for more information on OTP Applications
   @moduledoc false
 
@@ -14,7 +14,8 @@ defmodule Privee.Application do
 
     children = [
       Privee.Repo,
-      {DNSCluster, query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
+      {DNSCluster,
+       query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
       {Phoenix.PubSub, name: Privee.PubSub}
       # Start a worker by calling: Privee.Worker.start_link(arg)
       # {Privee.Worker, arg}

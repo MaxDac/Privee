@@ -38,12 +38,11 @@ defmodule PriveeWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: PriveeWeb.Layouts]
+      use Phoenix.Controller, formats: [:html, :json]
+
+      use Gettext, backend: PriveeWeb.Gettext
 
       import Plug.Conn
-      import PriveeWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -51,21 +50,11 @@ defmodule PriveeWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {PriveeWeb.Layouts, :app}
+      use Phoenix.LiveView
+
+      on_mount PriveeWeb.JsFlash
 
       unquote(html_helpers())
-      unquote(js_flash_helpers())
-    end
-  end
-
-  def chat_live_view do
-    quote do
-      use Phoenix.LiveView,
-        layout: {PriveeWeb.Layouts, :chat_layout}
-
-      unquote(html_helpers())
-      unquote(js_flash_helpers())
     end
   end
 
@@ -97,67 +86,15 @@ defmodule PriveeWeb do
 
       # HTML escaping functionality
       import Phoenix.HTML
-      # Core UI components and translation
+      # Core UI components
       import PriveeWeb.CoreComponents
-      import PriveeWeb.Gettext
 
-      # Shortcut for generating JS commands
-      alias PriveeWeb.Layouts
+      # Common modules used in templates
       alias Phoenix.LiveView.JS
+      alias PriveeWeb.Layouts
 
       # Routes generation with the ~p sigil
       unquote(verified_routes())
-
-      @doc """
-      Assign a default action to the changeset. This function is useful when the form
-      that uses the changeset does not have an action, so from the documentation it does not
-      show the error.
-
-      Please check [here](https://stackoverflow.com/a/43453618/8620481) for more information.
-      """
-      @spec assign_changeset_action(changeset :: Ecto.Changeset.t(), action :: atom()) ::
-              Ecto.Changeset.t()
-      def assign_changeset_action(changeset, action \\ :insert)
-      def assign_changeset_action(%{valid?: true} = changeset, _), do: changeset
-      def assign_changeset_action(changeset, action), do: %{changeset | action: action}
-    end
-  end
-
-  defp js_flash_helpers do
-    quote do
-      @doc """
-      Handles JavaScript-triggered flash messages.
-
-      This function is automatically included in all LiveViews to handle
-      flash messages sent from client-side JavaScript using the existing
-      server-side flash system.
-      """
-      def handle_event("js_flash", %{"kind" => kind, "message" => message} = params, socket) do
-        flash_title = Map.get(params, "title")
-        kind_atom = String.to_existing_atom(kind)
-
-        final_message =
-          if flash_title do
-            "#{flash_title} #{message}"
-          else
-            message
-          end
-
-        {:noreply, put_flash(socket, kind_atom, final_message)}
-      rescue
-        ArgumentError ->
-          # Invalid kind provided, default to info
-          flash_title = Map.get(params, "title")
-
-          final_message =
-            if flash_title do
-              "#{flash_title} #{message}"
-            else
-              message
-            end
-
-          {:noreply, put_flash(socket, :info, final_message)}
-      end
     end
   end
 

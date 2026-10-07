@@ -1,39 +1,41 @@
-<section class="flex flex-col h-[calc(100dvh-80px)] justify-between">
-  <.header class="h-10 pt-5 pb-10 text-center">
-    {@selected_session_name}
-  </.header>
-  <main
-    id="chat-screen"
-    class="flex-grow overflow-auto"
-    phx-hook="ChatScreen"
-    data-session-name={@current_session.session_name}
-    data-selected-session-name={@selected_session_name}
-  >
-    <.chat_screen
-      current_session={@current_session}
-      selected_session={@selected_session}
-      streams={@streams}
-    />
-  </main>
-  <footer class="px-5 py-5">
-    <.simple_form
-      for={@form}
-      id="chat-form"
-      phx-change="validate"
-      phx-submit="create"
-      class="space-y-4"
+<Layouts.chat flash={@flash} current_session={@current_session} navigate_to={@navigate_to}>
+  <section class="flex flex-col h-[calc(100dvh-80px)] justify-between">
+    <.header class="h-10 pt-5 pb-10 text-center">
+      {@selected_session_name}
+    </.header>
+    <main
+      id="chat-screen"
+      class="flex-grow overflow-auto"
+      phx-hook="ChatScreen"
+      data-session-name={@current_session.session_name}
+      data-selected-session-name={@selected_session_name}
     >
-      <.input type="hidden" field={@form[:from]} value={@current_session.id} />
-
-      <.input type="hidden" field={@form[:to]} value={@selected_session.id} />
-
-      <.input
-        type="hidden"
-        field={@form[:sender_session_name]}
-        value={@current_session.session_name}
+      <.chat_screen
+        current_session={@current_session}
+        selected_session={@selected_session}
+        streams={@streams}
       />
+    </main>
+    <footer class="px-5 py-5">
+      <.simple_form
+        for={@form}
+        id="chat-form"
+        phx-change="validate"
+        phx-submit="create"
+        class="space-y-4"
+      >
+        <.input type="hidden" field={@form[:from]} value={@current_session.id} />
 
-      <.chat_input form={@form} />
-    </.simple_form>
-  </footer>
-</section>
+        <.input type="hidden" field={@form[:to]} value={@selected_session.id} />
+
+        <.input
+          type="hidden"
+          field={@form[:sender_session_name]}
+          value={@current_session.session_name}
+        />
+
+        <.chat_input form={@form} />
+      </.simple_form>
+    </footer>
+  </section>
+</Layouts.chat>
