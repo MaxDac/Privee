@@ -34,5 +34,3 @@ erl_crash.dump
 # Playwright reports and traces
 playwright-report/
 test-results/
-# Self-hosting secrets (see .env.example)
-/.env

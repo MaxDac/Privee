@@ -1,7 +1,7 @@
 defmodule PriveeWeb.Plugs.ForwardedRemoteIp do
   @moduledoc """
   Sets `conn.remote_ip` to the client address reported by trusted reverse
-  proxies, so per-client rate limits work behind Caddy, nginx or Fly.io.
+  proxies, so per-client rate limits work behind Fly.io's proxy.
 
   Configured with `config :privee_web, :proxy_hops, n` (`PROXY_HOPS` at
   runtime): the number of trusted proxies in front of the app. The client is

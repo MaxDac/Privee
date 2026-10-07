@@ -15,7 +15,7 @@ manual release checklist, and the [E2EE audit](docs/security/e2ee-audit.md) for
 the independent review of the web, server and Android implementations.
 
 Anyone can run their own Privee server. See [Self-hosting](docs/self-hosting.md)
-to deploy it with Docker Compose, Fly.io or a bare release, and
+to deploy it on Fly.io, and
 [Client API](docs/client-api.md) for the API that native clients (such as the
 [Privee Android app](https://github.com/MaxDac/PriveeApp)) use to talk to any
 instance through its DNS name.

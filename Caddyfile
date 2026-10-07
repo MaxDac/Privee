@@ -1,9 +1,0 @@
-# Terminates TLS for the Privee instance with automatic Let's Encrypt
-# certificates. PHX_HOST must be a DNS name pointing to this server.
-# Only used by docker-compose.yml on your own server; Fly.io deployments
-# (fly.toml) get TLS from Fly and ignore this file.
-{$PHX_HOST} {
-	encode zstd gzip
-	# Caddy sets X-Forwarded-Proto, which Privee uses for force_ssl.
-	reverse_proxy privee:4000
-}

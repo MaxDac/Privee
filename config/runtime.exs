@@ -17,7 +17,7 @@ config :privee_web, :instance,
   source_url: System.get_env("PRIVEE_SOURCE_URL")
 
 # Number of trusted reverse proxies that append to X-Forwarded-For (see
-# `PriveeWeb.Plugs.ForwardedRemoteIp`). Set it to 1 behind Caddy or Fly.io.
+# `PriveeWeb.Plugs.ForwardedRemoteIp`). fly.toml sets it to 1 for Fly's proxy.
 config :privee_web, :proxy_hops, String.to_integer(System.get_env("PROXY_HOPS", "0"))
 
 if config_env() == :dev do
