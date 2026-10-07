@@ -5,16 +5,21 @@
  * sessions used in the same browser never share or overwrite key material.
  */
 
-export const DB_VERSION = 1
+/**
+ * Version 2: libsignal (PQXDH) replaced libsignal-protocol-typescript. Key material,
+ * pinned identities and protocol metadata of version 1 are incompatible and dropped;
+ * the local history and the pending outbox (re-encrypted on flush) are kept.
+ */
+export const DB_VERSION = 2
 
 export const LEGACY_DB_NAME = "SignalKeyStore"
 
 /** Object stores. All use out-of-line keys unless a key path is given. */
 export const Stores = Object.freeze({
+  /** Serialized libsignal state (protocol) and the own public identity key. */
   identity: "identity",
-  prekeys: "prekeys",
+  /** Lifecycle of signed (and Kyber last-resort) prekeys: {keyId, createdAt, retiredAt?}. */
   signedPrekeys: "signed_prekeys",
-  sessions: "sessions",
   trustedIdentities: "trusted_identities",
   meta: "meta",
   history: "history",
@@ -53,19 +58,27 @@ export const transactionDone = (tx) =>
     tx.onabort = () => reject(tx.error || new Error("Transaction aborted"))
   })
 
+/** Stores of version 1 holding key material of the previous library. */
+const LEGACY_STORES = ["prekeys", "sessions"]
+
 /**
  * @param {IDBDatabase} db
+ * @param {IDBTransaction} tx Version change transaction.
+ * @param {number} oldVersion
  */
-const upgrade = (db) => {
+const upgrade = (db, tx, oldVersion) => {
+  for (const name of LEGACY_STORES) {
+    if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name)
+  }
+
   for (const name of [
     Stores.identity,
-    Stores.prekeys,
     Stores.signedPrekeys,
-    Stores.sessions,
     Stores.trustedIdentities,
     Stores.meta,
   ]) {
     if (!db.objectStoreNames.contains(name)) db.createObjectStore(name)
+    else if (oldVersion < 2) tx.objectStore(name).clear()
   }
 
   if (!db.objectStoreNames.contains(Stores.history)) {
@@ -94,7 +107,8 @@ export const openSignalDb = (ownSessionId, factory = globalThis.indexedDB) =>
     }
 
     const request = factory.open(dbNameFor(ownSessionId), DB_VERSION)
-    request.onupgradeneeded = () => upgrade(request.result)
+    request.onupgradeneeded = (event) =>
+      upgrade(request.result, /** @type {IDBTransaction} */ (request.transaction), event.oldVersion)
     request.onerror = () => reject(request.error)
     request.onblocked = () => reject(new Error("Database upgrade blocked by another tab"))
     request.onsuccess = () => {

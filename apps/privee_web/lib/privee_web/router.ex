@@ -2,6 +2,7 @@ defmodule PriveeWeb.Router do
   use PriveeWeb, :router
 
   import PriveeWeb.SessionAuth
+  import PriveeWeb.App.AppAuth, only: [require_app_session: 2]
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -11,6 +12,14 @@ defmodule PriveeWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_session
+  end
+
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
+  pipeline :app_session do
+    plug :require_app_session
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -66,5 +75,23 @@ defmodule PriveeWeb.Router do
 
     get "/share/:session_name", SessionShareController, :share
     delete "/sessions/log_out", SessionController, :delete
+  end
+
+  ## Native app API
+
+  scope "/api/app", PriveeWeb.App do
+    pipe_through :api
+
+    post "/sessions", SessionController, :register
+    post "/sessions/log_in", SessionController, :log_in
+  end
+
+  scope "/api/app", PriveeWeb.App do
+    pipe_through [:api, :app_session]
+
+    get "/session", SessionController, :show
+    delete "/session", SessionController, :delete
+    put "/push", PushController, :update
+    delete "/push", PushController, :delete
   end
 end

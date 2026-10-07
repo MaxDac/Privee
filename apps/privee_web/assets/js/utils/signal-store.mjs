@@ -1,15 +1,20 @@
 /**
- * Operation-scoped implementation of the libsignal `StorageType`.
+ * Operation-scoped, staged access to the IndexedDB of a Privee session.
  *
  * A `SignalStore` instance is created for one logical operation (for example
- * "encrypt a message and queue it in the outbox"). Every mutation performed by
- * the library or by our code is staged in memory; reads see staged writes first.
+ * "encrypt a message and queue it in the outbox"). The libsignal state is a
+ * single serialized snapshot (`loadProtocol`/`saveProtocol`); every mutation
+ * is staged in memory and reads see staged writes first.
  * `commit()` then writes everything in a single IndexedDB transaction with
  * synchronous requests, so ratchet state, history and outbox never diverge.
  * A failed operation simply discards the stage.
  */
 
 import { Stores, promisifyRequest, transactionDone } from "./signal-db.mjs"
+import { Protocol } from "./signal-wasm.mjs"
+
+const PROTOCOL_KEY = "protocol"
+const PUBLIC_KEY = "public_key"
 
 const DELETED = Symbol("deleted")
 
@@ -29,7 +34,7 @@ const RECORD_KEYS = /** @type {Record<string, string>} */ ({
 export class IdentityChangedError extends Error {
   /**
    * @param {string} peer
-   * @param {ArrayBuffer} identityKey
+   * @param {Uint8Array} identityKey
    */
   constructor(peer, identityKey) {
     super(`The identity key of ${peer} changed`)
@@ -54,17 +59,9 @@ export const equalBuffers = (a, b) => {
 }
 
 /**
- * The library uses both `name` and `name.deviceId` as identity keys: normalize to name.
- * @param {string | number} encodedAddress
- * @returns {string}
- */
-export const addressName = (encodedAddress) => String(encodedAddress).replace(/\.\d+$/, "")
-
-/**
  * @typedef {object} TrustRecord
- * @property {ArrayBuffer} publicKey Pinned identity key.
- * @property {ArrayBuffer} [pendingKey] Changed key seen but not yet approved.
- * @property {ArrayBuffer} [approvedKey] Changed key approved by the user.
+ * @property {Uint8Array} publicKey Pinned identity key.
+ * @property {Uint8Array} [pendingKey] Changed key seen but not yet approved.
  */
 
 export class SignalStore {
@@ -195,57 +192,55 @@ export class SignalStore {
     this.cleared.clear()
   }
 
-  // -- Identity -------------------------------------------------------------
+  // -- Protocol state -------------------------------------------------------
 
-  getIdentityKeyPair() {
-    return this.get(Stores.identity, "keyPair")
-  }
-
-  getLocalRegistrationId() {
-    return this.get(Stores.identity, "registrationId")
+  /**
+   * Restores the libsignal state. The caller must free() the returned object.
+   * @returns {Promise<Protocol | undefined>}
+   */
+  async loadProtocol() {
+    /** @type {Uint8Array | undefined} */
+    const bytes = await this.get(Stores.identity, PROTOCOL_KEY)
+    return bytes ? Protocol.restore(bytes) : undefined
   }
 
   /**
-   * Never waits on the UI: unknown peers are trusted on first use, changed keys
-   * only once approved.
-   * @param {string} identifier
-   * @param {ArrayBuffer} identityKey
+   * Stages the libsignal state and the own public identity key.
+   * @param {Protocol} protocol
+   */
+  saveProtocol(protocol) {
+    this.put(Stores.identity, PROTOCOL_KEY, protocol.serialize())
+    this.put(Stores.identity, PUBLIC_KEY, protocol.identityKey())
+  }
+
+  /** @returns {Promise<Uint8Array | undefined>} */
+  publicIdentityKey() {
+    return this.get(Stores.identity, PUBLIC_KEY)
+  }
+
+  // -- Trust ----------------------------------------------------------------
+
+  /**
+   * The user-facing trust decision. Unknown peers are trusted on first use,
+   * changed keys only once approved.
+   * @param {string} name
+   * @param {Uint8Array} identityKey
    * @returns {Promise<boolean>}
    */
-  async isTrustedIdentity(identifier, identityKey) {
+  async isTrustedIdentity(name, identityKey) {
     /** @type {TrustRecord | undefined} */
-    const record = await this.get(Stores.trustedIdentities, addressName(identifier))
-    if (!record) return true
-    return (
-      equalBuffers(record.publicKey, identityKey) || equalBuffers(record.approvedKey, identityKey)
-    )
+    const record = await this.getTrust(name)
+    return !record || equalBuffers(record.publicKey, identityKey)
   }
 
   /**
-   * Pins the identity of a peer. Refuses (throws) to replace a pinned key that
-   * was not approved: the library does not always await `isTrustedIdentity`.
-   * @param {string} encodedAddress
-   * @param {ArrayBuffer} identityKey
-   * @returns {Promise<boolean>} Whether a previous key was replaced.
+   * Pins the identity of a peer seen for the first time.
+   * @param {string} name
+   * @param {Uint8Array} identityKey
    */
-  async saveIdentity(encodedAddress, identityKey) {
-    const name = addressName(encodedAddress)
-    /** @type {TrustRecord | undefined} */
-    const record = await this.get(Stores.trustedIdentities, name)
-
-    if (!record) {
+  async pinIdentity(name, identityKey) {
+    if (!(await this.getTrust(name)))
       this.put(Stores.trustedIdentities, name, { publicKey: identityKey })
-      return false
-    }
-
-    if (equalBuffers(record.publicKey, identityKey)) return false
-
-    if (equalBuffers(record.approvedKey, identityKey)) {
-      this.put(Stores.trustedIdentities, name, { publicKey: identityKey })
-      return true
-    }
-
-    throw new IdentityChangedError(name, identityKey)
   }
 
   /**
@@ -253,87 +248,6 @@ export class SignalStore {
    * @returns {Promise<TrustRecord | undefined>}
    */
   getTrust(name) {
-    return this.get(Stores.trustedIdentities, addressName(name))
-  }
-
-  // -- Prekeys --------------------------------------------------------------
-
-  /**
-   * @param {string | number} keyId
-   */
-  loadPreKey(keyId) {
-    const id = Number(keyId)
-    if (!id) return Promise.resolve(undefined)
-    return this.get(Stores.prekeys, id)
-  }
-
-  /**
-   * @param {string | number} keyId
-   * @param {import("@privacyresearch/libsignal-protocol-typescript").KeyPairType} keyPair
-   */
-  storePreKey(keyId, keyPair) {
-    this.put(Stores.prekeys, Number(keyId), keyPair)
-    return Promise.resolve()
-  }
-
-  /**
-   * @param {string | number} keyId
-   */
-  removePreKey(keyId) {
-    this.delete(Stores.prekeys, Number(keyId))
-    return Promise.resolve()
-  }
-
-  /**
-   * @param {string | number} keyId
-   */
-  async loadSignedPreKey(keyId) {
-    const record = await this.get(Stores.signedPrekeys, Number(keyId))
-    return record?.keyPair
-  }
-
-  /**
-   * @param {string | number} keyId
-   * @param {import("@privacyresearch/libsignal-protocol-typescript").KeyPairType} keyPair
-   */
-  async storeSignedPreKey(keyId, keyPair) {
-    const id = Number(keyId)
-    const existing = await this.get(Stores.signedPrekeys, id)
-    this.put(Stores.signedPrekeys, id, { createdAt: Date.now(), ...existing, keyId: id, keyPair })
-  }
-
-  /**
-   * @param {string | number} keyId
-   */
-  removeSignedPreKey(keyId) {
-    this.delete(Stores.signedPrekeys, Number(keyId))
-    return Promise.resolve()
-  }
-
-  // -- Sessions -------------------------------------------------------------
-
-  /**
-   * @param {string} encodedAddress
-   * @param {string} record
-   */
-  storeSession(encodedAddress, record) {
-    this.put(Stores.sessions, encodedAddress, record)
-    return Promise.resolve()
-  }
-
-  /**
-   * @param {string} encodedAddress
-   * @returns {Promise<string | undefined>}
-   */
-  loadSession(encodedAddress) {
-    return this.get(Stores.sessions, encodedAddress)
-  }
-
-  /**
-   * @param {string} encodedAddress
-   */
-  removeSession(encodedAddress) {
-    this.delete(Stores.sessions, encodedAddress)
-    return Promise.resolve()
+    return this.get(Stores.trustedIdentities, name)
   }
 }

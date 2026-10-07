@@ -15,7 +15,7 @@ defmodule Privee.MessageFixtures do
       |> check_message_to()
 
     Enum.into(attrs, %{
-      type: 1,
+      type: 2,
       body: Base.encode64("ciphertext-" <> Ecto.UUID.generate()),
       client_nonce: unique_nonce(),
       sender_session_name: "sender"

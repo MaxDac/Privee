@@ -4,14 +4,9 @@ defmodule PriveeWeb.Chat.ChatLive do
   selected one.
 
   The server never sees plaintext. The client (see `assets/js/hooks/chat-hooks.mjs`)
-  talks to this LiveView through reply-based events:
-
-    * `open_conversation` - `%{epoch}`: the conversation epoch sessions bind to.
-    * `request_peer_bundle` - `%{bundle}`: the peer's public prekey bundle. At most
-      #{3} one-time prekeys per requester/peer pair are popped every 10 minutes.
-    * `send_message` - `%{type, body, client_nonce, epoch, identity_key}` ->
-      `%{id, seq, epoch, client_nonce}` or `%{error}`.
-    * `fetch_messages` - `%{epoch, after_seq}` -> `%{messages, next_cursor}`.
+  talks to this LiveView through the reply-based events documented in
+  `PriveeWeb.ChatActions`: `open_conversation`, `request_peer_bundle`,
+  `send_message` and `fetch_messages`.
 
   Server pushes: `peer_keys_ready` (content-free) when the peer publishes keys.
   """
@@ -19,13 +14,11 @@ defmodule PriveeWeb.Chat.ChatLive do
   use PriveeWeb, :live_view
 
   alias Privee.Chats
-  alias Privee.PreKeyStore
-  alias Privee.RateLimiter
-  alias Privee.Sessions
   alias Privee.Sessions.Message
 
+  alias PriveeWeb.ChatActions
   alias PriveeWeb.Events
-  alias PriveeWeb.SignalKeysLive
+  alias PriveeWeb.SignalKeys
 
   import PriveeWeb.Chat.ChatHelpers
 
@@ -36,10 +29,6 @@ defmodule PriveeWeb.Chat.ChatLive do
   @chat_created_event "chat_created"
   @message_received_event "message_received"
   @prekeys_available_event "prekeys_available"
-
-  @opk_pops_per_window 3
-  @opk_window_ms :timer.minutes(10)
-  @max_page_size 200
 
   @impl true
   def mount(%{"session" => selected_session_name}, _session, socket) do
@@ -68,72 +57,23 @@ defmodule PriveeWeb.Chat.ChatLive do
   @impl true
   def handle_event("open_conversation", _params, socket) do
     %{current_session: me, selected_session: peer} = socket.assigns
-
-    case Chats.open_conversation(me.id, peer.id) do
-      {:ok, epoch} -> {:reply, %{epoch: epoch}, socket}
-      {:error, reason} -> {:reply, %{error: to_string(reason)}, socket}
-    end
+    {:reply, ChatActions.open_conversation(me, peer), socket}
   end
 
   def handle_event("request_peer_bundle", _params, socket) do
     %{current_session: me, selected_session: peer} = socket.assigns
-
-    pop? =
-      RateLimiter.hit({:opk_pop, me.id, peer.id}, @opk_pops_per_window, @opk_window_ms) == :ok
-
-    case PreKeyStore.fetch_bundle(peer.id, pop_one_time_prekey: pop?) do
-      {:ok, bundle, remaining} ->
-        if pop?, do: SignalKeysLive.maybe_notify_opk_low(peer.id, remaining)
-        {:reply, %{peer_id: peer.id, bundle: bundle}, socket}
-
-      {:error, :not_found} ->
-        {:reply, %{peer_id: peer.id, error: "not_found"}, socket}
-    end
+    {:reply, ChatActions.request_peer_bundle(me, peer), socket}
   end
 
-  def handle_event("send_message", %{"epoch" => epoch} = params, socket)
-      when is_binary(epoch) do
+  def handle_event("send_message", params, socket) do
+    %{current_session: me, selected_session: peer, signal_identity_key: key} = socket.assigns
+    {reply, key} = ChatActions.send_message(me, peer, params, key)
+    {:reply, reply, assign(socket, :signal_identity_key, key)}
+  end
+
+  def handle_event("fetch_messages", params, socket) do
     %{current_session: me, selected_session: peer} = socket.assigns
-    socket = refresh_identity_key(socket, params["identity_key"])
-
-    changeset =
-      Sessions.change_message(
-        %Message{from: me.id, to: peer.id, sender_session_name: me.session_name},
-        params
-      )
-
-    cond do
-      is_nil(socket.assigns.signal_identity_key) or
-          params["identity_key"] != socket.assigns.signal_identity_key ->
-        {:reply, %{error: "superseded"}, socket}
-
-      not changeset.valid? ->
-        {:reply, %{error: "invalid"}, socket}
-
-      true ->
-        changeset
-        |> Ecto.Changeset.apply_changes()
-        |> Chats.create_message(epoch)
-        |> reply_to_send(socket)
-    end
-  end
-
-  def handle_event("fetch_messages", %{"epoch" => epoch, "after_seq" => after_seq}, socket)
-      when is_binary(epoch) and is_integer(after_seq) do
-    %{current_session: me, selected_session: peer} = socket.assigns
-
-    {messages, next_cursor} =
-      Chats.messages_after(me.id, peer.id, epoch, after_seq, @max_page_size)
-
-    {:reply,
-     %{
-       messages: Enum.map(messages, &serialize_message(&1, me.id)),
-       next_cursor: next_cursor
-     }, socket}
-  end
-
-  def handle_event(event, _params, socket) when event in ~w(send_message fetch_messages) do
-    {:reply, %{error: "invalid"}, socket}
+    {:reply, ChatActions.fetch_messages(me, peer, params), socket}
   end
 
   # Legacy events from a cached client.
@@ -157,32 +97,15 @@ defmodule PriveeWeb.Chat.ChatLive do
 
   def handle_info(_message, socket), do: {:noreply, socket}
 
-  defp reply_to_send({:ok, message}, socket) do
-    Events.broadcast_new_message(message)
-    {:reply, sent_reply(message), socket}
-  end
-
-  defp reply_to_send({:duplicate, message}, socket), do: {:reply, sent_reply(message), socket}
-
-  defp reply_to_send({:error, {:stale_epoch, epoch}}, socket),
-    do: {:reply, %{error: "stale_epoch", epoch: epoch}, socket}
-
-  defp reply_to_send({:error, reason}, socket),
-    do: {:reply, %{error: to_string(reason)}, socket}
-
-  defp sent_reply(message) do
-    %{id: message.id, seq: message.seq, epoch: message.epoch, client_nonce: message.client_nonce}
-  end
-
   defp assign_selected_session(
          %{assigns: %{selected_session_name: selected_session_name, current_session: me}} =
            socket
        ) do
-    case Sessions.get_session_by_session_name(selected_session_name) do
-      %{id: id} = selected_session when id != me.id ->
+    case ChatActions.find_peer(me, selected_session_name) do
+      {:ok, selected_session} ->
         {:cont, assign(socket, :selected_session, selected_session)}
 
-      _ ->
+      :error ->
         {:halt,
          socket
          |> put_flash(:info, "You have to select a session to continue")
@@ -212,7 +135,7 @@ defmodule PriveeWeb.Chat.ChatLive do
       with :ok <-
              Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
            :ok <- Events.subscribe_to_receiving_events(socket, current_session.id),
-           :ok <- PriveeWeb.Endpoint.subscribe(SignalKeysLive.peer_topic(selected_session.id)) do
+           :ok <- PriveeWeb.Endpoint.subscribe(SignalKeys.peer_topic(selected_session.id)) do
         socket
       else
         error ->
@@ -231,19 +154,5 @@ defmodule PriveeWeb.Chat.ChatLive do
     |> assign(:last_message, new_message)
     |> assign(:epoch, new_message.epoch)
     |> stream_insert(:messages, new_message)
-  end
-
-  # The assign can lag behind the store (e.g. another tab published the identity
-  # after this socket mounted): re-read it before rejecting a send as superseded.
-  defp refresh_identity_key(%{assigns: %{signal_identity_key: key}} = socket, key)
-       when is_binary(key),
-       do: socket
-
-  defp refresh_identity_key(socket, _claimed) do
-    assign(
-      socket,
-      :signal_identity_key,
-      PreKeyStore.identity_key(socket.assigns.current_session.id)
-    )
   end
 end

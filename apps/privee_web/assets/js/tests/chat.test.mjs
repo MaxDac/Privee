@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto"
+import "./signal-wasm-setup.mjs"
 import { IDBFactory } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
 import { describe, it, expect, beforeEach, vi } from "vitest"

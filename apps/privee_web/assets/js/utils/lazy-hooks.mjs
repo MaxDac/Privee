@@ -7,7 +7,8 @@
 /**
  * Creates a hook that imports its implementation on mount and forwards the
  * lifecycle callbacks to it. `destroyed` may run before the import resolves:
- * the implementation is then never mounted.
+ * the implementation is then never mounted. The flag must not be named
+ * `__destroyed`: LiveView 1.1 defines that method on every hook instance.
  * @param {() => Promise<any>} load Dynamic import of the hook module.
  * @param {string} registrar Name of the exported `add*Hooks(Hooks)` function.
  * @param {string} name Hook name.
