@@ -85,12 +85,14 @@ defmodule Privee.Push do
   @spec notify(non_neg_integer()) :: :ok
   def notify(session_id) do
     with :ok <- RateLimiter.hit({:push, session_id}, @pushes_per_window, @push_window_ms) do
-      for endpoint <- endpoints(session_id) do
-        Task.Supervisor.start_child(Privee.TaskSupervisor, fn -> deliver(endpoint) end)
-      end
+      session_id |> endpoints() |> Enum.each(&deliver_async/1)
     end
 
     :ok
+  end
+
+  defp deliver_async(endpoint) do
+    Task.Supervisor.start_child(Privee.TaskSupervisor, fn -> deliver(endpoint) end)
   end
 
   @doc false
@@ -135,14 +137,9 @@ defmodule Privee.Push do
   @spec validate_endpoint(term()) :: :ok | {:error, :invalid_endpoint}
   def validate_endpoint(endpoint)
       when is_binary(endpoint) and byte_size(endpoint) <= @max_endpoint_length do
-    insecure? = config()[:allow_insecure] == true
-
     case URI.new(endpoint) do
-      {:ok, %URI{scheme: "https", host: host}} when is_binary(host) and host != "" ->
-        if insecure? or public_host?(host), do: :ok, else: {:error, :invalid_endpoint}
-
-      {:ok, %URI{scheme: "http", host: host}} when is_binary(host) and host != "" and insecure? ->
-        :ok
+      {:ok, %URI{scheme: scheme, host: host}} when is_binary(host) and host != "" ->
+        validate_host(scheme, host)
 
       _ ->
         {:error, :invalid_endpoint}
@@ -151,16 +148,26 @@ defmodule Privee.Push do
 
   def validate_endpoint(_endpoint), do: {:error, :invalid_endpoint}
 
+  defp validate_host(scheme, host) do
+    insecure? = config()[:allow_insecure] == true
+
+    allowed? =
+      (scheme == "https" and (insecure? or public_host?(host))) or
+        (scheme == "http" and insecure?)
+
+    if allowed?, do: :ok, else: {:error, :invalid_endpoint}
+  end
+
   defp public_host?(host) do
     host = String.downcase(host)
+    String.contains?(host, ".") and not local_host?(host) and not ip_literal?(host)
+  end
 
-    cond do
-      host == "localhost" or String.ends_with?(host, ".localhost") -> false
-      String.starts_with?(host, "[") -> false
-      match?({:ok, _}, :inet.parse_address(String.to_charlist(host))) -> false
-      not String.contains?(host, ".") -> false
-      true -> true
-    end
+  defp local_host?(host), do: host == "localhost" or String.ends_with?(host, ".localhost")
+
+  defp ip_literal?(host) do
+    String.starts_with?(host, "[") or
+      match?({:ok, _}, :inet.parse_address(String.to_charlist(host)))
   end
 
   defp get_session_token(token) when is_binary(token) do

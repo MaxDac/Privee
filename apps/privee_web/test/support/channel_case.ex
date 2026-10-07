@@ -5,6 +5,11 @@ defmodule PriveeWeb.ChannelCase do
 
   use ExUnit.CaseTemplate
 
+  alias Phoenix.ChannelTest
+  alias Privee.Sessions
+  alias PriveeWeb.App.AppAuth
+  alias PriveeWeb.App.AppSocket
+
   using do
     quote do
       import Phoenix.ChannelTest
@@ -21,14 +26,14 @@ defmodule PriveeWeb.ChannelCase do
 
   @doc "Returns an app socket authenticated as `session`."
   def app_socket(session) do
-    token = Privee.Sessions.generate_session_token(session)
+    token = Sessions.generate_session_token(session)
 
     {:ok, socket} =
-      Phoenix.ChannelTest.__connect__(
+      ChannelTest.__connect__(
         PriveeWeb.Endpoint,
-        PriveeWeb.App.AppSocket,
+        AppSocket,
         %{},
-        connect_info: %{auth_token: PriveeWeb.App.AppAuth.encode_token(token)}
+        connect_info: %{auth_token: AppAuth.encode_token(token)}
       )
 
     socket
