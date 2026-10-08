@@ -42,6 +42,22 @@ Clients work with any instance through its DNS name: the
 [Privee Android app](https://github.com/MaxDac/PriveeApp) asks for a server
 address, and other clients can use the [Client API](docs/client-api.md).
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md): umbrella apps, contexts, web layer, data
+  model and where to change what.
+- [Technologies](docs/TECHNOLOGIES.md): the full stack with versions.
+- [Cross-repo contract](docs/cross-repo.md): what the server and the
+  [Android app](https://github.com/MaxDac/PriveeApp) share (API, versioning,
+  push, libsignal) and how changes and releases are coordinated.
+- [Client API](docs/client-api.md), [End-to-end encryption](docs/e2e-encryption.md),
+  [E2EE audit](docs/security/e2ee-audit.md), [Self-hosting](docs/self-hosting.md),
+  [IDE setup](docs/ide-setup.md).
+- AI agents: [CLAUDE.md](CLAUDE.md) (Claude Code),
+  [.github/copilot-instructions.md](.github/copilot-instructions.md) (GitHub
+  Copilot), [AGENTS.md](AGENTS.md), and the skills in
+  [.claude/skills](.claude/skills) (mirrored in [.github/skills](.github/skills)).
+
 ## Toolchain
 
 Versions are pinned in [`.tool-versions`](./.tool-versions) for Erlang/OTP, Elixir and Node.js. CI reads the same file, so use [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/) to install matching versions:
@@ -81,6 +97,7 @@ It compiles with `--warnings-as-errors`, unlocks unused deps, formats the code, 
 - `mix dialyzer` (PLTs are stored in `priv/plts`)
 - browser end-to-end tests (below)
 - a Docker image build
+- a check that `.claude/skills` and `.github/skills` are identical
 
 ### Browser end-to-end tests
 
@@ -104,12 +121,12 @@ Editor setup notes are in [docs/ide-setup.md](docs/ide-setup.md).
 
 ## CI/CD
 
-[`ci.yml`](./.github/workflows/ci.yml) runs on pull requests, on every push to `main` and on demand: Elixir checks and tests (with Postgres), Dialyzer, asset checks, Playwright browser tests and a Docker build.
+[`ci.yml`](./.github/workflows/ci.yml) runs on pull requests, on every push to `main` and on demand: Elixir checks and tests (with Postgres), Dialyzer, asset checks, Playwright browser tests, a Docker build and the skills sync check.
 
-This repository never deploys. Deployments run on demand from [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy), which checks out a chosen commit of Privee and deploys it to Fly.io; the upstream instance and its `fly.toml` live there. To deploy from a workstation:
+This repository never deploys. Deployments run on demand from [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy), which checks out a chosen commit of Privee and deploys it to Fly.io; the upstream instance and its `fly.toml` live there. Merging to `main` only runs CI. To deploy from a workstation, choose a full source SHA with successful CI:
 
 ```bash
-gh workflow run deploy.yml -R MaxDac/PriveeDeploy -f ref=$(git rev-parse origin/main)
+gh workflow run deploy.yml -R MaxDac/PriveeDeploy -f ref=<full-source-sha>
 ```
 
 AI agents follow the [`deploy-privee`](.github/skills/deploy-privee/SKILL.md) skill, which checks CI and asks for confirmation first.
