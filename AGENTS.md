@@ -1,3 +1,30 @@
+# Privee project
+
+Privee is the server and web client of an end-to-end-encrypted chat (Elixir
+umbrella: `apps/privee` domain, `apps/privee_web` Phoenix web layer); the
+Android client lives in [MaxDac/PriveeApp](https://github.com/MaxDac/PriveeApp).
+Before changing anything, read:
+
+- [CLAUDE.md](CLAUDE.md) (Claude Code) or
+  [.github/copilot-instructions.md](.github/copilot-instructions.md) (Copilot):
+  commands, guardrails and the docs map.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/TECHNOLOGIES.md](docs/TECHNOLOGIES.md)
+  and [docs/cross-repo.md](docs/cross-repo.md) (contract with the Android app).
+- [docs/e2e-encryption.md](docs/e2e-encryption.md) and
+  [docs/client-api.md](docs/client-api.md).
+- Skills in `.claude/skills/` (identical copies in `.github/skills/`, checked by
+  CI): `api-change`, `local-dev-stack`, `deploy`, `libsignal-wasm-upgrade`,
+  `security-change-review`.
+
+Guardrails: never weaken E2EE (the server stores only ciphertext and public
+keys), keep API changes backward compatible with released app versions, keep
+migrations reversible, and do not deploy manually (production deploys from
+`main` via `.github/workflows/main.yml`).
+
+The generic Phoenix guidelines below still apply.
+
+# Phoenix guidelines
+
 This is a web application written using the Phoenix web framework.
 
 ## Project guidelines

@@ -228,3 +228,12 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  skills:
+    name: Skills in sync (.claude/skills = .github/skills)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check that Claude Code and Copilot skills are identical
+        run: diff -r .claude/skills .github/skills

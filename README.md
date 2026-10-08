@@ -20,6 +20,22 @@ to deploy it on Fly.io, and
 [Privee Android app](https://github.com/MaxDac/PriveeApp)) use to talk to any
 instance through its DNS name.
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md): umbrella apps, contexts, web layer, data
+  model and where to change what.
+- [Technologies](docs/TECHNOLOGIES.md): the full stack with versions.
+- [Cross-repo contract](docs/cross-repo.md): what the server and the
+  [Android app](https://github.com/MaxDac/PriveeApp) share (API, versioning,
+  push, libsignal) and how changes and releases are coordinated.
+- [Client API](docs/client-api.md), [End-to-end encryption](docs/e2e-encryption.md),
+  [E2EE audit](docs/security/e2ee-audit.md), [Self-hosting](docs/self-hosting.md),
+  [IDE setup](docs/ide-setup.md).
+- AI agents: [CLAUDE.md](CLAUDE.md) (Claude Code),
+  [.github/copilot-instructions.md](.github/copilot-instructions.md) (GitHub
+  Copilot), [AGENTS.md](AGENTS.md), and the skills in
+  [.claude/skills](.claude/skills) (mirrored in [.github/skills](.github/skills)).
+
 ## Toolchain
 
 Versions are pinned in [`.tool-versions`](./.tool-versions) for Erlang/OTP, Elixir and Node.js. CI reads the same file, so use [asdf](https://asdf-vm.com/) or [mise](https://mise.jdx.dev/) to install matching versions:
