@@ -104,6 +104,12 @@ deleted.
   kept in IndexedDB, as plaintext, on the device. They are never purged by age;
   use "Clear history on this device" or "Forget this device". Logging out keeps
   the keys and history, so logging back in on the same browser keeps working.
+- **Local conversation hints.** A user can add a short hint (at most 40
+  characters) about who is speaking in a conversation. The hint and the peer's
+  session name are kept as plaintext in the peer's metadata in IndexedDB, and
+  are never sent to the server or put in push payloads. The editor advises,
+  every time, not to use the contact's name. "Clear history on this device"
+  keeps hints; logging out and "Forget this device" remove them.
 - **Server retention.** Ciphertext lives in node-local ETS and is lost when the
   node restarts. A conversation expires as a whole after 24 hours of inactivity,
   7 days of age, or 1000 messages; the next message starts a new epoch. Older
@@ -155,8 +161,11 @@ Run against `mix assets.deploy` output (minified, production CSP) before releasi
    safety number, accepts, and the conversation continues with the new B.
 7. [ ] **Safety number.** It matches on both sides, grouped in blocks of five.
 8. [ ] **Clear / forget.** "Clear history on this device" removes the local
-   history only. "Forget this device" deletes the `privee-<id>` database and
-   reloads.
+   history only (hints stay). "Forget this device" deletes the `privee-<id>`
+   database and reloads. Add a hint from the chat's "Hint" button: the editor
+   advises not to use the contact's name, the hint shows under the chat title
+   and in "Conversations on this browser" on `/privee`, and no WS frame carries
+   it. After logging out, the hint is gone.
 9. [ ] **Notifications.** With the chat unfocused, an incoming message raises
    exactly one generic notification, even with several tabs open.
 10. [ ] **No plaintext on the wire.** DevTools → Network → WS: `send_message`
