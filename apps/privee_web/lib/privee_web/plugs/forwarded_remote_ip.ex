@@ -7,7 +7,7 @@ defmodule PriveeWeb.Plugs.ForwardedRemoteIp do
   runtime): the client is the `n`-th address from the right of
   `X-Forwarded-For`, because each trusted proxy appends to the header and
   anything further left is supplied by the client. On Fly.io the rightmost
-  address is the app's own IP, so `fly.toml` sets `2`. With `0` (the default)
+  address is the app's own IP, so PriveeDeploy's `fly.toml` sets `2`. With `0` (the default)
   the header is ignored.
   """
 
