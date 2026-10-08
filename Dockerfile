@@ -84,6 +84,12 @@ RUN chown nobody /app
 # set runner ENV
 ENV MIX_ENV="prod"
 
+# Source code of this build, reported to users (AGPL-3.0). The publish
+# workflow sets it to the building repository; PRIVEE_SOURCE_URL at runtime
+# still takes precedence, and an empty value falls back to upstream.
+ARG PRIVEE_SOURCE_URL=""
+ENV PRIVEE_SOURCE_URL="${PRIVEE_SOURCE_URL}"
+
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/privee_umbrella ./
 

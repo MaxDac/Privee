@@ -14,11 +14,17 @@ Chats are end-to-end encrypted with the Signal Protocol. See
 manual release checklist, and the [E2EE audit](docs/security/e2ee-audit.md) for
 the independent review of the web, server and Android implementations.
 
-Anyone can run their own Privee server. See [Self-hosting](docs/self-hosting.md)
-to deploy it on Fly.io, and
-[Client API](docs/client-api.md) for the API that native clients (such as the
-[Privee Android app](https://github.com/MaxDac/PriveeApp)) use to talk to any
-instance through its DNS name.
+## Run your own server
+
+Anyone can run their own Privee server on Fly.io without forking this
+repository: create a repository from the
+[PriveeDeploy](https://github.com/MaxDac/PriveeDeploy) template, which deploys
+the prebuilt `ghcr.io/maxdac/privee` image with your own `fly.toml`.
+**Follow the step-by-step [Self-hosting walkthrough](docs/self-hosting.md).**
+
+Clients work with any instance through its DNS name: the
+[Privee Android app](https://github.com/MaxDac/PriveeApp) asks for a server
+address, and other clients can use the [Client API](docs/client-api.md).
 
 ## Toolchain
 
@@ -87,18 +93,24 @@ All workflows live in [`.github/workflows`](./.github/workflows):
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Playwright browser tests, Docker build |
-| [`main.yml`](./.github/workflows/main.yml) | Push to `main`, manual | Runs `ci.yml`, then deploys to Fly.io when it passes |
+| [`main.yml`](./.github/workflows/main.yml) | Push to `main`, `v*` tags, manual | Runs `ci.yml`, then publishes the Docker image to GHCR and (from `main`) deploys to Fly.io |
+
+The image is published as `ghcr.io/<owner>/privee`, tagged `main` and `sha-<commit>` on every push to `main`, and `<version>` and `latest` on `v*` tags (e.g. `v1.2.0` → `1.2.0`). Self-hosters deploy it with [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy). Release a version with:
+
+```bash
+git tag v1.2.0 && git push origin v1.2.0
+```
 
 The deploy job only runs in the upstream `MaxDac/Privee` repository, so forks get CI without trying to deploy. It targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
 
 ```bash
-fly tokens create deploy -a privee
+fly tokens create deploy -a bauta
 ```
 
 ## Deployment (Fly.io)
 
 This section describes the upstream instance. To run your own, follow
-[Self-hosting](docs/self-hosting.md).
+[Self-hosting](docs/self-hosting.md) instead of editing these files.
 
 > **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
 > serving the conversation and are lost on restart, so the chat must run as a
@@ -110,7 +122,7 @@ This section describes the upstream instance. To run your own, follow
 Set these runtime secrets on the Fly app (`PHX_HOST` is already set in `fly.toml`):
 
 ```bash
-fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret) DATABASE_URL=ecto://... -a privee
+fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret) DATABASE_URL=ecto://... -a bauta
 ```
 
 Required variables: `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST` (the public DNS name of the instance).
@@ -120,7 +132,7 @@ Optional variables:
 - `PHX_PORT`: public HTTPS port used in generated URLs, defaults to `443`.
 - `PROXY_HOPS`: position of the client address from the right of `X-Forwarded-For` (`2` on Fly.io, set in `fly.toml`), used for per-client rate limits.
 - `PRIVEE_INSTANCE_NAME`: display name reported by `GET /api/app/info`.
-- `PRIVEE_SOURCE_URL`: link to the source code of the running version, defaults to `https://github.com/MaxDac/Privee`. Forks must point it to their own repository.
+- `PRIVEE_SOURCE_URL`: link to the source code of the running version. Images published by `main.yml` default it to the repository that built them; otherwise it defaults to `https://github.com/MaxDac/Privee`.
 - `POOL_SIZE`: database pool size.
 - `ENABLE_DB_SSL`: enables SSL for the database connection.
 - `DNS_CLUSTER_QUERY`: e.g. `privee.internal`, to cluster multiple machines.
