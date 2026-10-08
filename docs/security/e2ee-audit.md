@@ -82,6 +82,40 @@ executed by the reviewers.
 See [client-api.md](../client-api.md) and
 [self-hosting.md](../self-hosting.md).
 
+## Device threats
+
+Threat model: malicious or over-privileged apps on the same phone as the
+Android app, without root. A rooted or compromised OS is out of scope; no app
+can defend against it.
+
+**Server: no change.** The app keeps its session token AES-GCM encrypted under
+a non-exportable Android Keystore key, so stealing the token already requires
+root. Binding the token to a device key would add little there, because root
+can use the key on the device. An account taken over with a stolen recovery
+phrase is already visible to the owner as `identity_superseded`. Token binding
+and login alerts are deferred unless a concrete incident calls for them.
+
+**App mitigations (PriveeApp):**
+
+- `FLAG_SECURE` in every build: no screenshots, screen recordings, casting or
+  recents thumbnails. Store screenshots are rendered on the JVM instead.
+- Other apps' overlays are hidden on Android 12+; touches through overlays are
+  filtered on older versions (tapjacking).
+- On Android 14+, the UI is marked accessibility-data-sensitive, so only real
+  accessibility tools can read it.
+- Text fields ask the keyboard not to learn from input
+  (`IME_FLAG_NO_PERSONALIZED_LEARNING`).
+- Notifications say only "New message": no sender in the text, on the lock
+  screen or in the tag that notification listeners can read.
+
+**Rejected:** StrongBox and `setUnlockedDeviceRequired` for the storage key
+(StrongBox is slow for frequent Signal-state writes and the key is already
+non-exportable; requiring an unlocked device breaks fetching messages in the
+background while the phone is locked), root detection and Play Integrity
+(easy to bypass, and they break F-Droid and de-Googled users), clipboard flags
+(the app never writes to the clipboard), and a biometric app lock (it defends
+against physical access, not hostile apps; it would be a separate feature).
+
 ## Recommendations for users
 
 - Compare safety numbers with your contacts, which removes risk 2.
