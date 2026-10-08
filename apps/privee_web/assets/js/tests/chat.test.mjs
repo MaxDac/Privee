@@ -17,6 +17,8 @@ const Texts = catalogTexts()
 const layout = (/** @type {string} */ epoch) => `
   <div id="chat-banner"></div>
   <button id="chat-safety-number"></button>
+  <button id="chat-hint"></button>
+  <div id="chat-peer-hint"></div>
   <button id="chat-clear-history"></button>
   <button id="chat-forget-device"></button>
   <main id="chat-screen" data-epoch="${epoch}">
@@ -111,6 +113,31 @@ describe("ChatController", () => {
     expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
       false,
     )
+  })
+
+  it("lists the conversation locally and edits its hint from the header", async () => {
+    const alice = await party(server, ALICE, BOB)
+    alice.controller.peerName = "bob-session"
+    const editHint = vi.fn(() => Promise.resolve({ action: "save", hint: "<b>the plumber</b>" }))
+    alice.controller.editHint = /** @type {any} */ (editHint)
+    await alice.controller.start()
+    expect((await alice.client.listConversations()).map((c) => c.name)).toEqual(["bob-session"])
+    expect(alice.doc.getElementById("chat-peer-hint")?.children).toHaveLength(0)
+
+    alice.doc.getElementById("chat-hint")?.click()
+    await vi.waitFor(() =>
+      expect(alice.doc.getElementById("chat-peer-hint-text")?.textContent).toBe(
+        "<b>the plumber</b>",
+      ),
+    )
+    expect(editHint).toHaveBeenCalledWith(alice.doc, { current: null })
+    expect(alice.doc.querySelector("#chat-peer-hint b")).toBeNull()
+
+    editHint.mockResolvedValueOnce(/** @type {any} */ ({ action: "remove" }))
+    alice.doc.getElementById("chat-hint")?.click()
+    await vi.waitFor(() => expect(alice.doc.getElementById("chat-peer-hint-text")).toBeNull())
+    expect(await alice.client.peerHint(BOB)).toBeNull()
+    expect(editHint).toHaveBeenLastCalledWith(alice.doc, { current: "<b>the plumber</b>" })
   })
 
   it("switches existing client presentation without reinitializing keys or scrolling", async () => {

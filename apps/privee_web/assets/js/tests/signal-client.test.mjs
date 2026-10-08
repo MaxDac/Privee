@@ -411,6 +411,125 @@ describe("SignalClient", () => {
       await alice.clearHistory(BOB)
       expect(await alice.history(BOB)).toEqual([])
     })
+
+    it("keeps the local hint when the history is cleared", async () => {
+      await alice.setPeerHint(BOB, "the plumber")
+      await alice.send(BOB, "gone")
+      await alice.clearHistory(BOB)
+      expect(await alice.peerHint(BOB)).toBe("the plumber")
+    })
+
+    it("keeps the local hint across ratchet steps", async () => {
+      await alice.setPeerName(BOB, "bob-session")
+      await alice.setPeerHint(BOB, "the plumber")
+      await alice.send(BOB, "one")
+      await receiveAll(server, bob, BOB, ALICE)
+      await bob.send(ALICE, "two")
+      await receiveAll(server, alice, ALICE, BOB)
+      expect(await alice.peerHint(BOB)).toBe("the plumber")
+      expect((await alice.listConversations())[0]).toMatchObject({
+        name: "bob-session",
+        hint: "the plumber",
+      })
+    })
+
+    it("never sends the local hint to the server", async () => {
+      await alice.setPeerHint(BOB, "secret-hint-marker")
+      await alice.send(BOB, "hello")
+      expect(JSON.stringify([...server.bundles.values(), server.messages])).not.toContain(
+        "secret-hint-marker",
+      )
+    })
+  })
+
+  describe("local conversation hints", () => {
+    const CAROL = 3
+
+    it("stores, normalizes and removes a hint", async () => {
+      const { client } = await device(server, ALICE, BOB)
+      expect(await client.peerHint(BOB)).toBeNull()
+      expect(await client.setPeerHint(BOB, "  the\n plumber  ")).toBe("the plumber")
+      expect(await client.peerHint(BOB)).toBe("the plumber")
+      expect(await client.setPeerHint(BOB, "   ")).toBeNull()
+      expect(await client.peerHint(BOB)).toBeNull()
+    })
+
+    it("lists named conversations, most recent first", async () => {
+      let now = 1000
+      const factory = new IDBFactory()
+      const client = await SignalClient.open({
+        ownId: ALICE,
+        push: server.connect(ALICE, BOB),
+        locks: createMemoryLocks(),
+        factory,
+        now: () => now,
+      })
+      await client.setPeerHint(4, "no name, not listed")
+      await client.setPeerName(BOB, "bob-session")
+      now = 2000
+      await client.setPeerName(CAROL, "carol-session")
+      await client.setPeerHint(BOB, "the plumber")
+
+      expect(await client.listConversations()).toEqual([
+        {
+          peerId: CAROL,
+          name: "carol-session",
+          hint: null,
+          lastMessageAt: null,
+          lastActivity: 2000,
+        },
+        {
+          peerId: BOB,
+          name: "bob-session",
+          hint: "the plumber",
+          lastMessageAt: null,
+          lastActivity: 1000,
+        },
+      ])
+    })
+
+    it("orders conversations by their last local message", async () => {
+      let now = 1000
+      const client = await SignalClient.open({
+        ownId: ALICE,
+        push: server.connect(ALICE, BOB),
+        locks: createMemoryLocks(),
+        factory: new IDBFactory(),
+        now: () => now,
+      })
+      const bob = (await device(server, BOB, ALICE)).client
+      await client.ensureKeys()
+      await bob.ensureKeys()
+      await client.setPeerName(BOB, "bob-session")
+      now = 2000
+      await client.setPeerName(CAROL, "carol-session")
+      now = 3000
+      await client.send(BOB, "latest")
+
+      const list = await client.listConversations()
+      expect(list.map((c) => c.peerId)).toEqual([BOB, CAROL])
+      expect(list[0].lastMessageAt).toBe(3000)
+    })
+
+    it("clears every hint but keeps the conversations", async () => {
+      const { client } = await device(server, ALICE, BOB)
+      await client.setPeerName(BOB, "bob-session")
+      await client.setPeerHint(BOB, "the plumber")
+      await client.setPeerHint(CAROL, "the baker")
+      await client.clearPeerHints()
+      expect(await client.peerHint(BOB)).toBeNull()
+      expect(await client.peerHint(CAROL)).toBeNull()
+      expect((await client.listConversations()).map((c) => c.name)).toEqual(["bob-session"])
+    })
+
+    it("deletes hints with the device", async () => {
+      const factory = new IDBFactory()
+      const { client } = await device(server, ALICE, BOB, { factory })
+      await client.setPeerHint(BOB, "the plumber")
+      await client.forgetDevice()
+      const reopened = (await device(server, ALICE, BOB, { factory })).client
+      expect(await reopened.peerHint(BOB)).toBeNull()
+    })
   })
 
   describe("identity changes", () => {

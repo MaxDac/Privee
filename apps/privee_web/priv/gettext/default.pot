@@ -22,6 +22,11 @@ msgstr ""
 msgid "Attempting to reconnect"
 msgstr ""
 
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Cancel"
+msgstr ""
+
 #: lib/privee_web/components/layouts/menu.html.heex:52
 #: lib/privee_web/components/layouts/menu.html.heex:52
 #: lib/privee_web/components/layouts/root.html.heex:11
@@ -52,6 +57,11 @@ msgstr ""
 #: lib/privee_web/client_texts.ex:46
 #, elixir-autogen
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Conversations on this browser"
 msgstr ""
 
 #: lib/privee_web/components/layouts/menu.html.heex:154
@@ -144,6 +154,11 @@ msgstr ""
 msgid "Don't have a session?"
 msgstr ""
 
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Don't use their name. Anyone with access to this browser can read hints."
+msgstr ""
+
 #: lib/privee_web/client_texts.ex:32
 #: lib/privee_web/client_texts.ex:32
 #, elixir-autogen
@@ -184,6 +199,16 @@ msgstr ""
 #: lib/privee_web/components/layouts.ex:108
 #, elixir-autogen
 msgid "Hang in there while we get back on track"
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.html.heex
+#, elixir-autogen
+msgid "Hint"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Hint (only on this browser)"
 msgstr ""
 
 #: lib/privee_web/components/core_components.ex:559
@@ -292,6 +317,11 @@ msgstr ""
 msgid "Recovery phrase"
 msgstr ""
 
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Remove hint"
+msgstr ""
+
 #: lib/privee_web/client_texts.ex:43
 #: lib/privee_web/client_texts.ex:43
 #, elixir-autogen
@@ -308,6 +338,11 @@ msgstr ""
 #: lib/privee_web/live/chat/chat_live.html.heex:18
 #, elixir-autogen
 msgid "Safety number"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Save"
 msgstr ""
 
 #: lib/privee_web/client_texts.ex:58
@@ -404,6 +439,11 @@ msgstr ""
 #: lib/privee_web/live/privee_selector_live.html.heex:30
 #, elixir-autogen
 msgid "Start Privee"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Stored only on this browser. Hints are never sent to the server."
 msgstr ""
 
 #: lib/privee_web/components/layouts.ex:67
@@ -526,6 +566,11 @@ msgstr ""
 #: lib/privee_web/live/session_registration_live.html.heex:66
 #, elixir-autogen
 msgid "What's this?"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex
+#, elixir-autogen
+msgid "Who is speaking?"
 msgstr ""
 
 #: lib/privee_web/client_texts.ex:56

@@ -16,6 +16,9 @@ msgstr "Actions"
 msgid "Attempting to reconnect"
 msgstr "Attempting to reconnect"
 
+msgid "Cancel"
+msgstr "Cancel"
+
 msgid "Chatting app with focus on privacy"
 msgstr "Chatting app with focus on privacy"
 
@@ -27,6 +30,9 @@ msgstr "Close"
 
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
 msgstr "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
+
+msgid "Conversations on this browser"
+msgstr "Conversations on this browser"
 
 msgid "Copy link"
 msgstr "Copy link"
@@ -70,6 +76,9 @@ msgstr "Delete the local history of this conversation from this device?"
 msgid "Don't have a session?"
 msgstr "Don't have a session?"
 
+msgid "Don't use their name. Anyone with access to this browser can read hints."
+msgstr "Don't use their name. Anyone with access to this browser can read hints."
+
 msgid "Earlier on this device"
 msgstr "Earlier on this device"
 
@@ -90,6 +99,12 @@ msgstr "Forget this device"
 
 msgid "Hang in there while we get back on track"
 msgstr "Hang in there while we get back on track"
+
+msgid "Hint"
+msgstr "Hint"
+
+msgid "Hint (only on this browser)"
+msgstr "Hint (only on this browser)"
 
 msgid "Information"
 msgstr "Information"
@@ -139,6 +154,9 @@ msgstr "Quick session"
 msgid "Recovery phrase"
 msgstr "Recovery phrase"
 
+msgid "Remove hint"
+msgstr "Remove hint"
+
 msgid "Reset encryption identity"
 msgstr "Reset encryption identity"
 
@@ -147,6 +165,9 @@ msgstr "Reset the encryption identity of this session? Your contacts will be ask
 
 msgid "Safety number"
 msgstr "Safety number"
+
+msgid "Save"
+msgstr "Save"
 
 msgid "Send"
 msgstr "Send"
@@ -186,6 +207,9 @@ msgstr "Specify the session name you would like to chat with."
 
 msgid "Start Privee"
 msgstr "Start Privee"
+
+msgid "Stored only on this browser. Hints are never sent to the server."
+msgstr "Stored only on this browser. Hints are never sent to the server."
 
 msgid "Success!"
 msgstr "Success!"
@@ -246,6 +270,9 @@ msgstr "Welcome back!"
 
 msgid "What's this?"
 msgstr "What's this?"
+
+msgid "Who is speaking?"
+msgstr "Who is speaking?"
 
 msgid "Write your message here"
 msgstr "Write your message here"

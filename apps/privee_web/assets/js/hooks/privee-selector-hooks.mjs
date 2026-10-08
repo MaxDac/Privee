@@ -1,6 +1,25 @@
 import { pushFlash } from "./flash-hooks.mjs"
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
+import { renderConversations } from "../utils/conversation-list.mjs"
+import { openHintEditor } from "../utils/hint-editor.mjs"
 import { openClientFor } from "../utils/signal-hook-utils.mjs"
+
+/**
+ * Renders the conversations held on this browser, with their local hints.
+ * @param {HTMLElement} container
+ * @param {import("../utils/signal-client.mjs").SignalClient} client
+ */
+export const showLocalConversations = async (container, client) => {
+  const conversations = await client.listConversations()
+  renderConversations(container, conversations, {
+    onEditHint: async (conversation) => {
+      const result = await openHintEditor(container.ownerDocument, { current: conversation.hint })
+      if (!result) return
+      await client.setPeerHint(conversation.peerId, result.action === "save" ? result.hint : null)
+      await showLocalConversations(container, client)
+    },
+  })
+}
 
 /**
  * Adds hooks to the privee selector screen.
@@ -22,6 +41,14 @@ export function addPriveeSelectorHooks(Hooks) {
         this.client = await openClientFor(this, ownId)
         if (this.destroyedFlag) return this.client.close()
         this.handleEvent("replenish_prekeys", () => this.client?.replenish().catch(console.warn))
+
+        const container = this.el.querySelector("#local-conversations")
+        if (container) {
+          await showLocalConversations(container, this.client).catch((e) =>
+            console.warn("Unable to list local conversations", e),
+          )
+        }
+
         await this.client.ensureKeys()
       } catch (e) {
         console.warn("Unable to set up encryption keys", e)

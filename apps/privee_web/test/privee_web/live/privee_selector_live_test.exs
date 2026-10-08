@@ -18,6 +18,16 @@ defmodule PriveeWeb.PriveeSelectorLiveTest do
       assert html =~ "Create a new Privee"
     end
 
+    test " renders an empty container for the local conversations", %{conn: conn} do
+      {:ok, lv, _html} =
+        conn
+        |> log_in_session(session_fixture())
+        |> live(~p"/privee")
+
+      assert has_element?(lv, "#local-conversations[phx-update=ignore]")
+      refute has_element?(lv, "#local-conversations li")
+    end
+
     test " redirects to the login when the user is not logged in", %{conn: conn} do
       result =
         conn

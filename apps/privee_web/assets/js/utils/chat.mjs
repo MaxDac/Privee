@@ -14,6 +14,7 @@ import {
   wasQueued,
 } from "./signal-client.mjs"
 import { clientTexts } from "./locale.mjs"
+import { openHintEditor } from "./hint-editor.mjs"
 
 export const Selectors = Object.freeze({
   entry: "[data-signal-message]",
@@ -23,6 +24,8 @@ export const Selectors = Object.freeze({
   input: "#chat-text",
   send: "#chat-send",
   safetyNumber: "#chat-safety-number",
+  hint: "#chat-hint",
+  peerHint: "#chat-peer-hint",
   clearHistory: "#chat-clear-history",
   forgetDevice: "#chat-forget-device",
 })
@@ -32,18 +35,30 @@ export const Selectors = Object.freeze({
  * @property {HTMLElement} el The `#chat-screen` element.
  * @property {import("./signal-client.mjs").SignalClient} client
  * @property {number} peerId
+ * @property {string} [peerName] Peer session name, stored locally to list the conversation.
  * @property {(message: string) => boolean} [confirm]
  * @property {() => void} [reload]
+ * @property {typeof openHintEditor} [editHint]
  */
 
 export class ChatController {
   /** @param {ChatControllerOptions} options */
-  constructor({ el, client, peerId, confirm = (m) => window.confirm(m), reload }) {
+  constructor({
+    el,
+    client,
+    peerId,
+    peerName,
+    confirm = (m) => window.confirm(m),
+    reload,
+    editHint = openHintEditor,
+  }) {
     this.el = el
     this.doc = el.ownerDocument
     this.client = client
     this.peerId = peerId
+    this.peerName = peerName
     this.confirm = confirm
+    this.editHint = editHint
     this.reload = reload ?? (() => this.doc.defaultView?.location.reload())
     /** @type {import("./signal-client.mjs").DeviceState | "starting"} */
     this.state = "starting"
@@ -78,6 +93,7 @@ export class ChatController {
   async start() {
     this.bindComposer()
     this.bindMenu()
+    await this.loadPeerMeta()
 
     try {
       this.setState(await this.client.ensureKeys())
@@ -506,8 +522,46 @@ export class ChatController {
     }
 
     bind(Selectors.safetyNumber, () => this.showSafetyNumber())
+    bind(Selectors.hint, () => this.editPeerHint())
     bind(Selectors.clearHistory, () => this.clearHistory())
     bind(Selectors.forgetDevice, () => this.forgetDevice())
+  }
+
+  // -- Local hint (never sent to the server) -------------------------------------
+
+  /** Lists the conversation on this browser and shows its hint. */
+  async loadPeerMeta() {
+    try {
+      if (this.peerName) await this.client.setPeerName(this.peerId, this.peerName)
+      this.renderPeerHint(await this.client.peerHint(this.peerId))
+    } catch (e) {
+      console.warn("Unable to load the local conversation data", e)
+    }
+  }
+
+  /** @param {string | null} hint */
+  renderPeerHint(hint) {
+    const container = this.query(Selectors.peerHint)
+    if (!container) return
+    container.replaceChildren()
+    if (!hint) return
+
+    const text = this.doc.createElement("p")
+    text.id = "chat-peer-hint-text"
+    text.className = "truncate text-xs italic text-zinc-500 dark:text-zinc-400"
+    text.textContent = hint
+    container.append(text)
+  }
+
+  async editPeerHint() {
+    const current = await this.client.peerHint(this.peerId)
+    const result = await this.editHint(this.doc, { current })
+    if (!result) return
+    const hint = await this.client.setPeerHint(
+      this.peerId,
+      result.action === "save" ? result.hint : null,
+    )
+    this.renderPeerHint(hint)
   }
 
   async showSafetyNumber() {
