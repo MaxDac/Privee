@@ -77,9 +77,11 @@ Serving the Android emulator (`http://10.0.2.2:4000`) is covered by the
   `down`. Never edit a migration that is already on `main`.
 - **Keep the AGPL source URL.** `PRIVEE_SOURCE_URL` / `source_url` in
   `/api/app/info` and the licence notices must stay.
-- **Deploys** happen only from `MaxDac/Privee` `main` through
-  [`main.yml`](.github/workflows/main.yml). Do not run `fly deploy` or change
-  Fly secrets unless explicitly asked (`deploy` skill).
+- **Do not deploy without confirmation.** Privee runs CI only; merging to
+  `main` does not deploy. [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy)
+  owns `fly.toml` and the manual `deploy.yml` workflow. Follow `deploy-privee`:
+  verify successful CI for the full source SHA and get explicit user
+  confirmation before triggering it. Do not run `fly deploy` here.
 - Chat storage is node-local ETS: production runs a single machine; do not
   scale it out.
 - Use `Req` for HTTP. No secrets in the repo.
@@ -103,7 +105,7 @@ Serving the Android emulator (`http://10.0.2.2:4000`) is covered by the
 | --- | --- |
 | `api-change` | Change the native API end to end, with docs and an app follow-up |
 | `local-dev-stack` | Run the server for the Android emulator |
-| `deploy` | Deploy to Fly.io, verify, roll back |
+| `deploy-privee` | Confirm a CI-checked SHA, deploy through PriveeDeploy, verify, roll back |
 | `libsignal-wasm-upgrade` | Upgrade libsignal in the web client, aligned with the app |
 | `security-change-review` | Review a change against the E2EE design and audit |
 

@@ -47,7 +47,8 @@ The release is `privee_umbrella` ([`mix.exs`](../mix.exs)).
   (`Privee.PubSub`), `Privee.Chats.TableOwner` (owns the ETS tables and sweeps
   them every minute), `Task.Supervisor` (`Privee.TaskSupervisor`, async push
   deliveries). Runs migrations at boot only if `TRIGGER_STARTUP_MIGRATION=true`
-  (Fly runs `/app/bin/migrate` as the release command instead).
+  (PriveeDeploy's `fly.toml` runs `/app/bin/migrate` as the Fly release command
+  instead).
 - `PriveeWeb.Application`: `PriveeWeb.Telemetry`, `PriveeWeb.Endpoint`.
 
 ## Domain contexts (`apps/privee/lib/privee`)
@@ -164,5 +165,6 @@ every environment.
 | Add a database column/table | New migration in `apps/privee/priv/repo/migrations` (reversible), schema in `apps/privee/lib` | This page (data model) |
 | Upgrade libsignal in the web client | `vendor/libsignal-wasm`, `priv/static/wasm`, `WASM_VERSION` | Follow the `libsignal-wasm-upgrade` skill |
 | Change a web screen | `apps/privee_web/lib/privee_web/live/**` and `.heex` templates | Playwright specs in `assets/e2e` |
-| Change runtime configuration | `config/runtime.exs` | [README](../README.md#deployment-flyio), [self-hosting.md](self-hosting.md) |
-| Change deployment | `fly.toml`, `Dockerfile`, `.github/workflows/main.yml` | Follow the `deploy` skill |
+| Change runtime configuration | `config/runtime.exs` | [README](../README.md#cicd), [self-hosting.md](self-hosting.md) |
+| Change the release image | `Dockerfile` in this repository | [TECHNOLOGIES.md](TECHNOLOGIES.md#cicd-and-hosting), [self-hosting.md](self-hosting.md) |
+| Change Fly deployment | [`fly.toml`](https://github.com/MaxDac/PriveeDeploy/blob/main/fly.toml), [`deploy.yml`](https://github.com/MaxDac/PriveeDeploy/blob/main/.github/workflows/deploy.yml) in PriveeDeploy, not here | Follow the `deploy-privee` skill (successful CI for the full source SHA, explicit user confirmation) |

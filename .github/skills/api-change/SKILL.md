@@ -80,8 +80,11 @@ the `security-change-review` skill.
 1. Open the PR with a Conventional Commit title (`feat(api): ...`). State in
    the body whether the change is additive or breaking and how old apps
    behave.
-2. After merge, `main.yml` deploys to Fly.io (see the `deploy` skill). Verify
-   with `curl -s https://bauta.fly.dev/api/app/info`.
+2. After merge, Privee runs CI only. Follow `deploy-privee`: check successful
+   CI for the full source SHA and obtain explicit user confirmation before
+   triggering PriveeDeploy's manual `deploy.yml` with `ref=<sha>`. Verify the
+   run and `curl -fsS https://bauta.fly.dev/api/app/info` before releasing an
+   app that depends on the change.
 3. Open the app follow-up issue:
 
    ```bash

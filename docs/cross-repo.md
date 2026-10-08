@@ -134,14 +134,20 @@ ordering as an `api_version` bump.
 ## Coordinated change order
 
 F-Droid builds lag the app's GitHub release by days to weeks, and users update
-when they like. The server is deployed continuously from `main`. Therefore the
+when they like. The server is deployed manually through
+[PriveeDeploy](https://github.com/MaxDac/PriveeDeploy), not on merge to `main`.
+Therefore the
 **server must keep supporting every released app version**.
 
 1. **Server first, backward compatible.** Implement the change in Privee so
    that existing apps keep working (additive API, optional fields, old events
    kept). Update [client-api.md](client-api.md) and this page in the same PR.
-2. **Deploy.** Merging to `main` runs `main.yml`: CI, then Fly.io deploy. Check
-   `GET https://bauta.fly.dev/api/app/info` and the logs.
+2. **Deploy before the dependent app release.** Merging to `main` runs CI
+   only. Follow `deploy-privee`: select the full source SHA with successful CI,
+   get explicit user confirmation, then trigger PriveeDeploy's manual
+   `deploy.yml` with `ref=<sha>`. Verify the deploy run, instance info
+   (`GET https://bauta.fly.dev/api/app/info` upstream) and logs before shipping
+   an app that requires the change.
 3. **App change.** Open the follow-up in PriveeApp (issue or PR) that uses the
    new API, test it against a local server (`local-dev-stack` skill) and
    against production.
@@ -159,6 +165,11 @@ when they like. The server is deployed continuously from `main`. Therefore the
 
 Never require the reverse order (app first, then server) unless the app keeps
 working against the currently deployed server.
+
+PriveeDeploy owns `fly.toml` and the deployment workflow; this repository owns
+the source, `Dockerfile` and CI. Rollback is another confirmed deployment of an
+explicitly chosen older full source SHA with successful CI, after checking
+compatibility with the current database migrations; it does not undo migrations.
 
 ## App releases in short
 

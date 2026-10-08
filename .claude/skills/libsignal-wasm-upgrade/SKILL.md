@@ -96,5 +96,8 @@ a server restart.
     --body "The web client moves to libsignal X.Y.Z in <Privee PR URL>. Use the libsignal-upgrade skill (gradle/libs.versions.toml and libsignal/source.lock.json)."
   ```
 
-- The server deploys from `main` (`deploy` skill). Clients with cached
+- Merging to `main` runs CI only. Follow `deploy-privee`: successful CI for
+  the full source SHA and explicit user confirmation are required before
+  PriveeDeploy's manual `deploy.yml` is triggered with `ref=<sha>`. Verify the
+  server deployment before a dependent app release. Clients with cached
   JavaScript pick up the new binary through the `WASM_VERSION` query.

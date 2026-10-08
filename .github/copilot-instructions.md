@@ -49,9 +49,11 @@ Use the versions in `.tool-versions` (Erlang 29.1.1, Elixir 1.20.4, Node
   not be edited.
 - **Keep the AGPL source link**: `PRIVEE_SOURCE_URL` and `source_url` in
   `GET /api/app/info` stay.
-- **Do not deploy.** Production deploys run from `main` in MaxDac/Privee via
-  `.github/workflows/main.yml`. Do not run `fly` commands that change the app
-  unless the user asks (`deploy` skill).
+- **Do not deploy without confirmation.** Privee runs CI only; merging to
+  `main` does not deploy. [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy)
+  owns `fly.toml` and the manual `deploy.yml` workflow. Follow `deploy-privee`:
+  verify successful CI for the full source SHA and get explicit user
+  confirmation before triggering it. Do not run `fly deploy` here.
 - Chat messages are stored in node-local ETS, so production is one machine.
 - Use `Req` for HTTP requests. Never commit secrets.
 - Write Conventional Commit messages.
@@ -74,7 +76,8 @@ Skills live in `.github/skills/<name>/SKILL.md`, with identical copies in
 - `api-change`: native API changes end to end.
 - `local-dev-stack`: run the server for the Android emulator
   (`http://10.0.2.2:4000`).
-- `deploy`: Fly.io deploy, verification and rollback.
+- `deploy-privee`: confirmed, CI-checked deployment through PriveeDeploy,
+  verification and rollback.
 - `libsignal-wasm-upgrade`: upgrade libsignal in the web client in step with
   the app.
 - `security-change-review`: E2EE review checklist.

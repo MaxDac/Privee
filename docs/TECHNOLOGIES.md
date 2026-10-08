@@ -139,10 +139,10 @@ eslint, vitest). See [CLAUDE.md](../CLAUDE.md) for the exact commands.
 
 | Area | Technology | Notes |
 | --- | --- | --- |
-| CI | GitHub Actions ([`ci.yml`](../.github/workflows/ci.yml)) | On pull requests: Elixir (deps, unused deps, compile with warnings as errors, format, credo, tests with `postgres:18`), Dialyzer, assets (`npm run check`), Playwright E2E against a `MIX_ENV=prod` build, Docker build, and the skills sync check |
-| CD | GitHub Actions ([`main.yml`](../.github/workflows/main.yml)) | On push to `main`: runs CI, then `flyctl deploy --remote-only` (only in `MaxDac/Privee`, `production` environment, `FLY_API_TOKEN` secret) |
+| CI | GitHub Actions ([`ci.yml`](../.github/workflows/ci.yml)) | On pull requests, pushes to `main` and manual dispatch: Elixir (deps, unused deps, compile with warnings as errors, format, credo, tests with `postgres:18`), Dialyzer, assets (`npm run check`), Playwright E2E against a `MIX_ENV=prod` build, Docker build, and the skills sync check. No deployment |
+| Deployment | PriveeDeploy GitHub Actions ([`deploy.yml`](https://github.com/MaxDac/PriveeDeploy/blob/main/.github/workflows/deploy.yml)) | Manual dispatch only; checks out the chosen Privee ref and builds its Dockerfile on Fly's remote builders. Uses `production`, `FLY_API_TOKEN` and `--ha=false`. Agents require successful source CI for the full SHA and explicit user confirmation (`deploy-privee`) |
 | Container | [`Dockerfile`](../Dockerfile) | Multi-stage release (`hexpm/elixir` builder, `debian:trixie` runner), release `privee_umbrella` |
-| Hosting | [Fly.io](https://fly.io) ([`fly.toml`](../fly.toml)) | App `bauta`, region `ams`, one shared-CPU machine with 1 GB, internal port 8080, auto stop/start, `release_command = '/app/bin/migrate'`, public host `bauta.fly.dev` |
+| Hosting | [Fly.io](https://fly.io) (PriveeDeploy [`fly.toml`](https://github.com/MaxDac/PriveeDeploy/blob/main/fly.toml)) | Upstream app `bauta` at `bauta.fly.dev`; instance-agnostic config in PriveeDeploy, app/host supplied by repository variables. Region `ams`, one shared-CPU machine with 1 GB, internal port 8080, auto stop/start, `release_command = '/app/bin/migrate'` |
 | Database (prod) | PostgreSQL via `DATABASE_URL` | Optional SSL (`ENABLE_DB_SSL=true`) and IPv6 (`ECTO_IPV6`) |
 
 Self-hosting on other platforms: [Self-hosting](self-hosting.md).

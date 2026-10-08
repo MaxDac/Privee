@@ -13,13 +13,15 @@ Before changing anything, read:
 - [docs/e2e-encryption.md](docs/e2e-encryption.md) and
   [docs/client-api.md](docs/client-api.md).
 - Skills in `.claude/skills/` (identical copies in `.github/skills/`, checked by
-  CI): `api-change`, `local-dev-stack`, `deploy`, `libsignal-wasm-upgrade`,
+  CI): `api-change`, `local-dev-stack`, `deploy-privee`, `libsignal-wasm-upgrade`,
   `security-change-review`.
 
 Guardrails: never weaken E2EE (the server stores only ciphertext and public
 keys), keep API changes backward compatible with released app versions, keep
-migrations reversible, and do not deploy manually (production deploys from
-`main` via `.github/workflows/main.yml`).
+migrations reversible, and do not deploy without explicit user confirmation.
+Privee runs CI only; PriveeDeploy owns the manual deployment workflow and
+`fly.toml`. Follow `deploy-privee` and verify successful CI for the full source
+SHA before triggering a deployment.
 
 The generic Phoenix guidelines below still apply.
 
