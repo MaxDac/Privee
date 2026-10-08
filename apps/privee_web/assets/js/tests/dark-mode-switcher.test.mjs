@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest"
-import { addDarkModeToggleHandlers, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
+import {
+  addDarkModeToggleHandlers,
+  setStartupTheme,
+  addThemeEventHandlers,
+} from "../utils/dark-mode-switcher.mjs"
 import { getDom } from "./mock-utils.mjs"
 
 const html = `
@@ -62,6 +66,26 @@ beforeEach(() => {
 })
 
 describe("setStartupTheme", () => {
+  it("preserves cross-tab and LiveView theme events from the bundled script", () => {
+    const dom = getDom(html)
+    vi.stubGlobal("window", dom.window)
+    vi.stubGlobal("document", dom.window.document)
+    vi.stubGlobal("localStorage", dom.window.localStorage)
+    addThemeEventHandlers()
+    dom.window.dispatchEvent(
+      new dom.window.StorageEvent("storage", { key: "phx:theme", newValue: "dark" }),
+    )
+    expect(document.documentElement.dataset.theme).toBe("dark")
+    document.documentElement.dataset.phxTheme = "light"
+    document.documentElement.dispatchEvent(
+      new dom.window.CustomEvent("phx:set-theme", { bubbles: true }),
+    )
+    expect(document.documentElement.dataset.theme).toBe("light")
+    dom.window.dispatchEvent(
+      new dom.window.StorageEvent("storage", { key: "phx:theme", newValue: null }),
+    )
+    expect(document.documentElement.hasAttribute("data-theme")).toBe(false)
+  })
   it("select automatically the light mode", () => {
     setStartupTheme()
 

@@ -1,1 +1,3 @@
 vendor/libsignal-wasm/
+playwright-report/
+test-results/

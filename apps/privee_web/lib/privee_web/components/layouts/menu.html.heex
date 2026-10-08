@@ -7,13 +7,14 @@
           class="invert dark:invert-0"
           width="36"
           height="36"
-          alt="Logo"
-          aria-label="Logo"
+          alt={lgettext(@locale, "Privee logo")}
+          aria-label={lgettext(@locale, "Privee logo")}
         />
         <strong class="text-lg text-zinc-900 dark:text-zinc-50 hidden sm:inline">Privee</strong>
       </div>
     </.link>
   </div>
+
   <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
     <a
       id="source-code-link"
@@ -21,8 +22,8 @@
       target="_blank"
       rel="noopener noreferrer"
       class="text-zinc-900 dark:text-zinc-50 opacity-70 transition-opacity hover:opacity-100"
-      aria-label="Source code (AGPL-3.0)"
-      title="Source code (AGPL-3.0)"
+      aria-label={lgettext(@locale, "Source code (AGPL-3.0)")}
+      title={lgettext(@locale, "Source code (AGPL-3.0)")}
     >
       <svg
         class="w-6 h-6"
@@ -42,45 +43,91 @@
         />
       </svg>
     </a>
-    <.button
-      id="theme-toggle"
-      data-theme-toggle="theme-toggle"
-      aria-label="dark-theme-selector"
-      class="cursor-pointer"
+
+    <div
+      id="language-settings"
+      class="relative"
+      phx-hook="Locale"
+      data-locale={@locale}
+      data-description={lgettext(@locale, "Chatting app with focus on privacy")}
+      data-title-suffix={lgettext(@locale, "Privacy App")}
+      data-texts={Jason.encode!(PriveeWeb.ClientTexts.translations(@locale))}
     >
-      <svg
-        id="theme-toggle-dark-icon"
-        data-theme-selector="dark"
-        class="w-5 h-5"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
+      <button
+        id="settings-toggle"
+        type="button"
+        class="rounded-lg p-2 text-zinc-900 transition hover:bg-zinc-200 dark:text-zinc-50 dark:hover:bg-zinc-700"
+        aria-label={lgettext(@locale, "Settings")}
+        aria-controls="settings-menu"
+        phx-click={JS.toggle(to: "#settings-menu")}
       >
-        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-      </svg>
-      <svg
-        id="theme-toggle-light-icon"
-        data-theme-selector="light"
-        class="w-5 h-5"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
+        {lgettext(@locale, "Settings")}
+      </button>
+
+      <div
+        id="settings-menu"
+        class="absolute right-0 top-full z-50 mt-2 hidden w-64 rounded-xl border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+        phx-click-away={JS.hide(to: "#settings-menu")}
+        phx-window-keydown={JS.hide(to: "#settings-menu")}
+        phx-key="Escape"
       >
-        <path
-          d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-          fill-rule="evenodd"
-          clip-rule="evenodd"
-        >
-        </path>
-      </svg>
-    </.button>
+        <.form for={to_form(%{"locale" => @locale})} id="language-form" phx-change="set_locale">
+          <.input
+            type="select"
+            name="locale"
+            id="language-select"
+            value={@locale}
+            label={lgettext(@locale, "Language")}
+            options={PriveeWeb.Locale.languages()}
+          />
+        </.form>
+
+        <div class="mt-4 flex items-center justify-between text-sm text-zinc-800 dark:text-zinc-100">
+          <span>{lgettext(@locale, "Theme")}</span>
+          <.button
+            id="theme-toggle"
+            data-theme-toggle="theme-toggle"
+            aria-label={lgettext(@locale, "Switch theme")}
+            class="cursor-pointer"
+          >
+            <svg
+              id="theme-toggle-dark-icon"
+              data-theme-selector="dark"
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+
+            <svg
+              id="theme-toggle-light-icon"
+              data-theme-selector="light"
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+              >
+              </path>
+            </svg>
+          </.button>
+        </div>
+      </div>
+    </div>
+
     <%= if @current_session do %>
       <.button_link
         id="copy-session-code-btn"
         data-session-name={@current_session.session_name}
         data-action="code"
-        aria-label="copy-session-name"
-        legend="Copy session name"
+        aria-label={lgettext(@locale, "Copy session name")}
+        legend={lgettext(@locale, "Copy session name")}
       >
         <svg
           class="w-6 h-6"
@@ -99,12 +146,13 @@
           />
         </svg>
       </.button_link>
+
       <.button_link
         id="copy-session-url-btn"
         data-session-name={@current_session.session_name}
         data-action="url"
-        aria-label="copy-session-url"
-        legend="Copy link"
+        aria-label={lgettext(@locale, "Copy link")}
+        legend={lgettext(@locale, "Copy link")}
       >
         <svg
           class="w-6 h-6"
@@ -124,11 +172,13 @@
           />
         </svg>
       </.button_link>
+
       <.button_link
         href={~p"/sessions/log_out"}
         method="delete"
         class="cursor-pointer"
-        legend="Log Out"
+        legend={lgettext(@locale, "Log Out")}
+        aria-label={lgettext(@locale, "Log Out")}
       >
         <svg
           class="w-6 h-6"
@@ -152,7 +202,8 @@
       <.button_link
         navigate={~p"/"}
         class="cursor-pointer"
-        legend="Create"
+        legend={lgettext(@locale, "Create")}
+        aria-label={lgettext(@locale, "Create")}
       >
         <svg
           class="w-6 h-6"
@@ -172,10 +223,12 @@
           />
         </svg>
       </.button_link>
+
       <.button_link
         navigate={~p"/login"}
         class="cursor-pointer"
-        legend="log in"
+        legend={lgettext(@locale, "Sign in")}
+        aria-label={lgettext(@locale, "Sign in")}
       >
         <svg
           class="w-6 h-6"

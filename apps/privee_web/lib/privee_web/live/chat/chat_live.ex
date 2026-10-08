@@ -50,7 +50,7 @@ defmodule PriveeWeb.Chat.ChatLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> put_flash(:info, "You have to select a session to continue")
+     |> put_flash(:info, gettext("You have to select a session to continue"))
      |> push_navigate(to: ~p"/privee")}
   end
 
@@ -79,7 +79,9 @@ defmodule PriveeWeb.Chat.ChatLive do
   # Legacy events from a cached client.
   def handle_event(event, _params, socket) do
     Logger.debug("Unexpected chat event #{inspect(event)}")
-    {:noreply, put_flash(socket, :error, "The application was updated. Please reload the page.")}
+
+    {:noreply,
+     put_flash(socket, :error, gettext("The application was updated. Please reload the page."))}
   end
 
   @impl true
@@ -108,7 +110,7 @@ defmodule PriveeWeb.Chat.ChatLive do
       :error ->
         {:halt,
          socket
-         |> put_flash(:info, "You have to select a session to continue")
+         |> put_flash(:info, gettext("You have to select a session to continue"))
          |> push_navigate(to: ~p"/privee")}
     end
   end

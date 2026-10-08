@@ -102,7 +102,7 @@ defmodule PriveeWeb.ChatLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
       assert has_element?(lv, "#chat-text")
       refute has_element?(lv, "#chat-text[name]")
-      refute has_element?(lv, "form[phx-change]")
+      refute has_element?(lv, "form[phx-change] #chat-text")
       refute has_element?(lv, "form[phx-submit] #chat-text")
     end
 

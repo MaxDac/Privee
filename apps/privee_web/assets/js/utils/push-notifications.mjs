@@ -1,4 +1,5 @@
 import { createNotificationCoordinator } from "./notification-coordinator.mjs"
+import { clientText } from "./locale.mjs"
 
 /** @type {import("./notification-coordinator.mjs").NotificationCoordinator} */
 let coordinator = createNotificationCoordinator()
@@ -17,11 +18,12 @@ export const setNotificationCoordinator = (c) => {
  * @returns {Promise<string>} The result of the permission request.
  */
 export const askNotificationPermission = async () => {
+  const doc = window.document
   if ("Notification" in window) {
     await Notification.requestPermission()
     return `Permission: ${Notification.permission === "granted" ? "granted" : "denied"}`
   } else {
-    return Promise.reject("This browser does not support notifications.")
+    return Promise.reject(clientText("notificationsUnsupported", doc))
   }
 }
 
@@ -58,7 +60,7 @@ export const pushBackEndNotification = async (event) => {
     const allowed = await coordinator.shouldShowNotification(sessionName, dedupKey)
     if (!allowed) return undefined
 
-    const title = "Privee - Text received"
+    const title = clientText("notificationTitle", window.document)
     const url = `/chat/${sessionName}`
     const message = await getNotificationMessage(event)
 
@@ -99,7 +101,7 @@ export const pushBackEndNotification = async (event) => {
  * @returns {Promise<string>} The notification message.
  */
 const getNotificationMessage = (_event) => {
-  return Promise.resolve("New message received")
+  return Promise.resolve(clientText("notificationBody", window.document))
 }
 
 /**

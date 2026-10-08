@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { JSDOM } from "jsdom"
+import { installCatalog } from "./gettext-fixture.mjs"
 
 // Mock the flash-hooks module to avoid phoenix_live_view dependency
 vi.mock("../hooks/flash-hooks.mjs", () => ({
@@ -11,6 +12,24 @@ import {
   copySessionNameToClipboardBackEndEventHandler,
   testExports,
 } from "../utils/clipboard.mjs"
+
+describe("clipboard language changes", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("uses the latest Gettext presentation without changing copied session content", async () => {
+    const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
+    vi.stubGlobal("window", dom.window)
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal("navigator", { clipboard: { writeText } })
+    const flash = vi.fn().mockResolvedValue(undefined)
+    const handler = testExports.createCopyButtonHandler(flash)
+    installCatalog(dom.window.document, "it")
+    await handler.call({ dataset: { sessionName: "original-session-name", action: "code" } })
+    expect(writeText).toHaveBeenCalledWith("original-session-name")
+    expect(flash).toHaveBeenCalledWith("Info", "Sessione copiata")
+  })
+})
 
 describe("copySessionNameToClipboardBackEndEventHandler", () => {
   afterEach(() => {
@@ -76,6 +95,7 @@ describe("getSessionLoginMarkdownLink", () => {
 
   it("generates correct URL with basic inputs", () => {
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
 
     const result = testExports.getSessionLoginMarkdownLink("abc123", "Login Here")
@@ -84,6 +104,7 @@ describe("getSessionLoginMarkdownLink", () => {
 
   it("properly encodes special characters in session code", () => {
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
 
     const result = testExports.getSessionLoginMarkdownLink("test@#$%", "Session Link")
@@ -92,6 +113,7 @@ describe("getSessionLoginMarkdownLink", () => {
 
   it("handles different host origins", () => {
     const dom = new JSDOM("", { url: "http://localhost:4000" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
 
     const result = testExports.getSessionLoginMarkdownLink("session123", "Dev Link")
@@ -100,6 +122,7 @@ describe("getSessionLoginMarkdownLink", () => {
 
   it("handles empty title (title parameter ignored)", () => {
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
 
     const result = testExports.getSessionLoginMarkdownLink("abc123", "")
@@ -118,6 +141,7 @@ describe("createCopyButtonHandler", () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
@@ -147,6 +171,7 @@ describe("createCopyButtonHandler", () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
@@ -176,6 +201,7 @@ describe("createCopyButtonHandler", () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
@@ -205,6 +231,7 @@ describe("createCopyButtonHandler", () => {
     const mockWriteText = vi.fn().mockResolvedValue(undefined)
 
     const dom = new JSDOM("", { url: "https://example.com" })
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       clipboard: {
@@ -253,6 +280,7 @@ describe("addSessionNameCopyListener - Original Test Behavior", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
@@ -293,6 +321,7 @@ describe("addSessionNameCopyListener", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
@@ -328,6 +357,7 @@ describe("addSessionNameCopyListener", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
@@ -363,6 +393,7 @@ describe("addSessionNameCopyListener", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
@@ -400,6 +431,7 @@ describe("addSessionNameCopyListener", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,
@@ -442,6 +474,7 @@ describe("addSessionNameCopyListener", () => {
     const dom = new JSDOM(buttonHtml, { url: "https://example.com" })
 
     vi.stubGlobal("document", dom.window.document)
+    installCatalog(dom.window.document)
     vi.stubGlobal("window", dom.window)
     vi.stubGlobal("navigator", {
       ...dom.window.navigator,

@@ -36,7 +36,7 @@ export const pushFlash =
   (pushEvent) =>
   (kind, message, title = null) =>
     new Promise((res, _rej) => {
-      pushEvent(flashEventName, { kind, message, title }, (reply) => {
+      pushEvent(flashEventName, { kind: kind.toLowerCase(), message, title }, (reply) => {
         res(reply)
       })
     })

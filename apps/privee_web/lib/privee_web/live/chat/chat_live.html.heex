@@ -1,33 +1,42 @@
-<Layouts.chat flash={@flash} current_session={@current_session} navigate_to={@navigate_to}>
+<Layouts.chat
+  flash={@flash}
+  current_session={@current_session}
+  navigate_to={@navigate_to}
+  locale={@locale}
+>
   <section class="flex flex-col h-[calc(100dvh-80px)] justify-between">
     <.header class="h-10 pt-5 pb-10 text-center">
       {@selected_session_name}
     </.header>
+
     <div class="flex justify-center gap-2 px-5 text-xs">
       <button
         id="chat-safety-number"
         type="button"
         class="rounded-full px-3 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
       >
-        Safety number
+        {lgettext(@locale, "Safety number")}
       </button>
+
       <button
         id="chat-clear-history"
         type="button"
         class="rounded-full px-3 py-1 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
       >
-        Clear history on this device
+        {lgettext(@locale, "Clear history on this device")}
       </button>
+
       <button
         id="chat-forget-device"
         type="button"
         class="rounded-full px-3 py-1 text-red-500 transition hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
       >
-        Forget this device
+        {lgettext(@locale, "Forget this device")}
       </button>
     </div>
     <%!-- Client-rendered notices (identity change, superseded device, unsupported browser) --%>
     <div id="chat-banner" phx-update="ignore" class="px-5"></div>
+
     <main
       id="chat-screen"
       class="flex-grow overflow-auto"
@@ -40,14 +49,16 @@
     >
       <%!-- Messages decrypted earlier on this device that are no longer on the server --%>
       <div id="chat-local-history" phx-update="ignore"></div>
+
       <.chat_screen
         current_session={@current_session}
         selected_session={@selected_session}
         streams={@streams}
       />
     </main>
+
     <footer class="px-5 py-5">
-      <.chat_input />
+      <.chat_input locale={@locale} />
     </footer>
   </section>
 </Layouts.chat>

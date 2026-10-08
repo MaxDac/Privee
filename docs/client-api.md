@@ -57,6 +57,21 @@ log in.
 rate-limited per IP and return `429 {error: "rate_limited"}` when the limit is
 exceeded. Push notifications carry no message content.
 
+Clients may send `Accept-Language` on every REST request, including registration
+and login. Supported languages are `en`, `it`, `pt-PT` (European Portuguese),
+`es` and `fr`. Base and regional variants match the supported base language
+(for example `pt` and `pt-BR` select the European Portuguese catalog).
+Quality weights are respected; absent or unsupported headers default to English.
+The browser's language cookie is not consulted for native API requests.
+
+Only human-readable validation arrays in `errors[field]` are localized, including
+interpolated limits. The API version remains **1**; HTTP statuses, envelope/field
+names and top-level machine `error` strings (such as `invalid`,
+`invalid_credentials` and `rate_limited`) are unchanged. Socket payloads are
+unchanged. Clients should translate machine codes locally. Previously received
+validation text may be cleared on language changes while retaining entered values;
+the next validation request returns errors in the newly selected language.
+
 ## Socket: `/app/socket`
 
 A [Phoenix Channels](https://hexdocs.pm/phoenix/channels.html) WebSocket

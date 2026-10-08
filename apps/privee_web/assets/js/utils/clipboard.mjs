@@ -1,3 +1,5 @@
+import { clientText } from "./locale.mjs"
+
 /**
  * Copies the given text into the user clipboard.
  * @param {import("./back-end-event-handlers.mjs").PhoenixSessionNameEvent} [event] The event sent by the back-end.
@@ -58,10 +60,14 @@ const createCopyButtonHandler = (pushFlash) => {
     }
 
     if (action === "code") {
-      return copyTextToClipboard(sessionName).then(() => pushFlash("Info", "Session copied"))
+      return copyTextToClipboard(sessionName)
+        .then(() => pushFlash("Info", clientText("sessionCopied", window.document)))
+        .catch(() => pushFlash("Error", clientText("copyFailed", window.document)))
     } else {
       const sessionUrl = getSessionLoginMarkdownLink(sessionName)
-      return copyTextToClipboard(sessionUrl).then(() => pushFlash("Info", "Url copied"))
+      return copyTextToClipboard(sessionUrl)
+        .then(() => pushFlash("Info", clientText("urlCopied", window.document)))
+        .catch(() => pushFlash("Error", clientText("copyFailed", window.document)))
     }
   }
 }

@@ -5,14 +5,17 @@ defmodule PriveeWeb.SessionController do
   alias PriveeWeb.SessionAuth
 
   def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, """
-    Session created successfully!
-    Your session name has been automatically copied to the clipboard.
-    """)
+    create(
+      conn,
+      params,
+      gettext(
+        "Session created successfully! Your session name has been automatically copied to the clipboard."
+      )
+    )
   end
 
   def create(conn, params) do
-    create(conn, params, "Welcome back!")
+    create(conn, params, gettext("Welcome back!"))
   end
 
   defp create(conn, %{"session" => session_params} = params, info) do
@@ -43,7 +46,7 @@ defmodule PriveeWeb.SessionController do
   defp put_error_flash(conn, _session_params) do
     # In order to prevent user enumeration attacks, don't disclose whether the recovery_phrase is registered.
     conn
-    |> put_flash(:error, "Invalid recovery_phrase or session_name")
+    |> put_flash(:error, gettext("Invalid recovery phrase or session name"))
     |> redirect(to: ~p"/")
   end
 
@@ -62,7 +65,7 @@ defmodule PriveeWeb.SessionController do
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "Logged out successfully.")
+    |> put_flash(:info, gettext("Logged out successfully."))
     |> SessionAuth.log_out_session()
   end
 end

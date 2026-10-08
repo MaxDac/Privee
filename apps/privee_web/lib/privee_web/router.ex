@@ -7,6 +7,7 @@ defmodule PriveeWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug PriveeWeb.Locale, :browser
     plug :fetch_live_flash
     plug :put_root_layout, html: {PriveeWeb.Layouts, :root}
     plug :protect_from_forgery
@@ -16,6 +17,7 @@ defmodule PriveeWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug PriveeWeb.Locale, :api
   end
 
   pipeline :app_session do
@@ -46,6 +48,7 @@ defmodule PriveeWeb.Router do
 
     live_session :redirect_if_session_is_authenticated,
       on_mount: [
+        PriveeWeb.LocaleLive,
         {PriveeWeb.SessionAuth, :redirect_if_session_is_authenticated},
         {PriveeWeb.Navigation, :home}
       ] do
@@ -61,6 +64,7 @@ defmodule PriveeWeb.Router do
 
     live_session :require_authenticated_session,
       on_mount: [
+        PriveeWeb.LocaleLive,
         {PriveeWeb.SessionAuth, :ensure_authenticated},
         {PriveeWeb.Navigation, :logged},
         PriveeWeb.SignalKeysLive

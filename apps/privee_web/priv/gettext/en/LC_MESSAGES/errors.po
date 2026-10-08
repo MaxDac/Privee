@@ -1,112 +1,116 @@
-## `msgid`s in this file come from POT (.pot) files.
-##
-## Do not add, change, or remove `msgid`s manually here as
-## they're tied to the ones in the corresponding POT file
-## (with the same domain).
-##
-## Use `mix gettext.extract --merge` or `mix gettext.merge`
-## to merge POT files into PO files.
 msgid ""
 msgstr ""
 "Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-## From Ecto.Changeset.cast/4
-msgid "can't be blank"
-msgstr ""
+msgid "The session name does not exist"
+msgstr "The session name does not exist"
 
-## From Ecto.Changeset.unique_constraint/3
-msgid "has already been taken"
-msgstr ""
-
-## From Ecto.Changeset.put_change/3
-msgid "is invalid"
-msgstr ""
-
-## From Ecto.Changeset.validate_acceptance/3
-msgid "must be accepted"
-msgstr ""
-
-## From Ecto.Changeset.validate_format/3
-msgid "has invalid format"
-msgstr ""
-
-## From Ecto.Changeset.validate_subset/3
-msgid "has an invalid entry"
-msgstr ""
-
-## From Ecto.Changeset.validate_exclusion/3
-msgid "is reserved"
-msgstr ""
-
-## From Ecto.Changeset.validate_confirmation/3
-msgid "does not match confirmation"
-msgstr ""
-
-## From Ecto.Changeset.no_assoc_constraint/3
-msgid "is still associated with this entry"
-msgstr ""
+msgid "You selected your session name"
+msgstr "You selected your session name"
 
 msgid "are still associated with this entry"
-msgstr ""
+msgstr "are still associated with this entry"
 
-## From Ecto.Changeset.validate_length/3
-msgid "should have %{count} item(s)"
-msgid_plural "should have %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgid "can't be blank"
+msgstr "can't be blank"
 
-msgid "should be %{count} character(s)"
-msgid_plural "should be %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgid "cannot be the sender"
+msgstr "cannot be the sender"
+
+msgid "does not match confirmation"
+msgstr "does not match confirmation"
+
+msgid "has already been taken"
+msgstr "has already been taken"
+
+msgid "has an invalid entry"
+msgstr "has an invalid entry"
+
+msgid "has invalid format"
+msgstr "has invalid format"
+
+msgid "is invalid"
+msgstr "is invalid"
+
+msgid "is not valid"
+msgstr "is not valid"
+
+msgid "is reserved"
+msgstr "is reserved"
+
+msgid "is still associated with this entry"
+msgstr "is still associated with this entry"
+
+msgid "must be accepted"
+msgstr "must be accepted"
+
+msgid "must be empty for quick sessions"
+msgstr "must be empty for quick sessions"
+
+msgid "must be equal to %{number}"
+msgstr "must be equal to %{number}"
+
+msgid "must be greater than %{number}"
+msgstr "must be greater than %{number}"
+
+msgid "must be greater than or equal to %{number}"
+msgstr "must be greater than or equal to %{number}"
+
+msgid "must be less than %{number}"
+msgstr "must be less than %{number}"
+
+msgid "must be less than or equal to %{number}"
+msgstr "must be less than or equal to %{number}"
+
+msgid "must contain only alphabetic characters and punctuation"
+msgstr "must contain only alphabetic characters and punctuation"
+
+msgid "must contain only alphanumeric characters and hyphens"
+msgstr "must contain only alphanumeric characters and hyphens"
 
 msgid "should be %{count} byte(s)"
 msgid_plural "should be %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "should be %{count} byte"
+msgstr[1] "should be %{count} bytes"
 
-msgid "should have at least %{count} item(s)"
-msgid_plural "should have at least %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "should be at least %{count} character(s)"
-msgid_plural "should be at least %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "should be %{count} character"
+msgstr[1] "should be %{count} characters"
 
 msgid "should be at least %{count} byte(s)"
 msgid_plural "should be at least %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "should be at least %{count} byte"
+msgstr[1] "should be at least %{count} bytes"
 
-msgid "should have at most %{count} item(s)"
-msgid_plural "should have at most %{count} item(s)"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "should be at most %{count} character(s)"
-msgid_plural "should be at most %{count} character(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "should be at least %{count} character"
+msgstr[1] "should be at least %{count} characters"
 
 msgid "should be at most %{count} byte(s)"
 msgid_plural "should be at most %{count} byte(s)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "should be at most %{count} byte"
+msgstr[1] "should be at most %{count} bytes"
 
-## From Ecto.Changeset.validate_number/3
-msgid "must be less than %{number}"
-msgstr ""
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "should be at most %{count} character"
+msgstr[1] "should be at most %{count} characters"
 
-msgid "must be greater than %{number}"
-msgstr ""
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "should have %{count} item"
+msgstr[1] "should have %{count} items"
 
-msgid "must be less than or equal to %{number}"
-msgstr ""
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "should have at least %{count} item"
+msgstr[1] "should have at least %{count} items"
 
-msgid "must be greater than or equal to %{number}"
-msgstr ""
-
-msgid "must be equal to %{number}"
-msgstr ""
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "should have at most %{count} item"
+msgstr[1] "should have at most %{count} items"

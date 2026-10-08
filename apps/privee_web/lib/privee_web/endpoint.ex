@@ -51,6 +51,7 @@ defmodule PriveeWeb.Endpoint do
   plug PriveeWeb.Plugs.ForwardedRemoteIp
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+  plug PriveeWeb.Locale, :request
 
   # Security headers
   plug PriveeWeb.Plugs.SecurityHeaders

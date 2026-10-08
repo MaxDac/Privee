@@ -107,3 +107,24 @@ msgstr ""
 
 msgid "must be equal to %{number}"
 msgstr ""
+
+msgid "must contain only alphanumeric characters and hyphens"
+msgstr ""
+
+msgid "must be empty for quick sessions"
+msgstr ""
+
+msgid "must contain only alphabetic characters and punctuation"
+msgstr ""
+
+msgid "is not valid"
+msgstr ""
+
+msgid "The session name does not exist"
+msgstr ""
+
+msgid "You selected your session name"
+msgstr ""
+
+msgid "cannot be the sender"
+msgstr ""

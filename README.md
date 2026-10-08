@@ -13,6 +13,21 @@ Chats are end-to-end encrypted with the Signal Protocol. See
 manual release checklist, and the [E2EE audit](docs/security/e2ee-audit.md) for
 the independent review of the web, server and Android implementations.
 
+## Language
+
+Open **Settings > Language** before or after signing in to choose English,
+Italian, European Portuguese, Spanish or French. English is the default,
+regardless of browser language. The preference is stored in a browser-local
+cookie for one year, independently of your session, and survives login/logout.
+It is not synced to other browsers or the Android app.
+
+Switching language updates the current page without navigating or restarting
+encryption. Form drafts, messages and local chat history are preserved; existing
+validation errors are cleared and subsequent validation uses the new language.
+Messages, session names, recovery phrases and safety numbers are never translated.
+Server and browser-owned UI share the Gettext catalogs in
+`apps/privee_web/priv/gettext`.
+
 ## Run your own server
 
 Anyone can run their own Privee server on Fly.io: fork

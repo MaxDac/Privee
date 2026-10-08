@@ -13,6 +13,7 @@ import {
   NoPeerKeysError,
   wasQueued,
 } from "./signal-client.mjs"
+import { clientTexts } from "./locale.mjs"
 
 export const Selectors = Object.freeze({
   entry: "[data-signal-message]",
@@ -24,29 +25,6 @@ export const Selectors = Object.freeze({
   safetyNumber: "#chat-safety-number",
   clearHistory: "#chat-clear-history",
   forgetDevice: "#chat-forget-device",
-})
-
-export const Texts = Object.freeze({
-  undecryptable: "This message could not be decrypted.",
-  unavailable: "Sent from another device.",
-  noPeerKeys: "Your contact has not set up encryption yet. Try again once they are online.",
-  sendFailed: "The message could not be sent. Please try again.",
-  sendQueued: "The message could not be delivered yet. It will be sent automatically.",
-  identityChanged:
-    "Your contact's security code changed. They may have reset their device, or someone may be intercepting the conversation. Verify the safety number with them before continuing.",
-  superseded:
-    "Encryption for this session was reset on another device, so this device can no longer send or receive messages.",
-  needsReset:
-    "This device has no encryption keys for this session. Reset the encryption identity to continue; messages sent to your previous device will not be readable here.",
-  unsupported:
-    "This browser does not support the features required for end-to-end encryption (Web Locks). Please use an up-to-date browser.",
-  failedToStart: "Encryption could not be initialized. Please reload the page.",
-  earlier: "Earlier on this device",
-  confirmClear: "Delete the local history of this conversation from this device?",
-  confirmForget:
-    "Delete all encryption keys and history of this session from this device? You will need to reset encryption to chat again.",
-  confirmReset:
-    "Reset the encryption identity of this session? Your contacts will be asked to verify your new safety number.",
 })
 
 /**
@@ -83,6 +61,19 @@ export class ChatController {
     return /** @type {HTMLElement | null} */ (this.doc.querySelector(selector))
   }
 
+  get texts() {
+    return clientTexts(this.doc)
+  }
+
+  /**
+   * @param {HTMLElement} entry
+   * @param {string} key
+   */
+  placeholder(entry, key) {
+    entry.dataset.clientText = key
+    return this.texts[key]
+  }
+
   /** Initializes keys, delivers pending messages and renders the conversation. */
   async start() {
     this.bindComposer()
@@ -92,7 +83,7 @@ export class ChatController {
       this.setState(await this.client.ensureKeys())
     } catch (e) {
       console.error("Unable to initialize encryption", e)
-      this.showBanner("error", Texts.failedToStart)
+      this.showBanner("error", this.texts.failedToStart)
       return
     }
 
@@ -114,9 +105,10 @@ export class ChatController {
     this.state = state
     this.updateComposer()
 
-    if (state === "superseded") this.showBanner("superseded", Texts.superseded, this.resetAction())
+    if (state === "superseded")
+      this.showBanner("superseded", this.texts.superseded, this.resetAction())
     else if (state === "needs_reset")
-      this.showBanner("needs_reset", Texts.needsReset, this.resetAction())
+      this.showBanner("needs_reset", this.texts.needsReset, this.resetAction())
     else if (state === "ready") this.clearBanner(["superseded", "needs_reset"])
   }
 
@@ -175,15 +167,17 @@ export class ChatController {
 
   /** @param {HTMLElement[]} entries */
   async renderEntries(entries) {
+    let rendered = false
     for (const entry of entries) {
       if (entry.dataset.converted !== "false") continue
       if (this.blockedByIdentity && entry.dataset.direction === "in") break
       const text = await this.textFor(entry)
       if (text === undefined) break
       this.fill(entry, text)
+      rendered = true
     }
     await this.bannerTask
-    this.scrollToEnd()
+    if (rendered) this.scrollToEnd()
   }
 
   /**
@@ -192,7 +186,7 @@ export class ChatController {
    */
   async textFor(entry) {
     const { id, seq, epoch, type, body, direction, clientNonce } = entry.dataset
-    if (!id) return Texts.undecryptable
+    if (!id) return this.placeholder(entry, "undecryptable")
 
     if (direction === "out") {
       // The outbox is checked before the history: the send reply moves the row
@@ -200,7 +194,7 @@ export class ChatController {
       const row = clientNonce
         ? await this.client.acknowledge(clientNonce, { id, seq: Number(seq), epoch: String(epoch) })
         : await this.client.historyEntry(id)
-      return row?.plaintext ?? Texts.unavailable
+      return row?.plaintext ?? this.placeholder(entry, "unavailable")
     }
 
     try {
@@ -212,7 +206,7 @@ export class ChatController {
         body: String(body),
         direction: "in",
       })
-      return plaintext ?? Texts.undecryptable
+      return plaintext ?? this.placeholder(entry, "undecryptable")
     } catch (e) {
       this.handleError(e)
       return undefined
@@ -251,7 +245,8 @@ export class ChatController {
 
     const heading = this.doc.createElement("p")
     heading.className = "py-2 text-center text-xs text-zinc-500"
-    heading.textContent = Texts.earlier
+    heading.dataset.clientText = "earlier"
+    heading.textContent = this.texts.earlier
     container.append(heading)
     for (const row of rows) container.append(this.bubble(row))
   }
@@ -283,7 +278,8 @@ export class ChatController {
     text.className = `text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal ${
       out ? "text-zinc-50" : "text-zinc-900"
     }`
-    text.textContent = row.plaintext ?? (out ? Texts.unavailable : Texts.undecryptable)
+    text.textContent =
+      row.plaintext ?? this.placeholder(text, out ? "unavailable" : "undecryptable")
 
     bubble.append(text)
     wrapper.append(bubble)
@@ -331,9 +327,9 @@ export class ChatController {
       const queued = wasQueued(e)
       if (!queued && !input.value) input.value = text
       if (e instanceof NoPeerKeysError) {
-        this.showBanner("notice", Texts.noPeerKeys)
+        this.showBanner("notice", this.texts.noPeerKeys)
       } else if (!this.handleError(e)) {
-        this.showBanner("notice", queued ? Texts.sendQueued : Texts.sendFailed)
+        this.showBanner("notice", queued ? this.texts.sendQueued : this.texts.sendFailed)
         console.error("Unable to send message", e)
       }
     }
@@ -402,8 +398,8 @@ export class ChatController {
     const number = await this.client.safetyNumber(this.peerId)
     this.showBanner(
       "identity",
-      Texts.identityChanged,
-      { label: "Accept new security code", run: () => this.approveIdentity() },
+      this.texts.identityChanged,
+      { label: this.texts.acceptIdentity, run: () => this.approveIdentity() },
       number,
     )
   }
@@ -420,15 +416,15 @@ export class ChatController {
   /** @returns {{label: string, run: () => Promise<void>}} */
   resetAction() {
     return {
-      label: "Reset encryption identity",
+      label: this.texts.resetIdentity,
       run: async () => {
-        if (!this.confirm(Texts.confirmReset)) return
+        if (!this.confirm(this.texts.confirmReset)) return
         try {
           this.setState(await this.client.resetIdentity())
           await this.flush()
         } catch (e) {
           console.error("Unable to reset identity", e)
-          this.showBanner("error", Texts.failedToStart)
+          this.showBanner("error", this.texts.failedToStart)
         }
       },
     }
@@ -454,6 +450,7 @@ export class ChatController {
 
     const text = this.doc.createElement("p")
     text.textContent = message
+    text.dataset.clientText = Object.keys(this.texts).find((key) => this.texts[key] === message)
     banner.append(text)
 
     if (safetyNumber) banner.append(this.safetyNumberElement(safetyNumber))
@@ -465,6 +462,9 @@ export class ChatController {
       button.className =
         "mt-2 rounded-md bg-amber-900 px-3 py-1 text-xs font-semibold text-amber-50 transition hover:bg-amber-700 active:scale-95 dark:bg-amber-100 dark:text-amber-900"
       button.textContent = action.label
+      button.dataset.clientText = Object.keys(this.texts).find(
+        (key) => this.texts[key] === action.label,
+      )
       button.addEventListener("click", () => action.run())
       banner.append(button)
     }
@@ -513,25 +513,25 @@ export class ChatController {
   async showSafetyNumber() {
     const number = await this.client.safetyNumber(this.peerId)
     if (!number) {
-      this.showBanner("safety", "Exchange a message first to compare safety numbers.")
+      this.showBanner("safety", this.texts.exchangeFirst)
       return
     }
     this.showBanner(
       "safety",
-      "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted.",
-      { label: "Close", run: () => this.clearBanner(["safety"]) },
+      this.texts.compareSafety,
+      { label: this.texts.close, run: () => this.clearBanner(["safety"]) },
       number,
     )
   }
 
   async clearHistory() {
-    if (!this.confirm(Texts.confirmClear)) return
+    if (!this.confirm(this.texts.confirmClear)) return
     await this.client.clearHistory(this.peerId)
     this.query(Selectors.localHistory)?.replaceChildren()
   }
 
   async forgetDevice() {
-    if (!this.confirm(Texts.confirmForget)) return
+    if (!this.confirm(this.texts.confirmForget)) return
     await this.client.forgetDevice()
     this.reload()
   }

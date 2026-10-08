@@ -30,6 +30,8 @@ import topbar from "../vendor/topbar"
 // Import only the core functionality that's needed on every page
 import { addBackEndEventHandlers } from "./hooks/event-handlers.mjs"
 import { addFlashAutoHideHook } from "./hooks/flash-hooks.mjs"
+import { addLocaleHook, currentLocale } from "./utils/locale.mjs"
+import { addThemeEventHandlers } from "./utils/dark-mode-switcher.mjs"
 import {
   createLazyChatScreenHook,
   createLazyRegistrationScreenHook,
@@ -41,6 +43,8 @@ const Hooks = {}
 
 // Flash hook is used on all pages - load immediately
 addFlashAutoHideHook(Hooks)
+addLocaleHook(Hooks)
+addThemeEventHandlers()
 
 // Lazy-load page-specific hooks (loaded only when their pages are visited)
 Hooks.ChatScreen = createLazyChatScreenHook()
@@ -52,7 +56,7 @@ const csrfToken = /** @type {HTMLMetaElement} */ (
 ).getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
-  params: { _csrf_token: csrfToken },
+  params: () => ({ _csrf_token: csrfToken, locale: currentLocale() }),
   hooks: Hooks,
 })
 
