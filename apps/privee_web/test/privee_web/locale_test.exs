@@ -178,14 +178,24 @@ defmodule PriveeWeb.LocaleTest do
   end
 
   test "error interpolation uses translated singular and plural forms" do
-    Gettext.with_locale(PriveeWeb.Gettext, "it", fn ->
-      assert PriveeWeb.CoreComponents.translate_error(
-               {"should be %{count} character(s)", count: 1}
-             ) == "deve contenere 1 carattere"
+    for {locale, singular, plural} <- [
+          {"en", "should be 1 character", "should be %{count} characters"},
+          {"it", "deve contenere 1 carattere", "deve contenere %{count} caratteri"},
+          {"pt-PT", "deve ter 1 caráter", "deve ter %{count} carateres"},
+          {"es", "debe tener 1 carácter", "debe tener %{count} caracteres"},
+          {"fr", "doit contenir 1 caractère", "doit contenir %{count} caractères"}
+        ] do
+      Gettext.with_locale(PriveeWeb.Gettext, locale, fn ->
+        assert PriveeWeb.CoreComponents.translate_error(
+                 {"should be %{count} character(s)", count: 1}
+               ) == singular
 
-      assert PriveeWeb.CoreComponents.translate_error(
-               {"should be %{count} character(s)", count: 2}
-             ) == "deve contenere 2 caratteri"
-    end)
+        for count <- [0, 2, 10] do
+          assert PriveeWeb.CoreComponents.translate_error(
+                   {"should be %{count} character(s)", count: count}
+                 ) == String.replace(plural, "%{count}", Integer.to_string(count))
+        end
+      end)
+    end
   end
 end

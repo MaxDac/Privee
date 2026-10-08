@@ -21,5 +21,5 @@ defmodule PriveeWeb.Gettext do
 
   See the [Gettext Docs](https://gettext.hexdocs.pm) for detailed usage.
   """
-  use Gettext.Backend, otp_app: :privee_web
+  use Gettext.Backend, otp_app: :privee_web, plural_forms: PriveeWeb.GettextPlural
 end
