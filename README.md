@@ -1,7 +1,6 @@
 # Privee
 
 [![CI](https://github.com/MaxDac/Privee/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/ci.yml)
-[![Main](https://github.com/MaxDac/Privee/actions/workflows/main.yml/badge.svg)](https://github.com/MaxDac/Privee/actions/workflows/main.yml)
 
 Privee is a Phoenix LiveView umbrella application:
 
@@ -16,11 +15,13 @@ the independent review of the web, server and Android implementations.
 
 ## Run your own server
 
-Anyone can run their own Privee server on Fly.io without forking this
-repository: create a repository from the
-[PriveeDeploy](https://github.com/MaxDac/PriveeDeploy) template, which deploys
-the prebuilt `ghcr.io/maxdac/privee` image with your own `fly.toml`.
-**Follow the step-by-step [Self-hosting walkthrough](docs/self-hosting.md).**
+Anyone can run their own Privee server on Fly.io: fork
+[PriveeDeploy](https://github.com/MaxDac/PriveeDeploy), add your Fly.io keys,
+and run its Deploy workflow. It builds Privee (or your fork of it) with your own
+`fly.toml`. **The step-by-step walkthrough is in the
+[PriveeDeploy README](https://github.com/MaxDac/PriveeDeploy#readme)**;
+[Self-hosting](docs/self-hosting.md) lists the server configuration and notes on
+other platforms.
 
 Clients work with any instance through its DNS name: the
 [Privee Android app](https://github.com/MaxDac/PriveeApp) asks for a server
@@ -88,62 +89,22 @@ Editor setup notes are in [docs/ide-setup.md](docs/ide-setup.md).
 
 ## CI/CD
 
-All workflows live in [`.github/workflows`](./.github/workflows):
+[`ci.yml`](./.github/workflows/ci.yml) runs on pull requests, on every push to `main` and on demand: Elixir checks and tests (with Postgres), Dialyzer, asset checks, Playwright browser tests and a Docker build.
 
-| Workflow | Trigger | What it does |
-| --- | --- | --- |
-| [`ci.yml`](./.github/workflows/ci.yml) | Pull requests, manual, reusable | Elixir checks + tests (with Postgres), Dialyzer, asset checks, Playwright browser tests, Docker build |
-| [`main.yml`](./.github/workflows/main.yml) | Push to `main`, `v*` tags, manual | Runs `ci.yml`, then publishes the Docker image to GHCR and (from `main`) deploys to Fly.io |
-
-The image is published as `ghcr.io/<owner>/privee`, tagged `main` and `sha-<commit>` on every push to `main`, and `<version>` and `latest` on `v*` tags (e.g. `v1.2.0` → `1.2.0`). Self-hosters deploy it with [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy). Release a version with:
+This repository never deploys. Deployments run on demand from [PriveeDeploy](https://github.com/MaxDac/PriveeDeploy), which checks out a chosen commit of Privee and deploys it to Fly.io; the upstream instance and its `fly.toml` live there. To deploy from a workstation:
 
 ```bash
-git tag v1.2.0 && git push origin v1.2.0
+gh workflow run deploy.yml -R MaxDac/PriveeDeploy -f ref=$(git rev-parse origin/main)
 ```
 
-The deploy job only runs in the upstream `MaxDac/Privee` repository, so forks get CI without trying to deploy. It targets the `production` GitHub environment and authenticates with the `FLY_API_TOKEN` environment secret. Create the token with:
+AI agents follow the [`deploy-privee`](.github/skills/deploy-privee/SKILL.md) skill, which checks CI and asks for confirmation first.
 
-```bash
-fly tokens create deploy -a bauta
-```
-
-## Deployment (Fly.io)
-
-This section describes the upstream instance. To run your own, follow
-[Self-hosting](docs/self-hosting.md) instead of editing these files.
+The release reads its configuration from environment variables, listed in [Self-hosting](docs/self-hosting.md#configuration-reference). [`rel/env.sh.eex`](./rel/env.sh.eex) detects Fly through `FLY_APP_NAME` and sets the node name and IPv6 distribution; outside Fly the node falls back to a short name.
 
 > **Chat storage is node-local.** Encrypted messages are kept in ETS on the node
 > serving the conversation and are lost on restart, so the chat must run as a
-> single Fly machine. See
+> single machine. See
 > [End-to-end encryption](docs/e2e-encryption.md#deliberate-trade-offs).
-
-[`fly.toml`](./fly.toml) configures the app. Fly builds the [`Dockerfile`](./Dockerfile) remotely. Each deploy runs migrations through the `release_command` (`/app/bin/migrate`).
-
-Set these runtime secrets on the Fly app (`PHX_HOST` is already set in `fly.toml`):
-
-```bash
-fly secrets set SECRET_KEY_BASE=$(mix phx.gen.secret) DATABASE_URL=ecto://... -a bauta
-```
-
-Required variables: `DATABASE_URL`, `SECRET_KEY_BASE` and `PHX_HOST` (the public DNS name of the instance).
-
-Optional variables:
-
-- `PHX_PORT`: public HTTPS port used in generated URLs, defaults to `443`.
-- `PROXY_HOPS`: position of the client address from the right of `X-Forwarded-For` (`2` on Fly.io, set in `fly.toml`), used for per-client rate limits.
-- `PRIVEE_INSTANCE_NAME`: display name reported by `GET /api/app/info`.
-- `PRIVEE_SOURCE_URL`: link to the source code of the running version. Images published by `main.yml` default it to the repository that built them; otherwise it defaults to `https://github.com/MaxDac/Privee`.
-- `POOL_SIZE`: database pool size.
-- `ENABLE_DB_SSL`: enables SSL for the database connection.
-- `DNS_CLUSTER_QUERY`: e.g. `privee.internal`, to cluster multiple machines.
-
-[`rel/env.sh.eex`](./rel/env.sh.eex) detects Fly through `FLY_APP_NAME` and sets the node name and IPv6 distribution. Outside Fly the node falls back to a short name.
-
-To deploy manually from a workstation:
-
-```bash
-fly deploy --remote-only
-```
 
 ## License
 
