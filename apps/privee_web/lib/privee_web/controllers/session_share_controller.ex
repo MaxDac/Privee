@@ -44,7 +44,7 @@ defmodule PriveeWeb.SessionShareController do
 
       nil ->
         conn
-        |> put_flash(:error, "The session you're trying to join doesn't exist.")
+        |> put_flash(:error, gettext("The session you're trying to join doesn't exist."))
         |> redirect(to: ~p"/privee")
     end
   end
@@ -57,7 +57,7 @@ defmodule PriveeWeb.SessionShareController do
 
       nil ->
         conn
-        |> put_flash(:error, "The session you're trying to join doesn't exist.")
+        |> put_flash(:error, gettext("The session you're trying to join doesn't exist."))
         |> redirect(to: ~p"/")
     end
   end

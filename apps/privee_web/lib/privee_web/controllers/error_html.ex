@@ -19,6 +19,10 @@ defmodule PriveeWeb.ErrorHTML do
   # the template name. For example, "404.html" becomes
   # "Not Found".
   def render(template, _assigns) do
-    Phoenix.Controller.status_message_from_template(template)
+    case template do
+      "404.html" -> gettext("Not Found")
+      "500.html" -> gettext("Internal Server Error")
+      _ -> gettext("Something went wrong!")
+    end
   end
 end

@@ -28,6 +28,7 @@ defmodule PriveeWeb.CoreComponents do
   """
   use Phoenix.Component
   use Gettext, backend: PriveeWeb.Gettext
+  import PriveeWeb.LocaleHelpers
 
   alias Phoenix.LiveView.JS
 
@@ -53,6 +54,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :locale, :string, default: "en"
   slot :inner_block, required: true
 
   def modal(assigns) do
@@ -73,16 +75,18 @@ defmodule PriveeWeb.CoreComponents do
           >
             ✕
           </label>
+
           <div id={"#{@id}-content"}>
             {render_slot(@inner_block)}
           </div>
         </div>
+
         <label
           class="modal-backdrop"
           for={"#{@id}-checkbox"}
           phx-click={JS.exec("data-cancel", to: "##{@id}")}
         >
-          Close
+          {lgettext(@locale, "Close")}
         </label>
       </div>
     </div>
@@ -103,6 +107,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error, :warning], doc: "used for styling and flash lookup"
+  attr :locale, :string, default: "en"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -140,6 +145,7 @@ defmodule PriveeWeb.CoreComponents do
           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
+
       <svg
         :if={@kind == :error}
         xmlns="http://www.w3.org/2000/svg"
@@ -154,6 +160,7 @@ defmodule PriveeWeb.CoreComponents do
           d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
+
       <svg
         :if={@kind == :warning}
         xmlns="http://www.w3.org/2000/svg"
@@ -168,18 +175,15 @@ defmodule PriveeWeb.CoreComponents do
           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
         />
       </svg>
-
       <!-- Message content -->
       <div>
-        <span :if={@title} class="font-semibold">{@title}</span>
-        <span>{msg}</span>
+        <span :if={@title} class="font-semibold">{@title}</span> <span>{msg}</span>
       </div>
-
       <!-- Close button -->
       <button
         type="button"
         class="btn btn-sm btn-circle btn-ghost"
-        aria-label={gettext("close")}
+        aria-label={lgettext(@locale, "Close")}
       >
         ✕
       </button>
@@ -369,9 +373,9 @@ defmodule PriveeWeb.CoreComponents do
           checked={@checked}
           class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
           {@rest}
-        />
-        {@label}
+        /> {@label}
       </label>
+
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -381,6 +385,7 @@ defmodule PriveeWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <.label for={@id}>{@label}</.label>
+
       <select
         id={@id}
         name={@name}
@@ -391,6 +396,7 @@ defmodule PriveeWeb.CoreComponents do
         <option :if={@prompt} value="">{@prompt}</option>
         {Phoenix.HTML.Form.options_for_select(@options, @value)}
       </select>
+
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -449,6 +455,7 @@ defmodule PriveeWeb.CoreComponents do
         </div>
         {@label}
       </.label>
+
       <.error :for={msg <- @errors}>{msg}</.error>
     </div>
     """
@@ -459,6 +466,7 @@ defmodule PriveeWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <.label for={@id} errors={@errors}>{@label}</.label>
+
       <input
         type={@type}
         name={@name}
@@ -514,6 +522,7 @@ defmodule PriveeWeb.CoreComponents do
   attr :inline_description, :string, default: nil
   attr :short_description, :string
   attr :long_description, :any, default: nil
+  attr :locale, :string, default: "en"
 
   def info_icon(assigns) do
     ~H"""
@@ -521,7 +530,6 @@ defmodule PriveeWeb.CoreComponents do
       <span class="text-xs mb-2 font-semibold leading-6 dark:text-white">
         {@inline_description || ""}
       </span>
-
       <!-- Tooltip wrapper -->
       <div class="tooltip tooltip-right" data-tip={@short_description}>
         <label for={"#{@id}-modal"} class="cursor-pointer">
@@ -544,22 +552,23 @@ defmodule PriveeWeb.CoreComponents do
           </svg>
         </label>
       </div>
-
       <!-- DaisyUI Modal -->
       <input type="checkbox" id={"#{@id}-modal"} class="modal-toggle" />
       <div class="modal modal-bottom sm:modal-middle" role="dialog">
         <div class="modal-box">
-          <h3 class="font-bold text-lg">Info</h3>
+          <h3 class="font-bold text-lg">{lgettext(@locale, "Information")}</h3>
+
           <p class="py-4">
             {@long_description || @short_description}
           </p>
+
           <div class="modal-action">
             <label for={"#{@id}-modal"} class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
               ✕
             </label>
           </div>
         </div>
-        <label class="modal-backdrop" for={"#{@id}-modal"}>Close</label>
+        <label class="modal-backdrop" for={"#{@id}-modal"}>{lgettext(@locale, "Close")}</label>
       </div>
     </div>
     """
@@ -612,9 +621,11 @@ defmodule PriveeWeb.CoreComponents do
         <h1 class="text-lg font-semibold leading-8 text-zinc-800 dark:text-zinc-50">
           {render_slot(@inner_block)}
         </h1>
+
         <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           {render_slot(@subtitle)}
         </p>
+
         <p
           :if={@description != []}
           class="text-left mt-2 text-xs leading-6 text-zinc-600 dark:text-zinc-400"
@@ -622,6 +633,7 @@ defmodule PriveeWeb.CoreComponents do
           {render_slot(@description)}
         </p>
       </div>
+
       <div class="flex-none">{render_slot(@actions)}</div>
     </header>
     """
@@ -664,11 +676,13 @@ defmodule PriveeWeb.CoreComponents do
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal">{col[:label]}</th>
+
             <th :if={@action != []} class="relative p-0 pb-4">
               <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
+
         <tbody
           id={@id}
           phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
@@ -687,6 +701,7 @@ defmodule PriveeWeb.CoreComponents do
                 </span>
               </div>
             </td>
+
             <td :if={@action != []} class="relative w-14 p-0">
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
                 <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
@@ -725,6 +740,7 @@ defmodule PriveeWeb.CoreComponents do
       <dl class="-my-4 divide-y divide-zinc-100">
         <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
           <dt class="w-1/4 flex-none text-zinc-500">{item.title}</dt>
+
           <dd class="text-zinc-700">{render_slot(item)}</dd>
         </div>
       </dl>

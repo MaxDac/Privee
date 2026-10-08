@@ -63,7 +63,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       conn = submit_form(form, conn)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Invalid recovery_phrase or session_name"
+               "Invalid recovery phrase or session name"
 
       assert redirected_to(conn) == "/"
     end
@@ -99,7 +99,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
       conn = submit_form(form, conn)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Invalid recovery_phrase or session_name"
+               "Invalid recovery phrase or session name"
 
       assert redirected_to(conn) == "/"
     end
@@ -138,7 +138,7 @@ defmodule PriveeWeb.SessionLoginLiveTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Invalid recovery_phrase or session_name"
+               "Invalid recovery phrase or session name"
 
       assert redirected_to(conn) == "/"
     end

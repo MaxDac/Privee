@@ -98,11 +98,7 @@ defmodule PriveeWeb.App.SessionController do
     do: %{id: session.id, session_name: session.session_name, is_quick: session.is_quick}
 
   defp errors_on(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
-      Regex.replace(~r"%{(\w+)}", message, fn _, key ->
-        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-      end)
-    end)
+    Ecto.Changeset.traverse_errors(changeset, &PriveeWeb.CoreComponents.translate_error/1)
   end
 
   defp rate_limit(conn, _opts) do

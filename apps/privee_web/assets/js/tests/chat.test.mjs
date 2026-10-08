@@ -3,13 +3,16 @@ import "./signal-wasm-setup.mjs"
 import { IDBFactory } from "fake-indexeddb"
 import { JSDOM } from "jsdom"
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { ChatController, Texts } from "../utils/chat.mjs"
+import { ChatController } from "../utils/chat.mjs"
+import { catalogTexts, installCatalog } from "./gettext-fixture.mjs"
+import { refreshClientTexts } from "../utils/locale.mjs"
 import { SignalClient } from "../utils/signal-client.mjs"
 import { createMemoryLocks } from "../utils/signal-locks.mjs"
 import { FakeServer } from "./signal-fake-server.mjs"
 
 const ALICE = 1
 const BOB = 2
+const Texts = catalogTexts()
 
 const layout = (/** @type {string} */ epoch) => `
   <div id="chat-banner"></div>
@@ -58,6 +61,7 @@ const appendEntry = (doc, message) => {
 const party = async (server, ownId, peerId, factory = new IDBFactory()) => {
   const dom = new JSDOM(`<body>${layout(server.currentEpoch(ownId, peerId))}</body>`)
   const doc = dom.window.document
+  installCatalog(doc)
   const client = await SignalClient.open({
     ownId,
     push: server.connect(ownId, peerId),
@@ -107,6 +111,27 @@ describe("ChatController", () => {
     expect(/** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text")).disabled).toBe(
       false,
     )
+  })
+
+  it("switches existing client presentation without reinitializing keys or scrolling", async () => {
+    const alice = await party(server, ALICE, BOB)
+    await alice.controller.start()
+    alice.controller.showBanner("notice", alice.controller.texts.noPeerKeys)
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "draft stays private"
+    alice.controller.el.scrollTop = 123
+    const ensureKeys = vi.spyOn(alice.client, "ensureKeys")
+    installCatalog(alice.doc, "it")
+    refreshClientTexts(alice.doc)
+    await alice.controller.processEntries()
+    expect(alice.controller.el.scrollTop).toBe(123)
+    expect(input.value).toBe("draft stays private")
+    expect(input.disabled).toBe(false)
+    expect(ensureKeys).not.toHaveBeenCalled()
+    expect(alice.doc.getElementById("chat-banner-notice")?.textContent).toContain(
+      catalogTexts("it").noPeerKeys,
+    )
+    await alice.client.close()
   })
 
   it("sends from the composer and renders both sides", async () => {

@@ -85,6 +85,7 @@ defmodule PriveeWeb do
       use Gettext, backend: PriveeWeb.Gettext
 
       # HTML escaping functionality
+      import PriveeWeb.LocaleHelpers
       import Phoenix.HTML
       # Core UI components
       import PriveeWeb.CoreComponents

@@ -1,4 +1,5 @@
-import { ChatController, Texts } from "../utils/chat.mjs"
+import { ChatController } from "../utils/chat.mjs"
+import { clientText } from "../utils/locale.mjs"
 import { addSessionNameCopyListener } from "../utils/clipboard.mjs"
 import { addDarkModeToggleHandlers } from "../utils/dark-mode-switcher.mjs"
 import { UnsupportedBrowserError } from "../utils/signal-locks.mjs"
@@ -36,7 +37,7 @@ export const addChatHooks = (Hooks) => {
       } catch (e) {
         showStartupError(
           this.el,
-          e instanceof UnsupportedBrowserError ? Texts.unsupported : Texts.failedToStart,
+          e instanceof UnsupportedBrowserError ? "unsupported" : "failedToStart",
         )
         console.error("Unable to open the Signal store", e)
         return
@@ -76,9 +77,9 @@ export const addChatHooks = (Hooks) => {
 
 /**
  * @param {HTMLElement} el
- * @param {string} message
+ * @param {string} key
  */
-const showStartupError = (el, message) => {
+const showStartupError = (el, key) => {
   const container = el.ownerDocument.getElementById("chat-banner")
   if (!container) return
   const banner = el.ownerDocument.createElement("div")
@@ -86,6 +87,7 @@ const showStartupError = (el, message) => {
   banner.setAttribute("role", "alert")
   banner.className =
     "my-2 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100"
-  banner.textContent = message
+  banner.dataset.clientText = key
+  banner.textContent = clientText(key, el.ownerDocument)
   container.replaceChildren(banner)
 }

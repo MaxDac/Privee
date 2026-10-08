@@ -23,7 +23,7 @@ defmodule PriveeWeb.SessionRegistrationLive do
       |> assign_form(changeset)
       |> maybe_set_quick_session(is_quick)
 
-    {:ok, socket, temporary_assigns: [form: nil]}
+    {:ok, socket}
   end
 
   @impl true

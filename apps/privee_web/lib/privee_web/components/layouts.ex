@@ -15,17 +15,18 @@ defmodule PriveeWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :current_session, :any, default: nil, doc: "the currently authenticated session"
   attr :navigate_to, :string, default: "/", doc: "the logo link destination"
+  attr :locale, :string, required: true
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
     <.sticky_header>
-      <.menu current_session={@current_session} navigate_to={@navigate_to} />
+      <.menu current_session={@current_session} navigate_to={@navigate_to} locale={@locale} />
     </.sticky_header>
+
     <main class="px-4 py-20 sm:px-6 lg:px-8">
       <div class="mx-auto max-w-2xl">
-        <.flash_group flash={@flash} />
-        {render_slot(@inner_block)}
+        <.flash_group flash={@flash} locale={@locale} /> {render_slot(@inner_block)}
       </div>
     </main>
     """
@@ -37,15 +38,15 @@ defmodule PriveeWeb.Layouts do
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :current_session, :any, default: nil, doc: "the currently authenticated session"
   attr :navigate_to, :string, default: "/", doc: "the logo link destination"
+  attr :locale, :string, required: true
   slot :inner_block, required: true
 
   def chat(assigns) do
     ~H"""
     <.sticky_header>
-      <.menu current_session={@current_session} navigate_to={@navigate_to} />
+      <.menu current_session={@current_session} navigate_to={@navigate_to} locale={@locale} />
     </.sticky_header>
-    <.flash_group flash={@flash} />
-    {render_slot(@inner_block)}
+    <.flash_group flash={@flash} locale={@locale} /> {render_slot(@inner_block)}
     """
   end
 
@@ -58,22 +59,24 @@ defmodule PriveeWeb.Layouts do
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
+  attr :locale, :string, default: "en"
 
   def flash_group(assigns) do
     ~H"""
     <div id={@id} class="fixed bottom-4 right-4 z-50 space-y-2">
-      <.flash kind={:info} title={gettext("Success!")} flash={@flash} />
-      <.flash kind={:error} title={gettext("Error!")} flash={@flash} />
-      <.flash kind={:warning} title={gettext("Warning!")} flash={@flash} />
+      <.flash kind={:info} title={lgettext(@locale, "Success!")} flash={@flash} locale={@locale} />
+      <.flash kind={:error} title={lgettext(@locale, "Error!")} flash={@flash} locale={@locale} />
+      <.flash kind={:warning} title={lgettext(@locale, "Warning!")} flash={@flash} locale={@locale} />
       <.flash
         id="client-error"
         kind={:error}
-        title={gettext("We can't find the internet")}
+        title={lgettext(@locale, "We can't find the internet")}
+        locale={@locale}
         phx-disconnected={show(".phx-client-error #client-error")}
         phx-connected={hide("#client-error")}
         hidden
       >
-        {gettext("Attempting to reconnect")}
+        {lgettext(@locale, "Attempting to reconnect")}
         <svg
           class="w-6 h-6 text-gray-800 dark:text-white"
           aria-hidden="true"
@@ -96,12 +99,13 @@ defmodule PriveeWeb.Layouts do
       <.flash
         id="server-error"
         kind={:error}
-        title={gettext("Something went wrong!")}
+        title={lgettext(@locale, "Something went wrong!")}
+        locale={@locale}
         phx-disconnected={show(".phx-server-error #server-error")}
         phx-connected={hide("#server-error")}
         hidden
       >
-        {gettext("Hang in there while we get back on track")}
+        {lgettext(@locale, "Hang in there while we get back on track")}
         <svg
           class="w-6 h-6 text-gray-800 dark:text-white"
           aria-hidden="true"

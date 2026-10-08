@@ -116,6 +116,20 @@ export const addToggleDarkModeHandling = () => {
   addDarkModeToggleHandlers()
 }
 
+/** Preserve theme synchronization in the bundle, rather than an inline layout script. */
+export const addThemeEventHandlers = () => {
+  window.addEventListener("storage", (event) => {
+    if (event.key !== localStorageDarkModeKey) return
+    const theme = event.newValue || "system"
+    if (theme === "dark" || theme === "light" || theme === "system") trySetTheme(theme)
+  })
+  window.addEventListener("phx:set-theme", (event) => {
+    if (!(event.target instanceof window.HTMLElement)) return
+    const theme = event.target.dataset.phxTheme
+    if (theme === "dark" || theme === "light" || theme === "system") trySetTheme(theme)
+  })
+}
+
 /**
  * Adds the handlers for the buttons that toggle the dark mode theme.
  */

@@ -97,7 +97,7 @@ defmodule PriveeWeb.SessionControllerTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Invalid recovery_phrase or session_name"
+               "Invalid recovery phrase or session name"
 
       assert redirected_to(conn) == ~p"/"
     end

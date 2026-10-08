@@ -1,22 +1,27 @@
-<Layouts.app flash={@flash} current_session={@current_session} navigate_to={@navigate_to}>
+<Layouts.app
+  flash={@flash}
+  current_session={@current_session}
+  navigate_to={@navigate_to}
+  locale={@locale}
+>
   <div class="mx-auto sm:max-w-sm md:max-w-md">
     <.header class="text-center">
-      Create a new session
+      {lgettext(@locale, "Create a new session")}
       <:subtitle>
-        You want to reconnect with an existing session?
+        {lgettext(@locale, "Want to reconnect with an existing session?")}
         <.link
           navigate={~p"/login"}
           class="font-semibold text-brand dark:text-brand-dark hover:underline"
         >
-          Sign in
+          {lgettext(@locale, "Sign in")}
         </.link>
-        to your account now.
       </:subtitle>
 
       <:description>
-        To register a session, you have to define a <strong>Session Name</strong>, a series of alphanumeric characters
-        divided by hyphens with a minimum length of 24 characters, and a recovery phrase, that can contain only
-        alphabetic character, spaces and punctuation.
+        {lgettext(
+          @locale,
+          "To register a session, choose a session name of at least 24 alphanumeric characters separated by hyphens, and a recovery phrase containing only letters, spaces and punctuation."
+        )}
       </:description>
     </.header>
 
@@ -31,7 +36,7 @@
       phx-hook="RegistrationScreen"
     >
       <.error :if={@check_errors}>
-        Oops, something went wrong! Please check the errors below.
+        {lgettext(@locale, "Oops, something went wrong! Please check the errors below.")}
       </.error>
 
       <input
@@ -40,32 +45,34 @@
         name="target_session_code"
         value={@target_session_code}
       />
-
       <.input
         field={@form[:session_name]}
         type="search"
-        label="Session Name"
-        placeholder="Write your own session name"
-        value={@automatic_session_name}
+        label={lgettext(@locale, "Session Name")}
+        placeholder={lgettext(@locale, "Write your own session name")}
+        value={@form[:session_name].value || @automatic_session_name}
         phx-debounce="1000"
         required
       />
-
       <div class="inline-flex space-x-10">
         <.input
           field={@form[:is_quick]}
           type="toggle"
-          label="Quick session"
+          label={lgettext(@locale, "Quick session")}
         />
-
         <.info_icon
-          inline_description="What's this?"
-          short_description="This allows you to create a session quickly without the recovery phrase"
-          long_description={[
-            "By checking the \"Quick session\" toggle, you will be able to create a session without writing a recovery phrase.",
-            "This means that you will be able to login quickly, but the session will be used only once, and you would not be able",
-            "to login to this session again."
-          ]}
+          id="quick-session-info"
+          locale={@locale}
+          inline_description={lgettext(@locale, "What's this?")}
+          short_description={
+            lgettext(@locale, "Create a session quickly without a recovery phrase")
+          }
+          long_description={
+            lgettext(
+              @locale,
+              "A quick session needs no recovery phrase. You can sign in only once; you will not be able to recover this session later."
+            )
+          }
         />
       </div>
 
@@ -73,21 +80,25 @@
         :if={!quick_session?(@form)}
         field={@form[:recovery_phrase]}
         type="textarea"
-        label="Recovery phrase"
-        placeholder="Write your preferred citation. This will be used to recover the session, so keep it saved."
+        label={lgettext(@locale, "Recovery phrase")}
+        placeholder={
+          lgettext(
+            @locale,
+            "Write your preferred citation. This will be used to recover the session, so keep it saved."
+          )
+        }
         rows="5"
         phx-debounce="1000"
         required
       />
-
       <:actions>
         <.button
-          phx-disable-with="Creating account..."
+          phx-disable-with={lgettext(@locale, "Creating account...")}
           class="w-full"
           name="action"
           value="create"
         >
-          Create an account
+          {lgettext(@locale, "Create an account")}
         </.button>
       </:actions>
     </.simple_form>

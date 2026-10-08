@@ -1,0 +1,278 @@
+msgid ""
+msgstr ""
+"Language: it\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "A quick session needs no recovery phrase. You can sign in only once; you will not be able to recover this session later."
+msgstr "Una sessione rapida non richiede una frase di recupero. Puoi accedere una sola volta e non potrai recuperare questa sessione in seguito."
+
+msgid "Accept new security code"
+msgstr "Accetta il nuovo codice di sicurezza"
+
+msgid "Actions"
+msgstr "Azioni"
+
+msgid "Attempting to reconnect"
+msgstr "Tentativo di riconnessione"
+
+msgid "Chatting app with focus on privacy"
+msgstr "App di chat incentrata sulla privacy"
+
+msgid "Clear history on this device"
+msgstr "Cancella cronologia su questo dispositivo"
+
+msgid "Close"
+msgstr "Chiudi"
+
+msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
+msgstr "Confronta questo numero con il tuo contatto, di persona o tramite un altro canale. Se coincide, la conversazione è crittografata end-to-end."
+
+msgid "Copy link"
+msgstr "Copia link"
+
+msgid "Copy session name"
+msgstr "Copia nome della sessione"
+
+msgid "Could not copy to the clipboard."
+msgstr "Non è stato possibile copiare negli appunti."
+
+msgid "Create"
+msgstr "Crea"
+
+msgid "Create a new Privee"
+msgstr "Crea un nuovo Privee"
+
+msgid "Create a new one"
+msgstr "Creane una nuova"
+
+msgid "Create a new session"
+msgstr "Crea una nuova sessione"
+
+msgid "Create a session quickly without a recovery phrase"
+msgstr "Crea rapidamente una sessione senza frase di recupero"
+
+msgid "Create an account"
+msgstr "Crea un account"
+
+msgid "Creating account..."
+msgstr "Creazione dell'account..."
+
+msgid "Creating..."
+msgstr "Creazione in corso..."
+
+msgid "Delete all encryption keys and history of this session from this device? You will need to reset encryption to chat again."
+msgstr "Eliminare tutte le chiavi crittografiche e la cronologia di questa sessione da questo dispositivo? Dovrai reimpostare la crittografia per chattare di nuovo."
+
+msgid "Delete the local history of this conversation from this device?"
+msgstr "Eliminare la cronologia locale di questa conversazione da questo dispositivo?"
+
+msgid "Don't have a session?"
+msgstr "Non hai una sessione?"
+
+msgid "Earlier on this device"
+msgstr "In precedenza su questo dispositivo"
+
+msgid "Encryption could not be initialized. Please reload the page."
+msgstr "Non è stato possibile inizializzare la crittografia. Ricarica la pagina."
+
+msgid "Encryption for this session was reset on another device, so this device can no longer send or receive messages."
+msgstr "La crittografia di questa sessione è stata reimpostata su un altro dispositivo. Questo dispositivo non può più inviare o ricevere messaggi."
+
+msgid "Error!"
+msgstr "Errore!"
+
+msgid "Exchange a message first to compare safety numbers."
+msgstr "Scambia prima un messaggio per confrontare i numeri di sicurezza."
+
+msgid "Forget this device"
+msgstr "Dimentica questo dispositivo"
+
+msgid "Hang in there while we get back on track"
+msgstr "Attendi mentre ripristiniamo il servizio"
+
+msgid "Information"
+msgstr "Informazioni"
+
+msgid "Internal Server Error"
+msgstr "Errore interno del server"
+
+msgid "Invalid recovery phrase or session name"
+msgstr "Frase di recupero o nome della sessione non validi"
+
+msgid "Keep me logged in"
+msgstr "Mantieni l'accesso"
+
+msgid "Language"
+msgstr "Lingua"
+
+msgid "Log Out"
+msgstr "Esci"
+
+msgid "Logged out successfully."
+msgstr "Disconnessione riuscita."
+
+msgid "Message"
+msgstr "Messaggio"
+
+msgid "New message received"
+msgstr "Nuovo messaggio ricevuto"
+
+msgid "Not Found"
+msgstr "Pagina non trovata"
+
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr "Si è verificato un problema! Controlla gli errori qui sotto."
+
+msgid "Privacy App"
+msgstr "App per la privacy"
+
+msgid "Privee - Text received"
+msgstr "Privee - Messaggio ricevuto"
+
+msgid "Privee logo"
+msgstr "Logo di Privee"
+
+msgid "Quick session"
+msgstr "Sessione rapida"
+
+msgid "Recovery phrase"
+msgstr "Frase di recupero"
+
+msgid "Reset encryption identity"
+msgstr "Reimposta identità crittografica"
+
+msgid "Reset the encryption identity of this session? Your contacts will be asked to verify your new safety number."
+msgstr "Reimpostare l'identità crittografica di questa sessione? Ai tuoi contatti verrà chiesto di verificare il nuovo numero di sicurezza."
+
+msgid "Safety number"
+msgstr "Numero di sicurezza"
+
+msgid "Send"
+msgstr "Invia"
+
+msgid "Sent from another device."
+msgstr "Inviato da un altro dispositivo."
+
+msgid "Session Name"
+msgstr "Nome della sessione"
+
+msgid "Session copied"
+msgstr "Sessione copiata"
+
+msgid "Session created successfully! Your session name has been automatically copied to the clipboard."
+msgstr "Sessione creata! Il nome della sessione è stato copiato automaticamente negli appunti."
+
+msgid "Settings"
+msgstr "Impostazioni"
+
+msgid "Sign in"
+msgstr "Accedi"
+
+msgid "Sign in to existing session"
+msgstr "Accedi a una sessione esistente"
+
+msgid "Signing in..."
+msgstr "Accesso in corso..."
+
+msgid "Something went wrong!"
+msgstr "Qualcosa è andato storto!"
+
+msgid "Source code (AGPL-3.0)"
+msgstr "Codice sorgente (AGPL-3.0)"
+
+msgid "Specify the session name you would like to chat with."
+msgstr "Indica il nome della sessione con cui vuoi chattare."
+
+msgid "Start Privee"
+msgstr "Avvia Privee"
+
+msgid "Success!"
+msgstr "Operazione riuscita!"
+
+msgid "Switch theme"
+msgstr "Cambia tema"
+
+msgid "The application was updated. Please reload the page."
+msgstr "L'applicazione è stata aggiornata. Ricarica la pagina."
+
+msgid "The message could not be delivered yet. It will be sent automatically."
+msgstr "Il messaggio non è stato ancora recapitato. Verrà inviato automaticamente."
+
+msgid "The message could not be sent. Please try again."
+msgstr "Non è stato possibile inviare il messaggio. Riprova."
+
+msgid "The session name you'd like to contact."
+msgstr "Il nome della sessione da contattare."
+
+msgid "The session you're trying to join doesn't exist."
+msgstr "La sessione a cui vuoi accedere non esiste."
+
+msgid "Theme"
+msgstr "Tema"
+
+msgid "This browser does not support notifications."
+msgstr "Questo browser non supporta le notifiche."
+
+msgid "This browser does not support the features required for end-to-end encryption (Web Locks). Please use an up-to-date browser."
+msgstr "Questo browser non supporta le funzionalità necessarie per la crittografia end-to-end (Web Locks). Usa un browser aggiornato."
+
+msgid "This device has no encryption keys for this session. Reset the encryption identity to continue; messages sent to your previous device will not be readable here."
+msgstr "Questo dispositivo non ha chiavi crittografiche per questa sessione. Reimposta l'identità crittografica per continuare; i messaggi inviati al dispositivo precedente non saranno leggibili qui."
+
+msgid "This language is not supported."
+msgstr "Questa lingua non è supportata."
+
+msgid "This message could not be decrypted."
+msgstr "Non è stato possibile decifrare questo messaggio."
+
+msgid "To register a session, choose a session name of at least 24 alphanumeric characters separated by hyphens, and a recovery phrase containing only letters, spaces and punctuation."
+msgstr "Per registrare una sessione, scegli un nome di almeno 24 caratteri alfanumerici separati da trattini e una frase di recupero contenente solo lettere, spazi e punteggiatura."
+
+msgid "Url copied"
+msgstr "Link copiato"
+
+msgid "Want to reconnect with an existing session?"
+msgstr "Vuoi riconnetterti a una sessione esistente?"
+
+msgid "Warning!"
+msgstr "Attenzione!"
+
+msgid "We can't find the internet"
+msgstr "Connessione a Internet non disponibile"
+
+msgid "Welcome back!"
+msgstr "Bentornato!"
+
+msgid "What's this?"
+msgstr "Che cos'è?"
+
+msgid "Write your message here"
+msgstr "Scrivi qui il tuo messaggio"
+
+msgid "Write your own session name"
+msgstr "Scrivi il nome della tua sessione"
+
+msgid "Write your preferred citation. This will be used to recover the session, so keep it saved."
+msgstr "Scrivi la tua citazione preferita. Servirà a recuperare la sessione, quindi conservala."
+
+msgid "Write your session name."
+msgstr "Scrivi il nome della tua sessione."
+
+msgid "You have to select a session to continue"
+msgstr "Devi selezionare una sessione per continuare"
+
+msgid "You must have a session to access this page."
+msgstr "Devi avere una sessione per accedere a questa pagina."
+
+msgid "Your citation."
+msgstr "La tua citazione."
+
+msgid "Your contact has not set up encryption yet. Try again once they are online."
+msgstr "Il tuo contatto non ha ancora configurato la crittografia. Riprova quando sarà online."
+
+msgid "Your contact's security code changed. They may have reset their device, or someone may be intercepting the conversation. Verify the safety number with them before continuing."
+msgstr "Il codice di sicurezza del tuo contatto è cambiato. Potrebbe aver reimpostato il dispositivo, oppure qualcuno potrebbe intercettare la conversazione. Verifica il numero di sicurezza con il contatto prima di continuare."
+
+msgid "Your language preference could not be saved."
+msgstr "Non è stato possibile salvare la lingua preferita."

@@ -1,0 +1,595 @@
+#: lib/privee_web/live/session_registration_live.html.heex:71
+#: lib/privee_web/live/session_registration_live.html.heex:71
+#, elixir-autogen
+msgid "A quick session needs no recovery phrase. You can sign in only once; you will not be able to recover this session later."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:42
+#: lib/privee_web/client_texts.ex:42
+#, elixir-autogen
+msgid "Accept new security code"
+msgstr ""
+
+#: lib/privee_web/components/core_components.ex:681
+#: lib/privee_web/components/core_components.ex:681
+#, elixir-autogen
+msgid "Actions"
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:79
+#: lib/privee_web/components/layouts.ex:79
+#, elixir-autogen
+msgid "Attempting to reconnect"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:52
+#: lib/privee_web/components/layouts/menu.html.heex:52
+#: lib/privee_web/components/layouts/root.html.heex:11
+#: lib/privee_web/components/layouts/root.html.heex:11
+#, elixir-autogen
+msgid "Chatting app with focus on privacy"
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.html.heex:26
+#: lib/privee_web/live/chat/chat_live.html.heex:26
+#, elixir-autogen
+msgid "Clear history on this device"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:49
+#: lib/privee_web/client_texts.ex:49
+#: lib/privee_web/components/core_components.ex:89
+#: lib/privee_web/components/core_components.ex:89
+#: lib/privee_web/components/core_components.ex:186
+#: lib/privee_web/components/core_components.ex:186
+#: lib/privee_web/components/core_components.ex:571
+#: lib/privee_web/components/core_components.ex:571
+#, elixir-autogen
+msgid "Close"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:46
+#: lib/privee_web/client_texts.ex:46
+#, elixir-autogen
+msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:154
+#: lib/privee_web/components/layouts/menu.html.heex:154
+#: lib/privee_web/components/layouts/menu.html.heex:155
+#: lib/privee_web/components/layouts/menu.html.heex:155
+#, elixir-autogen
+msgid "Copy link"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:129
+#: lib/privee_web/components/layouts/menu.html.heex:129
+#: lib/privee_web/components/layouts/menu.html.heex:130
+#: lib/privee_web/components/layouts/menu.html.heex:130
+#, elixir-autogen
+msgid "Copy session name"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:52
+#: lib/privee_web/client_texts.ex:52
+#, elixir-autogen
+msgid "Could not copy to the clipboard."
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:205
+#: lib/privee_web/components/layouts/menu.html.heex:205
+#: lib/privee_web/components/layouts/menu.html.heex:206
+#: lib/privee_web/components/layouts/menu.html.heex:206
+#, elixir-autogen
+msgid "Create"
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:14
+#: lib/privee_web/live/privee_selector_live.html.heex:14
+#, elixir-autogen
+msgid "Create a new Privee"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:16
+#: lib/privee_web/live/session_login_live.html.heex:16
+#, elixir-autogen
+msgid "Create a new one"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:9
+#: lib/privee_web/live/session_registration_live.html.heex:9
+#, elixir-autogen
+msgid "Create a new session"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:68
+#: lib/privee_web/live/session_registration_live.html.heex:68
+#, elixir-autogen
+msgid "Create a session quickly without a recovery phrase"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:101
+#: lib/privee_web/live/session_registration_live.html.heex:101
+#, elixir-autogen
+msgid "Create an account"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:96
+#: lib/privee_web/live/session_registration_live.html.heex:96
+#, elixir-autogen
+msgid "Creating account..."
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:29
+#: lib/privee_web/live/privee_selector_live.html.heex:29
+#, elixir-autogen
+msgid "Creating..."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:35
+#: lib/privee_web/client_texts.ex:35
+#, elixir-autogen
+msgid "Delete all encryption keys and history of this session from this device? You will need to reset encryption to chat again."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:33
+#: lib/privee_web/client_texts.ex:33
+#, elixir-autogen
+msgid "Delete the local history of this conversation from this device?"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:11
+#: lib/privee_web/live/session_login_live.html.heex:11
+#, elixir-autogen
+msgid "Don't have a session?"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:32
+#: lib/privee_web/client_texts.ex:32
+#, elixir-autogen
+msgid "Earlier on this device"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:31
+#: lib/privee_web/client_texts.ex:31
+#, elixir-autogen
+msgid "Encryption could not be initialized. Please reload the page."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:20
+#: lib/privee_web/client_texts.ex:20
+#, elixir-autogen
+msgid "Encryption for this session was reset on another device, so this device can no longer send or receive messages."
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:68
+#: lib/privee_web/components/layouts.ex:68
+#, elixir-autogen
+msgid "Error!"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:44
+#: lib/privee_web/client_texts.ex:44
+#, elixir-autogen
+msgid "Exchange a message first to compare safety numbers."
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.html.heex:34
+#: lib/privee_web/live/chat/chat_live.html.heex:34
+#, elixir-autogen
+msgid "Forget this device"
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:108
+#: lib/privee_web/components/layouts.ex:108
+#, elixir-autogen
+msgid "Hang in there while we get back on track"
+msgstr ""
+
+#: lib/privee_web/components/core_components.ex:559
+#: lib/privee_web/components/core_components.ex:559
+#, elixir-autogen
+msgid "Information"
+msgstr ""
+
+#: lib/privee_web/controllers/error_html.ex:24
+#: lib/privee_web/controllers/error_html.ex:24
+#, elixir-autogen
+msgid "Internal Server Error"
+msgstr ""
+
+#: lib/privee_web/controllers/session_controller.ex:49
+#: lib/privee_web/controllers/session_controller.ex:49
+#, elixir-autogen
+msgid "Invalid recovery phrase or session name"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:43
+#: lib/privee_web/live/session_login_live.html.heex:43
+#, elixir-autogen
+msgid "Keep me logged in"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:80
+#: lib/privee_web/components/layouts/menu.html.heex:80
+#, elixir-autogen
+msgid "Language"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:180
+#: lib/privee_web/components/layouts/menu.html.heex:180
+#: lib/privee_web/components/layouts/menu.html.heex:181
+#: lib/privee_web/components/layouts/menu.html.heex:181
+#, elixir-autogen
+msgid "Log Out"
+msgstr ""
+
+#: lib/privee_web/controllers/session_controller.ex:68
+#: lib/privee_web/controllers/session_controller.ex:68
+#, elixir-autogen
+msgid "Logged out successfully."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:57
+#: lib/privee_web/client_texts.ex:57
+#: lib/privee_web/live/chat/components/chat_input.html.heex:13
+#: lib/privee_web/live/chat/components/chat_input.html.heex:13
+#, elixir-autogen
+msgid "Message"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:54
+#: lib/privee_web/client_texts.ex:54
+#, elixir-autogen
+msgid "New message received"
+msgstr ""
+
+#: lib/privee_web/controllers/error_html.ex:23
+#: lib/privee_web/controllers/error_html.ex:23
+#, elixir-autogen
+msgid "Not Found"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:39
+#: lib/privee_web/live/session_registration_live.html.heex:39
+#, elixir-autogen
+msgid "Oops, something went wrong! Please check the errors below."
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:53
+#: lib/privee_web/components/layouts/menu.html.heex:53
+#: lib/privee_web/components/layouts/root.html.heex:15
+#: lib/privee_web/components/layouts/root.html.heex:15
+#, elixir-autogen
+msgid "Privacy App"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:53
+#: lib/privee_web/client_texts.ex:53
+#, elixir-autogen
+msgid "Privee - Text received"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:10
+#: lib/privee_web/components/layouts/menu.html.heex:10
+#: lib/privee_web/components/layouts/menu.html.heex:11
+#: lib/privee_web/components/layouts/menu.html.heex:11
+#, elixir-autogen
+msgid "Privee logo"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:61
+#: lib/privee_web/live/session_registration_live.html.heex:61
+#, elixir-autogen
+msgid "Quick session"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:33
+#: lib/privee_web/live/session_login_live.html.heex:33
+#: lib/privee_web/live/session_registration_live.html.heex:83
+#: lib/privee_web/live/session_registration_live.html.heex:83
+#, elixir-autogen
+msgid "Recovery phrase"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:43
+#: lib/privee_web/client_texts.ex:43
+#, elixir-autogen
+msgid "Reset encryption identity"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:39
+#: lib/privee_web/client_texts.ex:39
+#, elixir-autogen
+msgid "Reset the encryption identity of this session? Your contacts will be asked to verify your new safety number."
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.html.heex:18
+#: lib/privee_web/live/chat/chat_live.html.heex:18
+#, elixir-autogen
+msgid "Safety number"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:58
+#: lib/privee_web/client_texts.ex:58
+#: lib/privee_web/live/chat/components/chat_input.html.heex:26
+#: lib/privee_web/live/chat/components/chat_input.html.heex:26
+#, elixir-autogen
+msgid "Send"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:9
+#: lib/privee_web/client_texts.ex:9
+#, elixir-autogen
+msgid "Sent from another device."
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:24
+#: lib/privee_web/live/privee_selector_live.html.heex:24
+#: lib/privee_web/live/session_login_live.html.heex:25
+#: lib/privee_web/live/session_login_live.html.heex:25
+#: lib/privee_web/live/session_registration_live.html.heex:51
+#: lib/privee_web/live/session_registration_live.html.heex:51
+#, elixir-autogen
+msgid "Session Name"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:50
+#: lib/privee_web/client_texts.ex:50
+#, elixir-autogen
+msgid "Session copied"
+msgstr ""
+
+#: lib/privee_web/controllers/session_controller.ex:11
+#: lib/privee_web/controllers/session_controller.ex:11
+#, elixir-autogen
+msgid "Session created successfully! Your session name has been automatically copied to the clipboard."
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:60
+#: lib/privee_web/components/layouts/menu.html.heex:60
+#: lib/privee_web/components/layouts/menu.html.heex:64
+#: lib/privee_web/components/layouts/menu.html.heex:64
+#, elixir-autogen
+msgid "Settings"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:230
+#: lib/privee_web/components/layouts/menu.html.heex:230
+#: lib/privee_web/components/layouts/menu.html.heex:231
+#: lib/privee_web/components/layouts/menu.html.heex:231
+#: lib/privee_web/live/session_login_live.html.heex:49
+#: lib/privee_web/live/session_login_live.html.heex:49
+#: lib/privee_web/live/session_registration_live.html.heex:16
+#: lib/privee_web/live/session_registration_live.html.heex:16
+#, elixir-autogen
+msgid "Sign in"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:9
+#: lib/privee_web/live/session_login_live.html.heex:9
+#, elixir-autogen
+msgid "Sign in to existing session"
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:48
+#: lib/privee_web/live/session_login_live.html.heex:48
+#, elixir-autogen
+msgid "Signing in..."
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:102
+#: lib/privee_web/components/layouts.ex:102
+#: lib/privee_web/controllers/error_html.ex:25
+#: lib/privee_web/controllers/error_html.ex:25
+#, elixir-autogen
+msgid "Something went wrong!"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:25
+#: lib/privee_web/components/layouts/menu.html.heex:25
+#: lib/privee_web/components/layouts/menu.html.heex:26
+#: lib/privee_web/components/layouts/menu.html.heex:26
+#, elixir-autogen
+msgid "Source code (AGPL-3.0)"
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:16
+#: lib/privee_web/live/privee_selector_live.html.heex:16
+#, elixir-autogen
+msgid "Specify the session name you would like to chat with."
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:30
+#: lib/privee_web/live/privee_selector_live.html.heex:30
+#, elixir-autogen
+msgid "Start Privee"
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:67
+#: lib/privee_web/components/layouts.ex:67
+#, elixir-autogen
+msgid "Success!"
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:90
+#: lib/privee_web/components/layouts/menu.html.heex:90
+#, elixir-autogen
+msgid "Switch theme"
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.ex:84
+#: lib/privee_web/live/chat/chat_live.ex:84
+#, elixir-autogen
+msgid "The application was updated. Please reload the page."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:14
+#: lib/privee_web/client_texts.ex:14
+#, elixir-autogen
+msgid "The message could not be delivered yet. It will be sent automatically."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:12
+#: lib/privee_web/client_texts.ex:12
+#, elixir-autogen
+msgid "The message could not be sent. Please try again."
+msgstr ""
+
+#: lib/privee_web/live/privee_selector_live.html.heex:25
+#: lib/privee_web/live/privee_selector_live.html.heex:25
+#, elixir-autogen
+msgid "The session name you'd like to contact."
+msgstr ""
+
+#: lib/privee_web/controllers/session_share_controller.ex:47
+#: lib/privee_web/controllers/session_share_controller.ex:47
+#: lib/privee_web/controllers/session_share_controller.ex:60
+#: lib/privee_web/controllers/session_share_controller.ex:60
+#, elixir-autogen
+msgid "The session you're trying to join doesn't exist."
+msgstr ""
+
+#: lib/privee_web/components/layouts/menu.html.heex:86
+#: lib/privee_web/components/layouts/menu.html.heex:86
+#, elixir-autogen
+msgid "Theme"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:55
+#: lib/privee_web/client_texts.ex:55
+#, elixir-autogen
+msgid "This browser does not support notifications."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:28
+#: lib/privee_web/client_texts.ex:28
+#, elixir-autogen
+msgid "This browser does not support the features required for end-to-end encryption (Web Locks). Please use an up-to-date browser."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:24
+#: lib/privee_web/client_texts.ex:24
+#, elixir-autogen
+msgid "This device has no encryption keys for this session. Reset the encryption identity to continue; messages sent to your previous device will not be readable here."
+msgstr ""
+
+#: lib/privee_web/locale_live.ex:31
+#: lib/privee_web/locale_live.ex:31
+#, elixir-autogen
+msgid "This language is not supported."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:8
+#: lib/privee_web/client_texts.ex:8
+#, elixir-autogen
+msgid "This message could not be decrypted."
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:21
+#: lib/privee_web/live/session_registration_live.html.heex:21
+#, elixir-autogen
+msgid "To register a session, choose a session name of at least 24 alphanumeric characters separated by hyphens, and a recovery phrase containing only letters, spaces and punctuation."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:51
+#: lib/privee_web/client_texts.ex:51
+#, elixir-autogen
+msgid "Url copied"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:11
+#: lib/privee_web/live/session_registration_live.html.heex:11
+#, elixir-autogen
+msgid "Want to reconnect with an existing session?"
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:69
+#: lib/privee_web/components/layouts.ex:69
+#, elixir-autogen
+msgid "Warning!"
+msgstr ""
+
+#: lib/privee_web/components/layouts.ex:73
+#: lib/privee_web/components/layouts.ex:73
+#, elixir-autogen
+msgid "We can't find the internet"
+msgstr ""
+
+#: lib/privee_web/controllers/session_controller.ex:18
+#: lib/privee_web/controllers/session_controller.ex:18
+#, elixir-autogen
+msgid "Welcome back!"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:66
+#: lib/privee_web/live/session_registration_live.html.heex:66
+#, elixir-autogen
+msgid "What's this?"
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:56
+#: lib/privee_web/client_texts.ex:56
+#: lib/privee_web/live/chat/components/chat_input.html.heex:12
+#: lib/privee_web/live/chat/components/chat_input.html.heex:12
+#, elixir-autogen
+msgid "Write your message here"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:52
+#: lib/privee_web/live/session_registration_live.html.heex:52
+#, elixir-autogen
+msgid "Write your own session name"
+msgstr ""
+
+#: lib/privee_web/live/session_registration_live.html.heex:85
+#: lib/privee_web/live/session_registration_live.html.heex:85
+#, elixir-autogen
+msgid "Write your preferred citation. This will be used to recover the session, so keep it saved."
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:26
+#: lib/privee_web/live/session_login_live.html.heex:26
+#, elixir-autogen
+msgid "Write your session name."
+msgstr ""
+
+#: lib/privee_web/live/chat/chat_live.ex:53
+#: lib/privee_web/live/chat/chat_live.ex:53
+#: lib/privee_web/live/chat/chat_live.ex:113
+#: lib/privee_web/live/chat/chat_live.ex:113
+#, elixir-autogen
+msgid "You have to select a session to continue"
+msgstr ""
+
+#: lib/privee_web/session_auth.ex:165
+#: lib/privee_web/session_auth.ex:165
+#: lib/privee_web/session_auth.ex:214
+#: lib/privee_web/session_auth.ex:214
+#, elixir-autogen
+msgid "You must have a session to access this page."
+msgstr ""
+
+#: lib/privee_web/live/session_login_live.html.heex:34
+#: lib/privee_web/live/session_login_live.html.heex:34
+#, elixir-autogen
+msgid "Your citation."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:11
+#: lib/privee_web/client_texts.ex:11
+#, elixir-autogen
+msgid "Your contact has not set up encryption yet. Try again once they are online."
+msgstr ""
+
+#: lib/privee_web/client_texts.ex:16
+#: lib/privee_web/client_texts.ex:16
+#, elixir-autogen
+msgid "Your contact's security code changed. They may have reset their device, or someone may be intercepting the conversation. Verify the safety number with them before continuing."
+msgstr ""
+
+#: lib/privee_web/locale_live.ex:36
+#: lib/privee_web/locale_live.ex:36
+#, elixir-autogen
+msgid "Your language preference could not be saved."
+msgstr ""

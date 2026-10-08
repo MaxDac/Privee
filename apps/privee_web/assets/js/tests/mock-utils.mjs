@@ -1,17 +1,21 @@
 import { JSDOM } from "jsdom"
+import { installCatalog } from "./gettext-fixture.mjs"
 
 /**
  * Returns an already configured JSDOM instance.
  * @param {string} html The HTML content. It is defaulted to an empty string.
  * @returns {JSDOM} The JSDOM instance.
  */
-export const getDom = (html = "") =>
-  new JSDOM(html, {
+export const getDom = (html = "") => {
+  const dom = new JSDOM(html, {
     // Defining the url is necessary to avoid errors with the localStorage.
     // For more information, refer the following issue:
     // https://github.com/jsdom/jsdom/issues/2383#issuecomment-442199291
     url: "http://localhost",
   })
+  installCatalog(dom.window.document)
+  return dom
+}
 
 /**
  * Mocks the Notification object.

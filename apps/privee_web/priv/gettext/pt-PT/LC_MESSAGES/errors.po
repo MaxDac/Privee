@@ -1,0 +1,116 @@
+msgid ""
+msgstr ""
+"Language: pt-PT\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "The session name does not exist"
+msgstr "O nome da sessão não existe"
+
+msgid "You selected your session name"
+msgstr "Selecionou o nome da sua própria sessão"
+
+msgid "are still associated with this entry"
+msgstr "ainda estão associados a esta entrada"
+
+msgid "can't be blank"
+msgstr "não pode estar em branco"
+
+msgid "cannot be the sender"
+msgstr "não pode ser o remetente"
+
+msgid "does not match confirmation"
+msgstr "não corresponde à confirmação"
+
+msgid "has already been taken"
+msgstr "já está em uso"
+
+msgid "has an invalid entry"
+msgstr "contém uma entrada inválida"
+
+msgid "has invalid format"
+msgstr "tem um formato inválido"
+
+msgid "is invalid"
+msgstr "é inválido"
+
+msgid "is not valid"
+msgstr "não é válido"
+
+msgid "is reserved"
+msgstr "está reservado"
+
+msgid "is still associated with this entry"
+msgstr "ainda está associado a esta entrada"
+
+msgid "must be accepted"
+msgstr "tem de ser aceite"
+
+msgid "must be empty for quick sessions"
+msgstr "tem de estar vazio para sessões rápidas"
+
+msgid "must be equal to %{number}"
+msgstr "tem de ser igual a %{number}"
+
+msgid "must be greater than %{number}"
+msgstr "tem de ser superior a %{number}"
+
+msgid "must be greater than or equal to %{number}"
+msgstr "tem de ser superior ou igual a %{number}"
+
+msgid "must be less than %{number}"
+msgstr "tem de ser inferior a %{number}"
+
+msgid "must be less than or equal to %{number}"
+msgstr "tem de ser inferior ou igual a %{number}"
+
+msgid "must contain only alphabetic characters and punctuation"
+msgstr "tem de conter apenas letras e pontuação"
+
+msgid "must contain only alphanumeric characters and hyphens"
+msgstr "tem de conter apenas caracteres alfanuméricos e hífen"
+
+msgid "should be %{count} byte(s)"
+msgid_plural "should be %{count} byte(s)"
+msgstr[0] "deve ter %{count} byte"
+msgstr[1] "deve ter %{count} bytes"
+
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "deve ter %{count} caráter"
+msgstr[1] "deve ter %{count} carateres"
+
+msgid "should be at least %{count} byte(s)"
+msgid_plural "should be at least %{count} byte(s)"
+msgstr[0] "deve ter pelo menos %{count} byte"
+msgstr[1] "deve ter pelo menos %{count} bytes"
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "deve ter pelo menos %{count} caráter"
+msgstr[1] "deve ter pelo menos %{count} carateres"
+
+msgid "should be at most %{count} byte(s)"
+msgid_plural "should be at most %{count} byte(s)"
+msgstr[0] "deve ter no máximo %{count} byte"
+msgstr[1] "deve ter no máximo %{count} bytes"
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "deve ter no máximo %{count} caráter"
+msgstr[1] "deve ter no máximo %{count} carateres"
+
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "deve ter %{count} elemento"
+msgstr[1] "deve ter %{count} elementos"
+
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "deve ter pelo menos %{count} elemento"
+msgstr[1] "deve ter pelo menos %{count} elementos"
+
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "deve ter no máximo %{count} elemento"
+msgstr[1] "deve ter no máximo %{count} elementos"

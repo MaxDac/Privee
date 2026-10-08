@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { NotificationMock, getDom } from "./mock-utils.mjs"
+import { installCatalog } from "./gettext-fixture.mjs"
 import {
   askNotificationPermission,
   pushBackEndNotification,
@@ -22,6 +23,31 @@ const alwaysSuppressCoordinator = {
   shouldShowNotification: () => Promise.resolve(false),
   destroy: () => {},
 }
+
+describe("notification language changes", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("uses localized generic presentation rather than private message content", async () => {
+    setNotificationCoordinator(alwaysAllowCoordinator)
+    const dom = getDom()
+    installCatalog(dom.window.document, "pt-PT")
+    vi.stubGlobal("window", addRequiredMockedMethod(dom.window))
+    vi.stubGlobal("document", {
+      ...dom.window.document,
+      hidden: false,
+      visibilityState: "visible",
+      addEventListener: (type, callback) => {
+        if (type === "visibilitychange") callback()
+      },
+    })
+    vi.stubGlobal("Notification", NotificationMock)
+    const notification = await pushBackEndNotification({
+      detail: { check_focus: false, session_name: "unchanged-name", text: "private message" },
+    })
+    expect(notification.title).toBe("Privee - Mensagem recebida")
+    expect(notification.body).toBe("Nova mensagem recebida")
+  })
+})
 
 describe("askNotificationPermission", () => {
   afterEach(() => {
