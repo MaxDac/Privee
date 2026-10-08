@@ -56,6 +56,18 @@ defmodule PriveeWeb.ChatLiveTest do
       assert has_element?(lv, "#chat-local-history[phx-update=ignore]")
     end
 
+    test "renders the local hint controls without the hint", %{
+      conn: conn,
+      me: me,
+      peer: peer
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
+      assert has_element?(lv, "#chat-hint")
+      assert has_element?(lv, "#chat-peer-hint[phx-update=ignore]")
+      assert has_element?(lv, "#chat-screen[data-peer-session-name='#{peer.session_name}']")
+      assert has_element?(lv, "#log-out-link[data-own-session-id='#{me.id}']")
+    end
+
     test "redirects to the privee page when the logo is clicked", %{conn: conn, peer: peer} do
       {:ok, lv, _html} = live(conn, ~p"/chat/#{peer.session_name}")
 

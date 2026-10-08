@@ -31,5 +31,8 @@
         </.button>
       </:actions>
     </.simple_form>
+
+    <%!-- Client-rendered from this browser's IndexedDB: names and local hints never reach the server --%>
+    <div id="local-conversations" phx-update="ignore"></div>
   </div>
 </Layouts.app>

@@ -55,7 +55,18 @@ defmodule PriveeWeb.ClientTexts do
         notificationsUnsupported: gettext("This browser does not support notifications."),
         messagePlaceholder: gettext("Write your message here"),
         messageLabel: gettext("Message"),
-        send: gettext("Send")
+        send: gettext("Send"),
+        hintTitle: gettext("Who is speaking?"),
+        hintAdvice:
+          gettext("Don't use their name. Anyone with access to this browser can read hints."),
+        hintLabel: gettext("Hint (only on this browser)"),
+        hintRemove: gettext("Remove hint"),
+        hintButton: gettext("Hint"),
+        cancel: gettext("Cancel"),
+        save: gettext("Save"),
+        conversationsTitle: gettext("Conversations on this browser"),
+        conversationsNote:
+          gettext("Stored only on this browser. Hints are never sent to the server.")
       }
     end)
   end

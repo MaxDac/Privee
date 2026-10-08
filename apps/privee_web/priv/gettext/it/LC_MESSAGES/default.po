@@ -16,6 +16,9 @@ msgstr "Azioni"
 msgid "Attempting to reconnect"
 msgstr "Tentativo di riconnessione"
 
+msgid "Cancel"
+msgstr "Annulla"
+
 msgid "Chatting app with focus on privacy"
 msgstr "App di chat incentrata sulla privacy"
 
@@ -27,6 +30,9 @@ msgstr "Chiudi"
 
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
 msgstr "Confronta questo numero con il tuo contatto, di persona o tramite un altro canale. Se coincide, la conversazione è crittografata end-to-end."
+
+msgid "Conversations on this browser"
+msgstr "Conversazioni su questo browser"
 
 msgid "Copy link"
 msgstr "Copia link"
@@ -70,6 +76,9 @@ msgstr "Eliminare la cronologia locale di questa conversazione da questo disposi
 msgid "Don't have a session?"
 msgstr "Non hai una sessione?"
 
+msgid "Don't use their name. Anyone with access to this browser can read hints."
+msgstr "Non usare il suo nome. Chiunque abbia accesso a questo browser può leggere i suggerimenti."
+
 msgid "Earlier on this device"
 msgstr "In precedenza su questo dispositivo"
 
@@ -90,6 +99,12 @@ msgstr "Dimentica questo dispositivo"
 
 msgid "Hang in there while we get back on track"
 msgstr "Attendi mentre ripristiniamo il servizio"
+
+msgid "Hint"
+msgstr "Suggerimento"
+
+msgid "Hint (only on this browser)"
+msgstr "Suggerimento (solo su questo browser)"
 
 msgid "Information"
 msgstr "Informazioni"
@@ -139,6 +154,9 @@ msgstr "Sessione rapida"
 msgid "Recovery phrase"
 msgstr "Frase di recupero"
 
+msgid "Remove hint"
+msgstr "Rimuovi suggerimento"
+
 msgid "Reset encryption identity"
 msgstr "Reimposta identità crittografica"
 
@@ -147,6 +165,9 @@ msgstr "Reimpostare l'identità crittografica di questa sessione? Ai tuoi contat
 
 msgid "Safety number"
 msgstr "Numero di sicurezza"
+
+msgid "Save"
+msgstr "Salva"
 
 msgid "Send"
 msgstr "Invia"
@@ -186,6 +207,9 @@ msgstr "Indica il nome della sessione con cui vuoi chattare."
 
 msgid "Start Privee"
 msgstr "Avvia Privee"
+
+msgid "Stored only on this browser. Hints are never sent to the server."
+msgstr "Salvate solo su questo browser. I suggerimenti non vengono mai inviati al server."
 
 msgid "Success!"
 msgstr "Operazione riuscita!"
@@ -246,6 +270,9 @@ msgstr "Bentornato!"
 
 msgid "What's this?"
 msgstr "Che cos'è?"
+
+msgid "Who is speaking?"
+msgstr "Chi sta parlando?"
 
 msgid "Write your message here"
 msgstr "Scrivi qui il tuo messaggio"

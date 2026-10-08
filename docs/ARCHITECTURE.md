@@ -122,6 +122,11 @@ Changing a payload in these modules changes **both** clients' contract.
 - Assets in [`apps/privee_web/assets`](../apps/privee_web/assets): `js/utils/signal-*.mjs`
   (libsignal client, IndexedDB store, locks, WASM loader), `chat.mjs`, LiveView
   hooks in `js/hooks`, vendored WASM glue in `vendor/libsignal-wasm`.
+- Local conversation hints: `peer-hints.mjs` (stored in the `meta` store of
+  `privee-<session id>`, key `peer:<id>`), `hint-editor.mjs` and
+  `conversation-list.mjs` (the "Conversations on this browser" list on
+  `/privee`). Hints never reach the server; `sign-out.mjs` clears them when
+  the user logs out.
 
 ## Data model
 

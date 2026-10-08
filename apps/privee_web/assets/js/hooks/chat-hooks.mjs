@@ -23,7 +23,7 @@ export const addChatHooks = (Hooks) => {
   Hooks.ChatScreen = {
     /** @this {ChatScreenHook} */
     async mounted() {
-      const { selectedSessionName, ownSessionId, peerSessionId } = this.el.dataset
+      const { selectedSessionName, ownSessionId, peerSessionId, peerSessionName } = this.el.dataset
       if (selectedSessionName) window.name = `privee-chat-${selectedSessionName}`
 
       addSessionNameCopyListener(pushFlash(this.pushEvent.bind(this)))
@@ -48,7 +48,12 @@ export const addChatHooks = (Hooks) => {
         return
       }
 
-      const controller = new ChatController({ el: this.el, client, peerId: Number(peerSessionId) })
+      const controller = new ChatController({
+        el: this.el,
+        client,
+        peerId: Number(peerSessionId),
+        peerName: peerSessionName || selectedSessionName,
+      })
       this.controller = controller
 
       this.handleEvent("peer_keys_ready", () => controller.onPeerKeysReady())

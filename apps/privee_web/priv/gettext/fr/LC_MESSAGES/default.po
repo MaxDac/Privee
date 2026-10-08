@@ -16,6 +16,9 @@ msgstr "Actions"
 msgid "Attempting to reconnect"
 msgstr "Tentative de reconnexion"
 
+msgid "Cancel"
+msgstr "Annuler"
+
 msgid "Chatting app with focus on privacy"
 msgstr "Application de discussion axée sur la confidentialité"
 
@@ -27,6 +30,9 @@ msgstr "Fermer"
 
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
 msgstr "Comparez ce numéro avec votre contact, en personne ou par un autre canal. S'il correspond, la conversation est chiffrée de bout en bout."
+
+msgid "Conversations on this browser"
+msgstr "Conversations sur ce navigateur"
 
 msgid "Copy link"
 msgstr "Copier le lien"
@@ -70,6 +76,9 @@ msgstr "Supprimer l'historique local de cette conversation sur cet appareil ?"
 msgid "Don't have a session?"
 msgstr "Vous n'avez pas de session ?"
 
+msgid "Don't use their name. Anyone with access to this browser can read hints."
+msgstr "N'utilisez pas son nom. Toute personne ayant accès à ce navigateur peut lire les indices."
+
 msgid "Earlier on this device"
 msgstr "Plus tôt sur cet appareil"
 
@@ -90,6 +99,12 @@ msgstr "Oublier cet appareil"
 
 msgid "Hang in there while we get back on track"
 msgstr "Patientez pendant le rétablissement du service"
+
+msgid "Hint"
+msgstr "Indice"
+
+msgid "Hint (only on this browser)"
+msgstr "Indice (uniquement sur ce navigateur)"
 
 msgid "Information"
 msgstr "Informations"
@@ -139,6 +154,9 @@ msgstr "Session rapide"
 msgid "Recovery phrase"
 msgstr "Phrase de récupération"
 
+msgid "Remove hint"
+msgstr "Supprimer l'indice"
+
 msgid "Reset encryption identity"
 msgstr "Réinitialiser l'identité de chiffrement"
 
@@ -147,6 +165,9 @@ msgstr "Réinitialiser l'identité de chiffrement de cette session ? Vos contact
 
 msgid "Safety number"
 msgstr "Numéro de sécurité"
+
+msgid "Save"
+msgstr "Enregistrer"
 
 msgid "Send"
 msgstr "Envoyer"
@@ -186,6 +207,9 @@ msgstr "Indiquez le nom de la session avec laquelle vous souhaitez discuter."
 
 msgid "Start Privee"
 msgstr "Démarrer Privee"
+
+msgid "Stored only on this browser. Hints are never sent to the server."
+msgstr "Enregistrées uniquement sur ce navigateur. Les indices ne sont jamais envoyés au serveur."
 
 msgid "Success!"
 msgstr "Succès !"
@@ -246,6 +270,9 @@ msgstr "Bon retour !"
 
 msgid "What's this?"
 msgstr "Qu'est-ce que c'est ?"
+
+msgid "Who is speaking?"
+msgstr "Qui parle ?"
 
 msgid "Write your message here"
 msgstr "Saisissez votre message ici"

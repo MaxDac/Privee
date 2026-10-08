@@ -174,8 +174,10 @@
       </.button_link>
 
       <.button_link
+        id="log-out-link"
         href={~p"/sessions/log_out"}
         method="delete"
+        data-own-session-id={@current_session.id}
         class="cursor-pointer"
         legend={lgettext(@locale, "Log Out")}
         aria-label={lgettext(@locale, "Log Out")}

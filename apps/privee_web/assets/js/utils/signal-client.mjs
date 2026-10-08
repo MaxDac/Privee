@@ -19,6 +19,15 @@ import { Stores, deleteLegacyDb, deleteSignalDb, openSignalDb } from "./signal-d
 import { webLocks } from "./signal-locks.mjs"
 import { IdentityChangedError, SignalStore, equalBuffers } from "./signal-store.mjs"
 import { Protocol, loadSignal, preKeyMessageIdentity } from "./signal-wasm.mjs"
+import {
+  keysLockName,
+  listConversations,
+  peerMetaKey,
+  readPeerHint,
+  removePeerHints,
+  writePeerHint,
+  writePeerName,
+} from "./peer-hints.mjs"
 
 export { IdentityChangedError }
 
@@ -149,9 +158,6 @@ const decoder = new TextDecoder()
 /** @param {number} ms */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/** @param {number | string} peerId */
-const peerMetaKey = (peerId) => `peer:${peerId}`
-
 /**
  * Converts a public prekey returned by libsignal to its JSON form, freeing it.
  * @param {import("../../vendor/libsignal-wasm/libsignal_wasm.js").PublicPreKey} key
@@ -226,7 +232,7 @@ export class SignalClient {
    * @returns {Promise<T>}
    */
   withKeysLock(mode, fn) {
-    return this.locks.request(`privee-keys-${this.ownId}`, { mode }, fn)
+    return this.locks.request(keysLockName(this.ownId), { mode }, fn)
   }
 
   /**
@@ -875,7 +881,8 @@ export class SignalClient {
   }
 
   /**
-   * Deletes the local history of the conversation with `peerId`.
+   * Deletes the local history of the conversation with `peerId`. The peer
+   * metadata, including its hint, is kept.
    * @param {number | string} peerId
    */
   async clearHistory(peerId) {
@@ -883,6 +890,45 @@ export class SignalClient {
     const store = this.operation()
     for (const row of rows) store.delete(Stores.history, row.id)
     await store.commit()
+  }
+
+  // -- Local conversation metadata (never sent to the server) --------------------
+
+  /**
+   * Remembers the session name of `peerId`, listing the conversation on this browser.
+   * @param {number | string} peerId
+   * @param {string} name
+   */
+  setPeerName(peerId, name) {
+    return this.withKeysLock("exclusive", () => writePeerName(this.db, peerId, name, this.now()))
+  }
+
+  /**
+   * @param {number | string} peerId
+   * @returns {Promise<string | null>} The local hint about who is speaking.
+   */
+  peerHint(peerId) {
+    return readPeerHint(this.db, peerId)
+  }
+
+  /**
+   * Stores the local hint of `peerId`; a blank hint removes it.
+   * @param {number | string} peerId
+   * @param {string | null} hint
+   * @returns {Promise<string | null>} The normalized hint.
+   */
+  setPeerHint(peerId, hint) {
+    return this.withKeysLock("exclusive", () => writePeerHint(this.db, peerId, hint))
+  }
+
+  /** Removes every local hint of this session. */
+  clearPeerHints() {
+    return this.withKeysLock("exclusive", () => removePeerHints(this.db))
+  }
+
+  /** @returns {Promise<import("./peer-hints.mjs").Conversation[]>} */
+  listConversations() {
+    return listConversations(this.db)
   }
 
   /**

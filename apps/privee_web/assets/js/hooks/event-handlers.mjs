@@ -2,6 +2,7 @@ import topbar from "../../vendor/topbar"
 import { handleSessionNameCopyToClipboardRegistrationEvent } from "../utils/clipboard.mjs"
 import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
 import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
+import { addSignOutHintsCleanup } from "../utils/sign-out.mjs"
 
 /**
  * Adds the event handlers to the front end, to handle events fired from the back-end.
@@ -19,6 +20,9 @@ export const addBackEndEventHandlers = () => {
 
   // Adds the dark mode toggle handling
   document.addEventListener("DOMContentLoaded", addToggleDarkModeHandling)
+
+  // Local conversation hints are removed on sign-out
+  addSignOutHintsCleanup()
 
   // Asking for notification permission to the browser
   askNotificationPermission().then(console.debug).catch(console.error)

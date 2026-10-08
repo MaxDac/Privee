@@ -16,6 +16,9 @@ msgstr "Ações"
 msgid "Attempting to reconnect"
 msgstr "A tentar restabelecer a ligação"
 
+msgid "Cancel"
+msgstr "Cancelar"
+
 msgid "Chatting app with focus on privacy"
 msgstr "Aplicação de conversas centrada na privacidade"
 
@@ -27,6 +30,9 @@ msgstr "Fechar"
 
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
 msgstr "Compare este número com o seu contacto, pessoalmente ou por outro canal. Se corresponder, a conversa está encriptada ponto a ponto."
+
+msgid "Conversations on this browser"
+msgstr "Conversas neste navegador"
 
 msgid "Copy link"
 msgstr "Copiar ligação"
@@ -70,6 +76,9 @@ msgstr "Eliminar o histórico local desta conversa deste dispositivo?"
 msgid "Don't have a session?"
 msgstr "Não tem uma sessão?"
 
+msgid "Don't use their name. Anyone with access to this browser can read hints."
+msgstr "Não use o nome da pessoa. Qualquer pessoa com acesso a este navegador pode ler as pistas."
+
 msgid "Earlier on this device"
 msgstr "Anteriormente neste dispositivo"
 
@@ -90,6 +99,12 @@ msgstr "Esquecer este dispositivo"
 
 msgid "Hang in there while we get back on track"
 msgstr "Aguarde enquanto repomos o serviço"
+
+msgid "Hint"
+msgstr "Pista"
+
+msgid "Hint (only on this browser)"
+msgstr "Pista (apenas neste navegador)"
 
 msgid "Information"
 msgstr "Informações"
@@ -139,6 +154,9 @@ msgstr "Sessão rápida"
 msgid "Recovery phrase"
 msgstr "Frase de recuperação"
 
+msgid "Remove hint"
+msgstr "Remover pista"
+
 msgid "Reset encryption identity"
 msgstr "Repor identidade de encriptação"
 
@@ -147,6 +165,9 @@ msgstr "Repor a identidade de encriptação desta sessão? Será pedido aos seus
 
 msgid "Safety number"
 msgstr "Número de segurança"
+
+msgid "Save"
+msgstr "Guardar"
 
 msgid "Send"
 msgstr "Enviar"
@@ -186,6 +207,9 @@ msgstr "Indique o nome da sessão com que pretende conversar."
 
 msgid "Start Privee"
 msgstr "Iniciar Privee"
+
+msgid "Stored only on this browser. Hints are never sent to the server."
+msgstr "Guardadas apenas neste navegador. As pistas nunca são enviadas para o servidor."
 
 msgid "Success!"
 msgstr "Sucesso!"
@@ -246,6 +270,9 @@ msgstr "Bem-vindo de volta!"
 
 msgid "What's this?"
 msgstr "O que é isto?"
+
+msgid "Who is speaking?"
+msgstr "Quem está a falar?"
 
 msgid "Write your message here"
 msgstr "Escreva aqui a sua mensagem"
