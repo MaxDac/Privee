@@ -71,6 +71,14 @@ defmodule Privee.Sessions.SessionToken do
     from SessionToken, where: [token: ^token, context: ^context]
   end
 
+  @doc "Days a session token stays valid."
+  def validity_in_days, do: @session_validity_in_days
+
+  @doc "Tokens that have expired and can no longer authenticate."
+  def expired_query do
+    from t in SessionToken, where: t.inserted_at <= ago(@session_validity_in_days, "day")
+  end
+
   @doc """
   Gets all tokens for the given session for the given contexts.
   """

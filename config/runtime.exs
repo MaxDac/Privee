@@ -20,6 +20,12 @@ config :privee_web, :instance,
 # `PriveeWeb.Plugs.ForwardedRemoteIp`). PriveeDeploy's fly.toml sets it to 2 for Fly's proxy.
 config :privee_web, :proxy_hops, String.to_integer(System.get_env("PROXY_HOPS", "0"))
 
+# Sessions without a sign-in for this many days are deleted (see
+# `Privee.Sessions.Janitor`). Only applied when set; the default is 90 days.
+if retention_days = System.get_env("PRIVEE_SESSION_RETENTION_DAYS") do
+  config :privee, Privee.Sessions.Janitor, retention_days: String.to_integer(retention_days)
+end
+
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :privee_web, PriveeWeb.Endpoint,

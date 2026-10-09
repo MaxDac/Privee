@@ -90,8 +90,10 @@ defmodule PriveeWeb.ChatLiveTest do
     end
 
     test "redirects when chatting with yourself", %{conn: conn, me: me} do
-      assert {:error, {:live_redirect, %{to: "/privee"}}} =
+      assert {:error, {:live_redirect, %{to: "/privee", flash: flash}}} =
                live(conn, ~p"/chat/#{me.session_name}")
+
+      assert flash["info"] == "You cannot open a chat with your own session."
     end
   end
 

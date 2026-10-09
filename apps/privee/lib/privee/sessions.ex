@@ -157,6 +157,60 @@ defmodule Privee.Sessions do
   end
 
   #
+  # Cleanup of unused sessions
+  #
+
+  @doc """
+  Deletes the session tokens that can no longer authenticate (older than the
+  token validity). Their push endpoints are deleted with them.
+
+  Returns the number of deleted tokens.
+  """
+  def delete_expired_session_tokens do
+    {count, _} = Repo.delete_all(SessionToken.expired_query())
+    count
+  end
+
+  @doc """
+  Deletes the sessions that are no longer used, together with their tokens,
+  push endpoints and published keys:
+
+    * quick sessions created more than a day ago that have no valid token
+      (never used, or already used and expired);
+    * sessions created more than `retention_days` ago with no sign-in in the
+      last `retention_days`.
+
+  `retention_days` must be longer than the token validity, so a session with
+  a valid token is never deleted.
+
+  Returns the number of deleted sessions.
+  """
+  def delete_unused_sessions(retention_days) when is_integer(retention_days) do
+    retention_days = max(retention_days, SessionToken.validity_in_days())
+
+    recent_tokens = fn days ->
+      from t in SessionToken,
+        where: t.session_id == parent_as(:session).id and t.inserted_at > ago(^days, "day")
+    end
+
+    quick =
+      from s in Session,
+        as: :session,
+        where: s.is_quick and s.inserted_at < ago(1, "day"),
+        where: not exists(recent_tokens.(SessionToken.validity_in_days()))
+
+    stale =
+      from s in Session,
+        as: :session,
+        where: s.inserted_at < ago(^retention_days, "day"),
+        where: not exists(recent_tokens.(retention_days))
+
+    {quick_count, _} = Repo.delete_all(quick)
+    {stale_count, _} = Repo.delete_all(stale)
+    quick_count + stale_count
+  end
+
+  #
   # Quick sessions management
   #
 

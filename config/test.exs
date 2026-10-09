@@ -19,6 +19,9 @@ config :privee, Privee.Repo,
 # Selecting the session name provider implementation
 config :privee, :session_name_provider, Privee.SessionNameProvider.Test
 
+# Tests run the session cleanup explicitly
+config :privee, Privee.Sessions.Janitor, interval_ms: :infinity
+
 # Push deliveries are served by Req.Test stubs
 config :privee, Privee.Push, req_options: [plug: {Req.Test, Privee.Push}], resolve_hosts: false
 

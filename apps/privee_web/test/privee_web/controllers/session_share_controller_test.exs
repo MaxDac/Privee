@@ -47,6 +47,26 @@ defmodule PriveeWeb.SessionShareControllerTest do
       refute get_session(conn, :session_token)
     end
 
+    test "signing in with an existing session returns to the shared chat", %{conn: conn} do
+      target_session = session_fixture(%{session_name: generate_new_unique_session_name()})
+      existing = session_fixture()
+
+      conn = get(conn, ~p"/share/#{target_session.session_name}")
+      assert get_session(conn, :session_return_to) == "/chat/#{target_session.session_name}"
+
+      conn =
+        conn
+        |> recycle()
+        |> post(~p"/sessions/log_in", %{
+          "session" => %{
+            "session_name" => existing.session_name,
+            "recovery_phrase" => session_recovery_phrase()
+          }
+        })
+
+      assert redirected_to(conn) == "/chat/#{target_session.session_name}"
+    end
+
     test "redirects to home page when target session doesn't exist", %{conn: conn} do
       conn = get(conn, ~p"/share/non-existent-session")
 

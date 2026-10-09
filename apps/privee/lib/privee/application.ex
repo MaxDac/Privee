@@ -18,6 +18,7 @@ defmodule Privee.Application do
        query: Application.get_env(:privee, :dns_cluster_query) || :ignore, log: :info},
       {Phoenix.PubSub, name: Privee.PubSub},
       Privee.Chats.TableOwner,
+      Privee.Sessions.Janitor,
       {Task.Supervisor, name: Privee.TaskSupervisor}
     ]
 
