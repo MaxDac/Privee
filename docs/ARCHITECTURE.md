@@ -62,6 +62,7 @@ The release is `privee_umbrella` ([`mix.exs`](../mix.exs)).
 | `Privee.PreKeyStore` | `sessions.prekey_bundle` | Public Signal bundle: identity key, signed prekey, Kyber-1024 last-resort prekey, ≤ 100 one-time prekeys with append-only increasing ids. Every write validates key sizes inside a row-locked transaction. |
 | `Privee.Chats` | ETS (`:chat_messages`, `:chat_conversations`, `:chat_nonces`) | Node-local ciphertext store grouped by conversation and **epoch**; dedup by client nonce; expiry after 24 h idle, 7 days or 1000 messages. Lost on restart, not shared across nodes. |
 | `Privee.Push` | `push_endpoints` | UnifiedPush endpoint registration (bound to a session token) and content-free wake-up delivery with SSRF checks. |
+| `Privee.Sessions.Janitor` | - | GenServer, every 6 hours: deletes expired session tokens and sessions without a sign-in for `PRIVEE_SESSION_RETENTION_DAYS` (cascading tokens, push endpoints and the prekey bundle). |
 | `Privee.RateLimiter` | ETS `:rate_limits` | Fixed-window counters (auth, prekey pops, pushes). |
 | `Privee.SessionNameProvider` | - | Behaviour + `Impl` (real names) and a mock used in tests (`config :privee, :session_name_provider`). |
 
@@ -80,7 +81,8 @@ The release is `privee_umbrella` ([`mix.exs`](../mix.exs)).
 | --- | --- |
 | `/dev` (dev only) | LiveDashboard `/dev/dashboard`, Swoosh mailbox `/dev/mailbox` |
 | `:browser` + `redirect_if_session_is_authenticated` | `live "/"` (`SessionRegistrationLive`), `live "/login"` (`SessionLoginLive`), `post "/sessions/log_in"` |
-| `:browser` + `require_authenticated_session` | `live "/privee"` (`PriveeSelectorLive`), `live "/chat/:session"` (`Chat.ChatLive`); every LiveView here mounts `PriveeWeb.SignalKeysLive` |
+| `:browser` + `require_authenticated_session` | `live "/privee"` (`PriveeSelectorLive`), `live "/chat/:session"` (`Chat.ChatLive`); every LiveView here mounts `PriveeWeb.SignalKeysLive` and `PriveeWeb.NotificationsLive` (in-app notification for messages from other chats) |
+| `:browser` (`live_session :public`) | `live "/guide"` (`GuideLive`), readable with or without a session |
 | `:browser` | `get "/share/:session_name"` (`SessionShareController`), `delete "/sessions/log_out"` |
 | `/api/app` + `:api` | `GET /info`, `POST /sessions`, `POST /sessions/log_in` |
 | `/api/app` + `:api`, `:app_session` | `GET`/`DELETE /session`, `PUT`/`DELETE /push` |
@@ -120,7 +122,8 @@ Changing a payload in these modules changes **both** clients' contract.
   `PriveeWeb.Plugs.SecurityHeaders` (CSP, HSTS, ...).
 - `PriveeWeb.Navigation`: menu state per `live_session`.
 - Assets in [`apps/privee_web/assets`](../apps/privee_web/assets): `js/utils/signal-*.mjs`
-  (libsignal client, IndexedDB store, locks, WASM loader), `chat.mjs`, LiveView
+  (libsignal client, IndexedDB store, locks, WASM loader), `chat.mjs` (with
+  `markdown.mjs`, `commands.mjs` for local `:` commands and `vim.mjs`), LiveView
   hooks in `js/hooks`, vendored WASM glue in `vendor/libsignal-wasm`.
 - Local conversation hints: `peer-hints.mjs` (stored in the `meta` store of
   `privee-<session id>`, key `peer:<id>`), `hint-editor.mjs` and

@@ -66,6 +66,8 @@ deleted.
 | `signal-locks.mjs` | Web Locks, used to coordinate tabs. Locking is fail-closed: browsers without the API cannot chat. |
 | `signal-client.mjs` | Key management, session building, encrypt/decrypt, outbox, history and catch-up. Every protocol operation restores the libsignal state, runs under the exclusive keys lock, and saves it back. |
 | `chat.mjs` | Chat screen controller: renders entries, composer, banners and menu actions. Plaintext only reaches the DOM through `textContent`. |
+| `markdown.mjs` | Inline formatting (`**bold**`, `*italic*`, `~~strike~~`, `` `code` ``, http(s) links). Builds DOM nodes with `textContent`, never HTML; links open with `rel="noopener noreferrer nofollow"`. |
+| `commands.mjs`, `vim.mjs` | `:` commands (`lock`, `unlock`, `export`, `safety`, `hint`, `clear`, `vim`) and the optional VIM mode of the composer. Commands run in the browser and are never sent. |
 
 ## Flows
 
@@ -110,6 +112,14 @@ deleted.
   are never sent to the server or put in push payloads. The editor advises,
   every time, not to use the contact's name. "Clear history on this device"
   keeps hints; logging out and "Forget this device" remove them.
+- **Chat commands are local.** The server never sees a `:` command, so it
+  cannot act on it. `:lock <password>` replaces the rendered plaintext with the
+  stored ciphertext and masks new messages; the password hash (salted SHA-256)
+  is kept in memory only, and reloading the page unlocks. It hides the screen
+  from onlookers, it does not encrypt the local history. Messages that arrive
+  while locked are still decrypted (Signal keys are single-use) and saved to
+  the local history. `:export` (and "Export CSV") downloads the local history
+  as CSV, with cells starting with `= + - @` prefixed by `'` to defuse formulas.
 - **Server retention.** Ciphertext lives in node-local ETS and is lost when the
   node restarts. A conversation expires as a whole after 24 hours of inactivity,
   7 days of age, or 1000 messages; the next message starts a new epoch. Older

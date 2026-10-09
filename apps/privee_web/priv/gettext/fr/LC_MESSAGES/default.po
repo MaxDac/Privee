@@ -19,6 +19,9 @@ msgstr "Tentative de reconnexion"
 msgid "Cancel"
 msgstr "Annuler"
 
+msgid "Chat commands"
+msgstr "Commandes du chat"
+
 msgid "Chatting app with focus on privacy"
 msgstr "Application de discussion axée sur la confidentialité"
 
@@ -27,6 +30,9 @@ msgstr "Effacer l'historique sur cet appareil"
 
 msgid "Close"
 msgstr "Fermer"
+
+msgid "Compare the safety number with your contact to make sure nobody is in the middle."
+msgstr "Comparez le numéro de sécurité avec votre contact pour vous assurer que personne ne s'est interposé."
 
 msgid "Compare this number with your contact, in person or over another channel. If it matches, the conversation is end-to-end encrypted."
 msgstr "Comparez ce numéro avec votre contact, en personne ou par un autre canal. S'il correspond, la conversation est chiffrée de bout en bout."
@@ -39,6 +45,9 @@ msgstr "Copier le lien"
 
 msgid "Copy session name"
 msgstr "Copier le nom de session"
+
+msgid "Copy your session name or your chat link from the top bar and send it to your contact."
+msgstr "Copiez le nom de votre session ou le lien du chat depuis la barre supérieure et envoyez-le à votre contact."
 
 msgid "Could not copy to the clipboard."
 msgstr "Impossible de copier dans le presse-papiers."
@@ -58,6 +67,9 @@ msgstr "Créer une nouvelle session"
 msgid "Create a session quickly without a recovery phrase"
 msgstr "Créez rapidement une session sans phrase de récupération"
 
+msgid "Create a session to get a session name and a recovery phrase. The session name is how others reach you; the recovery phrase is your password."
+msgstr "Créez une session pour obtenir un nom de session et une phrase de récupération. Le nom de session permet aux autres de vous joindre ; la phrase de récupération est votre mot de passe."
+
 msgid "Create an account"
 msgstr "Créer un compte"
 
@@ -70,6 +82,9 @@ msgstr "Création..."
 msgid "Delete all encryption keys and history of this session from this device? You will need to reset encryption to chat again."
 msgstr "Supprimer toutes les clés de chiffrement et l'historique de cette session sur cet appareil ? Vous devrez réinitialiser le chiffrement pour discuter à nouveau."
 
+msgid "Delete the history on this device"
+msgstr "Supprimer l'historique sur cet appareil"
+
 msgid "Delete the local history of this conversation from this device?"
 msgstr "Supprimer l'historique local de cette conversation sur cet appareil ?"
 
@@ -79,8 +94,14 @@ msgstr "Vous n'avez pas de session ?"
 msgid "Don't use their name. Anyone with access to this browser can read hints."
 msgstr "N'utilisez pas son nom. Toute personne ayant accès à ce navigateur peut lire les indices."
 
+msgid "Download this conversation as CSV"
+msgstr "Télécharger cette conversation en CSV"
+
 msgid "Earlier on this device"
 msgstr "Plus tôt sur cet appareil"
+
+msgid "Edit the hint for this contact"
+msgstr "Modifier l'indice pour ce contact"
 
 msgid "Encryption could not be initialized. Please reload the page."
 msgstr "Impossible d'initialiser le chiffrement. Rechargez la page."
@@ -94,17 +115,32 @@ msgstr "Erreur !"
 msgid "Exchange a message first to compare safety numbers."
 msgstr "Échangez d'abord un message pour comparer les numéros de sécurité."
 
+msgid "Export CSV"
+msgstr "Exporter en CSV"
+
 msgid "Forget this device"
 msgstr "Oublier cet appareil"
 
+msgid "Guide"
+msgstr "Guide d'utilisation"
+
 msgid "Hang in there while we get back on track"
 msgstr "Patientez pendant le rétablissement du service"
+
+msgid "Hide the messages behind a password"
+msgstr "Masquer les messages derrière un mot de passe"
 
 msgid "Hint"
 msgstr "Indice"
 
 msgid "Hint (only on this browser)"
 msgstr "Indice (uniquement sur ce navigateur)"
+
+msgid "History"
+msgstr "Historique"
+
+msgid "How Privee works"
+msgstr "Comment fonctionne Privee"
 
 msgid "Information"
 msgstr "Informations"
@@ -130,6 +166,15 @@ msgstr "Déconnexion réussie."
 msgid "Message"
 msgstr "Message"
 
+msgid "Messages are end-to-end encrypted in your browser with the Signal Protocol. The server only relays encrypted text it cannot read, and deletes it after a while."
+msgstr "Les messages sont chiffrés de bout en bout dans votre navigateur avec le protocole Signal. Le serveur ne relaie que du texte chiffré qu'il ne peut pas lire, et le supprime au bout d'un moment."
+
+msgid "Messages are hidden. Type :unlock followed by your password to show them."
+msgstr "Les messages sont masqués. Tapez :unlock suivi de votre mot de passe pour les afficher."
+
+msgid "Messages support **bold**, *italic*, ~~strikethrough~~, `code` and links."
+msgstr "Les messages prennent en charge **gras**, *italique*, ~~barré~~, `code` et liens."
+
 msgid "New message received"
 msgstr "Nouveau message reçu"
 
@@ -139,11 +184,17 @@ msgstr "Page introuvable"
 msgid "Oops, something went wrong! Please check the errors below."
 msgstr "Une erreur s'est produite ! Vérifiez les erreurs ci-dessous."
 
+msgid "Open a chat"
+msgstr "Ouvrir un chat"
+
 msgid "Privacy App"
 msgstr "Application de confidentialité"
 
 msgid "Privee - Text received"
 msgstr "Privee - Message reçu"
+
+msgid "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
+msgstr "Privee est un chat pour des conversations privées qui ne laissent aucune trace : pas de compte, pas d'e-mail, pas de numéro de téléphone."
 
 msgid "Privee logo"
 msgstr "Logo de Privee"
@@ -184,8 +235,17 @@ msgstr "Session copiée"
 msgid "Session created successfully! Your session name has been automatically copied to the clipboard."
 msgstr "Session créée ! Le nom de session a été copié automatiquement dans le presse-papiers."
 
+msgid "Sessions instead of accounts"
+msgstr "Des sessions plutôt que des comptes"
+
 msgid "Settings"
 msgstr "Paramètres"
+
+msgid "Show the hidden messages again"
+msgstr "Afficher à nouveau les messages masqués"
+
+msgid "Show the safety number"
+msgstr "Afficher le numéro de sécurité"
 
 msgid "Sign in"
 msgstr "Se connecter"
@@ -207,6 +267,9 @@ msgstr "Indiquez le nom de la session avec laquelle vous souhaitez discuter."
 
 msgid "Start Privee"
 msgstr "Démarrer Privee"
+
+msgid "Starting a conversation"
+msgstr "Démarrer une conversation"
 
 msgid "Stored only on this browser. Hints are never sent to the server."
 msgstr "Enregistrées uniquement sur ce navigateur. Les indices ne sont jamais envoyés au serveur."
@@ -235,6 +298,9 @@ msgstr "La session que vous essayez de rejoindre n'existe pas."
 msgid "Theme"
 msgstr "Thème"
 
+msgid "There is no history on the server. Messages you read are kept only on this browser, and a new device starts with an empty conversation. You can export them as CSV or delete them at any time."
+msgstr "Il n'y a pas d'historique sur le serveur. Les messages que vous lisez restent uniquement dans ce navigateur, et un nouvel appareil commence avec une conversation vide. Vous pouvez les exporter en CSV ou les supprimer à tout moment."
+
 msgid "This browser does not support notifications."
 msgstr "Ce navigateur ne prend pas en charge les notifications."
 
@@ -252,6 +318,21 @@ msgstr "Impossible de déchiffrer ce message."
 
 msgid "To register a session, choose a session name of at least 24 alphanumeric characters separated by hyphens, and a recovery phrase containing only letters, spaces and punctuation."
 msgstr "Pour créer une session, choisissez un nom d'au moins 24 caractères alphanumériques séparés par des tirets et une phrase de récupération contenant uniquement des lettres, des espaces et de la ponctuation."
+
+msgid "To sign in again, use the session name and the recovery phrase. Keep the phrase safe: it cannot be recovered."
+msgstr "Pour vous reconnecter, utilisez le nom de session et la phrase de récupération. Conservez la phrase en lieu sûr : elle ne peut pas être récupérée."
+
+msgid "Turn VIM mode on or off"
+msgstr "Activer ou désactiver le mode VIM"
+
+msgid "Type : in the message box to see the commands. They run in your browser and are never sent."
+msgstr "Tapez : dans la zone de message pour voir les commandes. Elles s'exécutent dans votre navigateur et ne sont jamais envoyées."
+
+msgid "Type a password after :lock, for example :lock my-secret."
+msgstr "Tapez un mot de passe après :lock, par exemple :lock mon-secret."
+
+msgid "Unused sessions are deleted automatically, so nothing ties you to past conversations."
+msgstr "Les sessions inutilisées sont supprimées automatiquement, rien ne vous relie donc aux conversations passées."
 
 msgid "Url copied"
 msgstr "Lien copié"
@@ -274,6 +355,9 @@ msgstr "Qu'est-ce que c'est ?"
 msgid "Who is speaking?"
 msgstr "Qui parle ?"
 
+msgid "Why Privee"
+msgstr "Pourquoi Privee"
+
 msgid "Write your message here"
 msgstr "Saisissez votre message ici"
 
@@ -286,6 +370,12 @@ msgstr "Saisissez votre citation préférée. Elle servira à récupérer la ses
 msgid "Write your session name."
 msgstr "Saisissez votre nom de session."
 
+msgid "Wrong password. The messages stay hidden."
+msgstr "Mot de passe incorrect. Les messages restent masqués."
+
+msgid "You cannot open a chat with your own session."
+msgstr "Vous ne pouvez pas ouvrir un chat avec votre propre session."
+
 msgid "You have to select a session to continue"
 msgstr "Vous devez sélectionner une session pour continuer"
 
@@ -297,6 +387,9 @@ msgstr "Votre citation."
 
 msgid "Your contact has not set up encryption yet. Try again once they are online."
 msgstr "Votre contact n'a pas encore configuré le chiffrement. Réessayez lorsqu'il sera en ligne."
+
+msgid "Your contact opens the link, or types your session name on the chat selection page."
+msgstr "Votre contact ouvre le lien ou saisit votre nom de session sur la page de sélection du chat."
 
 msgid "Your contact's security code changed. They may have reset their device, or someone may be intercepting the conversation. Verify the safety number with them before continuing."
 msgstr "Le code de sécurité de votre contact a changé. Il a peut-être réinitialisé son appareil, ou quelqu'un intercepte la conversation. Vérifiez le numéro de sécurité avec lui avant de continuer."
