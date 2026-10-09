@@ -132,11 +132,24 @@ defmodule Privee.Sessions do
   ## Session
 
   @doc """
-  Generates a session token.
+  Generates a session token and records the sign-in in `last_used_at`.
+
+  Both happen in one transaction, so a concurrent cleanup either sees the new
+  `last_used_at` and keeps the session, or deletes it first and the sign-in
+  fails.
   """
   def generate_session_token(session) do
     {token, session_token} = SessionToken.build_session_token(session)
-    Repo.insert!(session_token)
+    now = NaiveDateTime.utc_now(:second)
+
+    Repo.transact(fn ->
+      Repo.update_all(from(s in Session, where: s.id == ^session.id),
+        set: [last_used_at: now]
+      )
+
+      {:ok, Repo.insert!(session_token)}
+    end)
+
     token
   end
 
@@ -154,6 +167,57 @@ defmodule Privee.Sessions do
   def delete_session_token(token) do
     Repo.delete_all(SessionToken.by_token_and_context_query(token, "session"))
     :ok
+  end
+
+  #
+  # Cleanup of unused sessions
+  #
+
+  @doc """
+  Deletes the session tokens that can no longer authenticate (older than the
+  token validity). Their push endpoints are deleted with them.
+
+  Returns the number of deleted tokens.
+  """
+  def delete_expired_session_tokens do
+    {count, _} = Repo.delete_all(SessionToken.expired_query())
+    count
+  end
+
+  @doc """
+  Deletes the sessions that are no longer used, together with their tokens,
+  push endpoints and published keys:
+
+    * quick sessions never signed into and created more than a day ago;
+    * quick sessions whose last sign-in is older than the token validity (they
+      cannot sign in again);
+    * sessions with no sign-in (`last_used_at`, or the creation date when
+      never signed into) in the last `retention_days`.
+
+  `retention_days` is never less than the token validity, so a session with a
+  valid token is never deleted. The decision only depends on `last_used_at`,
+  which logging out or deleting expired tokens does not change.
+
+  Returns the number of deleted sessions.
+  """
+  def delete_unused_sessions(retention_days) when is_integer(retention_days) do
+    validity = SessionToken.validity_in_days()
+    retention_days = max(retention_days, validity)
+
+    quick =
+      from s in Session,
+        where: s.is_quick,
+        where:
+          (is_nil(s.last_used_at) and s.inserted_at < ago(1, "day")) or
+            s.last_used_at < ago(^validity, "day")
+
+    stale =
+      from s in Session,
+        where: coalesce(s.last_used_at, s.inserted_at) < ago(^retention_days, "day")
+
+    {quick_count, _} = Repo.delete_all(quick)
+    {stale_count, _} = Repo.delete_all(stale)
+    quick_count + stale_count
   end
 
   #

@@ -52,7 +52,10 @@ defmodule PriveeWeb.SessionShareController do
   defp create_quick_session_and_redirect(conn, target_session_name) do
     case Sessions.get_session_by_session_name(target_session_name) do
       %Sessions.Session{} ->
+        # Signing in with an existing session (instead of registering) also
+        # lands on the shared chat.
         conn
+        |> put_session(:session_return_to, ~p"/chat/#{target_session_name}")
         |> redirect(to: ~p"/?code=#{target_session_name}")
 
       nil ->

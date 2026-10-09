@@ -1,7 +1,10 @@
 import topbar from "../../vendor/topbar"
 import { handleSessionNameCopyToClipboardRegistrationEvent } from "../utils/clipboard.mjs"
 import { addToggleDarkModeHandling, setStartupTheme } from "../utils/dark-mode-switcher.mjs"
-import { askNotificationPermission, pushBackEndNotification } from "../utils/push-notifications.mjs"
+import {
+  askNotificationPermissionOnGesture,
+  pushBackEndNotification,
+} from "../utils/push-notifications.mjs"
 import { addSignOutHintsCleanup } from "../utils/sign-out.mjs"
 
 /**
@@ -24,8 +27,8 @@ export const addBackEndEventHandlers = () => {
   // Local conversation hints are removed on sign-out
   addSignOutHintsCleanup()
 
-  // Asking for notification permission to the browser
-  askNotificationPermission().then(console.debug).catch(console.error)
+  // Asking for notification permission on the first user gesture
+  askNotificationPermissionOnGesture().then(console.debug).catch(console.error)
 
   // Push notifications
   window.addEventListener("phx:trigger_notification", (event) =>

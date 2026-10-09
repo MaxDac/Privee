@@ -57,6 +57,10 @@ log in.
 rate-limited per IP and return `429 {error: "rate_limited"}` when the limit is
 exceeded. Push notifications carry no message content.
 
+Sessions with no token issued for `PRIVEE_SESSION_RETENTION_DAYS` (default 90)
+are deleted by the server, together with their push endpoint and prekey
+bundle; log in then answers `401 {error: "invalid_credentials"}`.
+
 Clients may send `Accept-Language` on every REST request, including registration
 and login. Supported languages are `en`, `it`, `pt-PT` (European Portuguese),
 `es` and `fr`. Base and regional variants match the supported base language

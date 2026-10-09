@@ -67,7 +67,8 @@ defmodule PriveeWeb.Router do
         PriveeWeb.LocaleLive,
         {PriveeWeb.SessionAuth, :ensure_authenticated},
         {PriveeWeb.Navigation, :logged},
-        PriveeWeb.SignalKeysLive
+        PriveeWeb.SignalKeysLive,
+        PriveeWeb.NotificationsLive
       ] do
       live "/privee", PriveeSelectorLive
       live "/chat/:session", Chat.ChatLive
@@ -76,6 +77,15 @@ defmodule PriveeWeb.Router do
 
   scope "/", PriveeWeb do
     pipe_through [:browser]
+
+    live_session :public,
+      on_mount: [
+        PriveeWeb.LocaleLive,
+        {PriveeWeb.SessionAuth, :mount_current_session},
+        PriveeWeb.NotificationsLive
+      ] do
+      live "/guide", GuideLive
+    end
 
     get "/share/:session_name", SessionShareController, :share
     delete "/sessions/log_out", SessionController, :delete

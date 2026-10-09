@@ -28,6 +28,7 @@ The release reads these environment variables at runtime.
 | `PROXY_HOPS` | no | Position of the client address from the right of `X-Forwarded-For`, used for per-client rate limits (`2` on Fly.io). |
 | `PRIVEE_INSTANCE_NAME` | no | Display name reported by `GET /api/app/info`. |
 | `PRIVEE_SOURCE_URL` | no | Link to the source code of the running version, defaults to `https://github.com/MaxDac/Privee`. |
+| `PRIVEE_SESSION_RETENTION_DAYS` | no | Days without a sign-in (`sessions.last_used_at`, set whenever a token is issued; logging out does not reset it) after which a session, its tokens, push endpoints and prekey bundle are deleted, defaults to `90` (never less than the 60-day token validity). Quick sessions are deleted a day after creation if never signed into, or once their last token has expired. A deleted session name can be registered again. |
 | `POOL_SIZE` | no | Database pool size. |
 | `ENABLE_DB_SSL` | no | Enables SSL for the database connection. |
 | `DNS_CLUSTER_QUERY` | no | DNS query used to cluster nodes; set automatically on Fly.io. |

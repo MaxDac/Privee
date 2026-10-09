@@ -1,6 +1,7 @@
+<%!-- The whole bubble stays hidden until the message is decrypted --%>
 <div
   class={[
-    "chat",
+    "chat has-[[data-converted=false]]:hidden",
     case {@message.in_thread, @message.from == @current_session.id} do
       {true, true} -> "mr-3"
       {true, _} -> "ml-3"
@@ -31,6 +32,7 @@
       data-converted="false"
       class={[
         "text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal hidden",
+        "data-[locked=true]:break-all data-[locked=true]:line-clamp-3 data-[locked=true]:font-mono data-[locked=true]:text-xs",
         if(@message.from == @current_session.id, do: "text-zinc-50", else: "text-zinc-900")
       ]}
     >

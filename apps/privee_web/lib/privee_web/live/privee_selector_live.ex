@@ -5,21 +5,12 @@ defmodule PriveeWeb.PriveeSelectorLive do
 
   use PriveeWeb, :live_view
 
-  alias PriveeWeb.Events
-
   alias Privee.Sessions
   alias Privee.Sessions.PriveeForm
 
-  require Logger
-
-  @message_received_event "message_received"
-
   @impl true
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> subscribe_to_events()
-     |> assign_form()}
+    {:ok, assign_form(socket)}
   end
 
   @impl true
@@ -45,13 +36,6 @@ defmodule PriveeWeb.PriveeSelectorLive do
        |> assign_form(params)}
     end
   end
-
-  @impl true
-  def handle_info(%{event: @message_received_event, payload: payload}, socket) do
-    {:noreply, Events.send_notification_event_to_client(socket, payload)}
-  end
-
-  def handle_info(_message, socket), do: {:noreply, socket}
 
   defp assign_form(socket, params \\ %{}) do
     changeset = get_privee_form_changeset(params, socket)
@@ -81,20 +65,5 @@ defmodule PriveeWeb.PriveeSelectorLive do
       _, _ ->
         []
     end)
-  end
-
-  defp subscribe_to_events(%{assigns: %{current_session: current_session}} = socket) do
-    if connected?(socket) do
-      case Events.subscribe_to_receiving_events(socket, current_session.id) do
-        :ok ->
-          socket
-
-        error ->
-          Logger.warning("Could not subscribe to receiving events '#{inspect(error)}'.")
-          socket
-      end
-    else
-      socket
-    end
   end
 end

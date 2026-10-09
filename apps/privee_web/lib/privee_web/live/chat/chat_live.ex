@@ -27,7 +27,6 @@ defmodule PriveeWeb.Chat.ChatLive do
   embed_templates "components/*"
 
   @chat_created_event "chat_created"
-  @message_received_event "message_received"
   @prekeys_available_event "prekeys_available"
 
   @impl true
@@ -93,10 +92,6 @@ defmodule PriveeWeb.Chat.ChatLive do
     {:noreply, assign_message(socket, message)}
   end
 
-  def handle_info(%{event: @message_received_event, payload: payload}, socket) do
-    {:noreply, Events.send_notification_event_to_client(socket, payload)}
-  end
-
   def handle_info(_message, socket), do: {:noreply, socket}
 
   defp assign_selected_session(
@@ -108,9 +103,14 @@ defmodule PriveeWeb.Chat.ChatLive do
         {:cont, assign(socket, :selected_session, selected_session)}
 
       :error ->
+        message =
+          if selected_session_name == me.session_name,
+            do: gettext("You cannot open a chat with your own session."),
+            else: gettext("You have to select a session to continue")
+
         {:halt,
          socket
-         |> put_flash(:info, gettext("You have to select a session to continue"))
+         |> put_flash(:info, message)
          |> push_navigate(to: ~p"/privee")}
     end
   end
@@ -136,7 +136,6 @@ defmodule PriveeWeb.Chat.ChatLive do
     if connected?(socket) do
       with :ok <-
              Events.subscribe_to_chat_events(socket, current_session.id, selected_session.id),
-           :ok <- Events.subscribe_to_receiving_events(socket, current_session.id),
            :ok <- PriveeWeb.Endpoint.subscribe(SignalKeys.peer_topic(selected_session.id)) do
         socket
       else
