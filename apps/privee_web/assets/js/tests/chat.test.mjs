@@ -21,10 +21,13 @@ const layout = (/** @type {string} */ epoch) => `
   <div id="chat-peer-hint"></div>
   <button id="chat-clear-history"></button>
   <button id="chat-forget-device"></button>
+  <button id="chat-export"></button>
   <main id="chat-screen" data-epoch="${epoch}">
     <div id="chat-local-history"></div>
     <div id="chat-screen-container"></div>
   </main>
+  <ul id="chat-commands" hidden></ul>
+  <span id="chat-vim-mode" hidden></span>
   <input id="chat-text" disabled />
   <button id="chat-send" disabled></button>
 `
@@ -183,6 +186,124 @@ describe("ChatController", () => {
     const entry = /** @type {HTMLElement} */ (bob.doc.querySelector("[data-signal-message]"))
     expect(entry.dataset.converted).toBe("true")
     expect(entry.classList.contains("hidden")).toBe(false)
+  })
+
+  it("renders markdown safely in received messages", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "**hi** see https://example.com and [x](javascript:alert(1)) <img src=x>"
+    await alice.controller.sendFromComposer()
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+
+    const entry = /** @type {HTMLElement} */ (bob.doc.querySelector("[data-signal-message]"))
+    expect(entry.querySelector("strong")?.textContent).toBe("hi")
+    const links = [...entry.querySelectorAll("a")]
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["https://example.com/"])
+    expect(links[0].rel).toContain("noopener")
+    expect(entry.querySelector("img")).toBeNull()
+    expect(entry.textContent).toBe(
+      "hi see https://example.com and [x](javascript:alert(1)) <img src=x>",
+    )
+  })
+
+  it("runs commands locally without sending them", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+    const input = /** @type {HTMLInputElement} */ (bob.doc.getElementById("chat-text"))
+
+    input.value = ":lo"
+    input.dispatchEvent(new bob.doc.defaultView.Event("input"))
+    const list = /** @type {HTMLElement} */ (bob.doc.getElementById("chat-commands"))
+    expect(list.hidden).toBe(false)
+    const suggested = [...list.querySelectorAll("[data-command]")]
+    expect(suggested.map((b) => /** @type {HTMLElement} */ (b).dataset.command)).toEqual(["lock"])
+    const lockButton = /** @type {HTMLElement} */ (list.querySelector("[data-command=lock]"))
+    lockButton.click()
+    expect(input.value).toBe(":lock ")
+    expect(list.hidden).toBe(true)
+
+    const before = server.messages.length
+    input.value = ":vim"
+    await bob.controller.sendFromComposer()
+    expect(bob.controller.vim?.enabled).toBe(true)
+    expect(server.messages).toHaveLength(before)
+
+    input.value = ":)"
+    await bob.controller.sendFromComposer()
+    expect(server.messages).toHaveLength(before + 1)
+  })
+
+  it("locks the screen behind a password and unlocks it from the local history", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    await alice.controller.start()
+    await bob.controller.start()
+
+    const aliceInput = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    aliceInput.value = "top secret"
+    await alice.controller.sendFromComposer()
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+    expect(texts(bob.doc)).toEqual(["top secret"])
+
+    const input = /** @type {HTMLInputElement} */ (bob.doc.getElementById("chat-text"))
+    input.value = ":lock"
+    await bob.controller.sendFromComposer()
+    expect(bob.doc.getElementById("chat-banner-notice")?.textContent).toContain(
+      Texts.lockNeedsPassword,
+    )
+
+    input.value = ":lock hunter2"
+    await bob.controller.sendFromComposer()
+    const entry = /** @type {HTMLElement} */ (bob.doc.querySelector("[data-signal-message]"))
+    expect(entry.textContent).toBe(entry.dataset.body)
+    expect(entry.dataset.locked).toBe("true")
+    expect(bob.doc.body.textContent).not.toContain("top secret")
+
+    aliceInput.value = "still secret"
+    await alice.controller.sendFromComposer()
+    stream(server, bob.doc, BOB)
+    await bob.controller.processEntries()
+    expect(bob.doc.body.textContent).not.toContain("still secret")
+
+    input.value = ":unlock wrong"
+    await bob.controller.sendFromComposer()
+    expect(bob.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.wrongPassword)
+    expect(bob.doc.body.textContent).not.toContain("top secret")
+
+    input.value = ":unlock hunter2"
+    await bob.controller.sendFromComposer()
+    expect(texts(bob.doc)).toEqual(["top secret", "still secret"])
+    expect(bob.doc.getElementById("chat-banner-locked")).toBeNull()
+  })
+
+  it("exports the local history as CSV", async () => {
+    const alice = await party(server, ALICE, BOB)
+    const bob = await party(server, BOB, ALICE)
+    alice.controller.peerName = "bob session"
+    const download = vi.fn()
+    alice.controller.download = download
+    await alice.controller.start()
+    await bob.controller.start()
+
+    const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
+    input.value = "=HYPERLINK(1), hi"
+    await alice.controller.sendFromComposer()
+
+    alice.doc.getElementById("chat-export")?.click()
+    await vi.waitFor(() => expect(download).toHaveBeenCalled())
+    const [filename, csv] = download.mock.calls[0]
+    expect(filename).toMatch(/^privee-bob_session-\d{4}-\d{2}-\d{2}\.csv$/)
+    const lines = csv.trim().split("\r\n")
+    expect(lines[0]).toBe("timestamp,direction,message")
+    expect(lines[1]).toMatch(/^\d{4}-.*Z,sent,"'=HYPERLINK\(1\), hi"$/)
   })
 
   it("keeps the text and warns when the peer has no keys", async () => {

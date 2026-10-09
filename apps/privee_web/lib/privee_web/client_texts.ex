@@ -66,7 +66,18 @@ defmodule PriveeWeb.ClientTexts do
         save: gettext("Save"),
         conversationsTitle: gettext("Conversations on this browser"),
         conversationsNote:
-          gettext("Stored only on this browser. Hints are never sent to the server.")
+          gettext("Stored only on this browser. Hints are never sent to the server."),
+        commandLock: gettext("Hide the messages behind a password"),
+        commandUnlock: gettext("Show the hidden messages again"),
+        commandExport: gettext("Download this conversation as CSV"),
+        commandSafety: gettext("Show the safety number"),
+        commandHint: gettext("Edit the hint for this contact"),
+        commandClear: gettext("Delete the history on this device"),
+        commandVim: gettext("Turn VIM mode on or off"),
+        lockNeedsPassword: gettext("Type a password after :lock, for example :lock my-secret."),
+        wrongPassword: gettext("Wrong password. The messages stay hidden."),
+        messagesLocked:
+          gettext("Messages are hidden. Type :unlock followed by your password to show them.")
       }
     end)
   end

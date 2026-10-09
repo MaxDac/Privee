@@ -4,7 +4,8 @@
  * Server-rendered stream entries (`[data-signal-message]`) carry ciphertext only.
  * Outgoing messages are shown from the local history or the pending outbox
  * (never decrypted), incoming ones are decrypted in ascending `seq` order.
- * All plaintext reaches the DOM through `textContent`.
+ * All plaintext reaches the DOM as text nodes (`textContent` or the DOM-only
+ * markdown renderer), never as HTML.
  */
 
 import {
@@ -15,6 +16,23 @@ import {
 } from "./signal-client.mjs"
 import { clientTexts } from "./locale.mjs"
 import { openHintEditor } from "./hint-editor.mjs"
+import { renderMarkdown } from "./markdown.mjs"
+import { hashPassword, historyToCsv, parseCommand, suggestCommands } from "./commands.mjs"
+import { VimMode } from "./vim.mjs"
+
+const lockedText = "••••••"
+
+/**
+ * @param {Document} doc
+ * @returns {Storage | undefined}
+ */
+const safeLocalStorage = (doc) => {
+  try {
+    return doc.defaultView?.localStorage
+  } catch {
+    return undefined
+  }
+}
 
 export const Selectors = Object.freeze({
   entry: "[data-signal-message]",
@@ -28,6 +46,9 @@ export const Selectors = Object.freeze({
   peerHint: "#chat-peer-hint",
   clearHistory: "#chat-clear-history",
   forgetDevice: "#chat-forget-device",
+  exportCsv: "#chat-export",
+  commands: "#chat-commands",
+  vimIndicator: "#chat-vim-mode",
 })
 
 /**
@@ -39,6 +60,8 @@ export const Selectors = Object.freeze({
  * @property {(message: string) => boolean} [confirm]
  * @property {() => void} [reload]
  * @property {typeof openHintEditor} [editHint]
+ * @property {(filename: string, csv: string) => void} [download]
+ * @property {Storage} [storage] Where the VIM mode preference is kept.
  */
 
 export class ChatController {
@@ -51,9 +74,17 @@ export class ChatController {
     confirm = (m) => window.confirm(m),
     reload,
     editHint = openHintEditor,
+    download,
+    storage,
   }) {
     this.el = el
     this.doc = el.ownerDocument
+    this.download = download ?? ((filename, csv) => this.downloadFile(filename, csv))
+    this.storage = storage ?? safeLocalStorage(this.doc)
+    /** @type {{salt: Uint8Array, hash: string} | null} Lock password hash, in memory only. */
+    this.lock = null
+    /** @type {VimMode | null} */
+    this.vim = null
     this.client = client
     this.peerId = peerId
     this.peerName = peerName
@@ -112,6 +143,8 @@ export class ChatController {
   /** Stops listening to DOM events. */
   destroy() {
     for (const cleanup of this.cleanups.splice(0)) cleanup()
+    this.vim?.destroy()
+    this.vim = null
   }
 
   /**
@@ -234,7 +267,13 @@ export class ChatController {
    * @param {string} text
    */
   fill(entry, text) {
-    entry.textContent = text
+    if (this.lock) {
+      entry.textContent = entry.dataset.body || lockedText
+      entry.dataset.locked = "true"
+    } else {
+      entry.replaceChildren(renderMarkdown(this.doc, text))
+      delete entry.dataset.locked
+    }
     entry.dataset.converted = "true"
     entry.classList.remove("hidden")
   }
@@ -294,8 +333,10 @@ export class ChatController {
     text.className = `text-sm text-left break-word w-max max-w-[calc(100vw-62px)] sm:max-w-[450px] font-normal ${
       out ? "text-zinc-50" : "text-zinc-900"
     }`
-    text.textContent =
-      row.plaintext ?? this.placeholder(text, out ? "unavailable" : "undecryptable")
+    if (this.lock) text.textContent = lockedText
+    else if (row.plaintext === null || row.plaintext === undefined)
+      text.textContent = this.placeholder(text, out ? "unavailable" : "undecryptable")
+    else text.append(renderMarkdown(this.doc, row.plaintext))
 
     bubble.append(text)
     wrapper.append(bubble)
@@ -312,21 +353,85 @@ export class ChatController {
     const input = /** @type {HTMLInputElement | null} */ (this.query(Selectors.input))
     const send = this.query(Selectors.send)
 
+    if (input && !this.vim) {
+      this.vim = new VimMode(input, {
+        indicator: this.query(Selectors.vimIndicator),
+        storage: this.storage,
+      })
+    }
+
     /** @param {KeyboardEvent} event */
     const onKey = (event) => {
-      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      if (event.key === "Tab" && this.completeCommand()) {
+        event.preventDefault()
+      } else if (event.key === "Escape") {
+        this.renderSuggestions([])
+      } else if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
         event.preventDefault()
         this.sendFromComposer()
       }
     }
+    const onInput = () => this.renderSuggestions(suggestCommands(input?.value ?? ""))
     const onClick = () => this.sendFromComposer()
 
     input?.addEventListener("keydown", onKey)
+    input?.addEventListener("input", onInput)
     send?.addEventListener("click", onClick)
     this.cleanups.push(() => {
       input?.removeEventListener("keydown", onKey)
+      input?.removeEventListener("input", onInput)
       send?.removeEventListener("click", onClick)
     })
+  }
+
+  /**
+   * Shows the commands matching what the user is typing after `:`.
+   * @param {readonly import("./commands.mjs").Command[]} commands
+   */
+  renderSuggestions(commands) {
+    const list = this.query(Selectors.commands)
+    if (!list) return
+    list.replaceChildren()
+    list.hidden = commands.length === 0
+
+    for (const command of commands) {
+      const item = this.doc.createElement("li")
+      const button = this.doc.createElement("button")
+      button.type = "button"
+      button.dataset.command = command.name
+      button.className =
+        "flex w-full gap-3 rounded-md px-3 py-1.5 text-left text-sm transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
+
+      const name = this.doc.createElement("span")
+      name.className = "font-mono font-semibold"
+      name.textContent = `:${command.name}${command.arg ? " …" : ""}`
+      const description = this.doc.createElement("span")
+      description.className = "text-zinc-500"
+      description.dataset.clientText = command.textKey
+      description.textContent = this.texts[command.textKey]
+
+      button.append(name, description)
+      button.addEventListener("click", () => this.completeCommand(command.name))
+      item.append(button)
+      list.append(item)
+    }
+  }
+
+  /**
+   * Completes the command being typed (the first suggestion by default).
+   * @param {string} [name]
+   * @returns {boolean} Whether a command was completed.
+   */
+  completeCommand(name) {
+    const input = /** @type {HTMLInputElement | null} */ (this.query(Selectors.input))
+    if (!input) return false
+    const command = name ?? suggestCommands(input.value)[0]?.name
+    if (!command) return false
+    input.value = `:${command} `
+    input.focus()
+    input.setSelectionRange(input.value.length, input.value.length)
+    this.renderSuggestions([])
+    return true
   }
 
   async sendFromComposer() {
@@ -334,6 +439,14 @@ export class ChatController {
     if (!input || input.disabled) return
     const text = input.value.trim()
     if (!text) return
+
+    this.renderSuggestions([])
+    const command = parseCommand(text)
+    if (command) {
+      input.value = ""
+      await this.runCommand(command.name, command.arg)
+      return
+    }
 
     input.value = ""
     try {
@@ -525,6 +638,109 @@ export class ChatController {
     bind(Selectors.hint, () => this.editPeerHint())
     bind(Selectors.clearHistory, () => this.clearHistory())
     bind(Selectors.forgetDevice, () => this.forgetDevice())
+    bind(Selectors.exportCsv, () => this.exportCsv())
+  }
+
+  // -- Commands (run locally, never sent) -------------------------------------------
+
+  /**
+   * @param {import("./commands.mjs").CommandName} name
+   * @param {string} arg
+   */
+  async runCommand(name, arg) {
+    try {
+      switch (name) {
+        case "lock":
+          return await this.lockMessages(arg)
+        case "unlock":
+          return await this.unlockMessages(arg)
+        case "export":
+          return await this.exportCsv()
+        case "safety":
+          return await this.showSafetyNumber()
+        case "hint":
+          return await this.editPeerHint()
+        case "clear":
+          return await this.clearHistory()
+        case "vim":
+          this.vim?.toggle()
+          return
+      }
+    } catch (e) {
+      console.error(`Command :${name} failed`, e)
+    }
+  }
+
+  /**
+   * Hides the decrypted messages behind a password (#72). Messages stay
+   * readable in the local history; the screen shows their ciphertext instead.
+   * @param {string} password
+   */
+  async lockMessages(password) {
+    if (!password) {
+      this.showBanner("notice", this.texts.lockNeedsPassword)
+      return
+    }
+    this.lock = await hashPassword(password)
+    this.el.dataset.locked = "true"
+    this.showBanner("locked", this.texts.messagesLocked)
+    for (const entry of /** @type {NodeListOf<HTMLElement>} */ (
+      this.doc.querySelectorAll(`${Selectors.entry}[data-converted=true]`)
+    )) {
+      entry.textContent = entry.dataset.body || lockedText
+      entry.dataset.locked = "true"
+    }
+    await this.renderLocalHistory()
+  }
+
+  /** @param {string} password */
+  async unlockMessages(password) {
+    if (!this.lock) return
+    const { hash } = await hashPassword(password, this.lock.salt)
+    if (hash !== this.lock.hash) {
+      this.showBanner("notice", this.texts.wrongPassword)
+      return
+    }
+
+    this.lock = null
+    delete this.el.dataset.locked
+    this.clearBanner(["locked", "notice"])
+    for (const entry of /** @type {NodeListOf<HTMLElement>} */ (
+      this.doc.querySelectorAll(`${Selectors.entry}[data-locked=true]`)
+    )) {
+      const row = entry.dataset.id ? await this.client.historyEntry(entry.dataset.id) : undefined
+      const text =
+        row?.plaintext ??
+        this.placeholder(entry, entry.dataset.direction === "out" ? "unavailable" : "undecryptable")
+      this.fill(entry, text)
+    }
+    await this.renderLocalHistory()
+  }
+
+  /** Downloads the history stored on this device as CSV (#57). */
+  async exportCsv() {
+    const rows = await this.client.history(this.peerId)
+    const date = new Date().toISOString().slice(0, 10)
+    const peer = (this.peerName ?? String(this.peerId)).replace(/[^\w.-]+/g, "_")
+    this.download(`privee-${peer}-${date}.csv`, historyToCsv(rows))
+  }
+
+  /**
+   * @param {string} filename
+   * @param {string} csv
+   */
+  downloadFile(filename, csv) {
+    const view = this.doc.defaultView
+    if (!view) return
+    const url = view.URL.createObjectURL(new view.Blob([csv], { type: "text/csv;charset=utf-8" }))
+    const link = this.doc.createElement("a")
+    link.href = url
+    link.download = filename
+    link.hidden = true
+    this.doc.body.append(link)
+    link.click()
+    link.remove()
+    view.setTimeout(() => view.URL.revokeObjectURL(url), 0)
   }
 
   // -- Local hint (never sent to the server) -------------------------------------

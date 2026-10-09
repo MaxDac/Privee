@@ -27,6 +27,29 @@ export const askNotificationPermission = async () => {
   }
 }
 
+const gestureEvents = /** @type {const} */ (["click", "keydown", "touchend"])
+
+/**
+ * Asks for the notification permission on the first user gesture, as browsers
+ * require (and Lighthouse recommends) instead of at page load. Nothing is asked
+ * when the user has already decided.
+ * @param {Document} [doc]
+ * @returns {Promise<string>} The result of the permission request.
+ */
+export const askNotificationPermissionOnGesture = (doc = window.document) => {
+  if (!("Notification" in window)) return askNotificationPermission()
+  if (Notification.permission !== "default")
+    return Promise.resolve(`Permission: ${Notification.permission}`)
+
+  return new Promise((resolve, reject) => {
+    const onGesture = () => {
+      for (const type of gestureEvents) doc.removeEventListener(type, onGesture, true)
+      askNotificationPermission().then(resolve, reject)
+    }
+    for (const type of gestureEvents) doc.addEventListener(type, onGesture, true)
+  })
+}
+
 /**
  * @typedef {object} EventDetails Represents the details of the event sent from the back end. For more information read `events.ex` file.
  * @property {string} [text] The text of the message that triggered the notification.

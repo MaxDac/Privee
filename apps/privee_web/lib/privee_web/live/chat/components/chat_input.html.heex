@@ -1,9 +1,22 @@
 <%!--
   The composer is intentionally not a LiveView form and the input has no `name`:
   plaintext must never be serialized to the server. The ChatScreen hook reads it,
-  encrypts it and pushes only the ciphertext.
+  encrypts it and pushes only the ciphertext. Commands such as `:lock` run in the
+  browser and are never sent.
 --%>
-<div id="chat-composer" class="flex items-center gap-2" phx-update="ignore">
+<div id="chat-composer" class="relative flex items-center gap-2" phx-update="ignore">
+  <ul
+    id="chat-commands"
+    hidden
+    class="absolute bottom-full left-0 mb-2 w-full max-w-md rounded-lg border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
+  >
+  </ul>
+
+  <span
+    id="chat-vim-mode"
+    hidden
+    class="shrink-0 font-mono text-xs text-zinc-500"
+  ></span>
   <input
     id="chat-text"
     type="text"
