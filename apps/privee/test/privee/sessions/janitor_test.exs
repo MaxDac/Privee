@@ -27,6 +27,10 @@ defmodule Privee.Sessions.JanitorTest do
       set: [inserted_at: days_ago(days)]
     )
 
+    Repo.update_all(from(s in Session, where: s.id == ^session.id),
+      set: [last_used_at: days_ago(days)]
+    )
+
     token
   end
 
@@ -88,6 +92,49 @@ defmodule Privee.Sessions.JanitorTest do
 
     assert Janitor.run(90) == {1, 1}
     refute exists?(session)
+  end
+
+  test "run/1 keeps a session whose expired token was deleted within the retention" do
+    session = session_fixture() |> age_session(200)
+    token(session, 61)
+
+    assert Janitor.run(90) == {1, 0}
+    assert exists?(session)
+  end
+
+  test "logging out does not make a recently used session deletable" do
+    session = session_fixture() |> age_session(200)
+    session |> token(1) |> Sessions.delete_session_token()
+
+    assert Janitor.run(90) == {0, 0}
+    assert exists?(session)
+  end
+
+  test "signing in records last_used_at" do
+    session = session_fixture() |> age_session(200)
+    assert is_nil(Repo.get!(Session, session.id).last_used_at)
+
+    Sessions.generate_session_token(session)
+
+    assert %NaiveDateTime{} = Repo.get!(Session, session.id).last_used_at
+    assert Sessions.delete_unused_sessions(90) == 0
+  end
+
+  test "deleting a session removes its tokens, push endpoints and keys" do
+    session = session_fixture() |> age_session(200)
+    token = token(session, 100)
+    :ok = Privee.Push.register_endpoint(token, "https://push.example.com/up/abc")
+
+    Repo.update_all(from(s in Session, where: s.id == ^session.id),
+      set: [prekey_bundle: %{"identity_key" => "pub"}]
+    )
+
+    assert Sessions.delete_unused_sessions(90) == 1
+    refute exists?(session)
+    assert Repo.aggregate(Privee.Push.PushEndpoint, :count) == 0
+
+    assert Repo.aggregate(from(t in SessionToken, where: t.session_id == ^session.id), :count) ==
+             0
   end
 
   test "the job can be disabled" do

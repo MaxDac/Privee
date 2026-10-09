@@ -27,12 +27,20 @@ export const askNotificationPermission = async () => {
   }
 }
 
-const gestureEvents = /** @type {const} */ (["click", "keydown", "touchend"])
+const gestureEvents = /** @type {const} */ (["click", "touchend"])
 
 /**
- * Asks for the notification permission on the first user gesture, as browsers
- * require (and Lighthouse recommends) instead of at page load. Nothing is asked
- * when the user has already decided.
+ * Whether a session is signed in on this page (only signed-in sessions receive
+ * notifications, so the sign-in and registration pages never ask).
+ * @param {Document} doc
+ */
+const signedIn = (doc) => doc.getElementById("copy-session-code-btn") !== null
+
+/**
+ * Asks for the notification permission on the first click or tap of a signed-in
+ * session, as browsers require (and Lighthouse recommends) instead of at page
+ * load. Key presses do not count, so typing a recovery phrase never triggers
+ * the prompt. Nothing is asked when the user has already decided.
  * @param {Document} [doc]
  * @returns {Promise<string>} The result of the permission request.
  */
@@ -43,6 +51,7 @@ export const askNotificationPermissionOnGesture = (doc = window.document) => {
 
   return new Promise((resolve, reject) => {
     const onGesture = () => {
+      if (!signedIn(doc)) return
       for (const type of gestureEvents) doc.removeEventListener(type, onGesture, true)
       askNotificationPermission().then(resolve, reject)
     }

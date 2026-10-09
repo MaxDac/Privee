@@ -193,8 +193,8 @@ msgstr "Aplicação de privacidade"
 msgid "Privee - Text received"
 msgstr "Privee - Mensagem recebida"
 
-msgid "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
-msgstr "O Privee é um chat para conversas privadas que não deixam rasto: sem conta, sem email, sem número de telefone."
+msgid "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
+msgstr "O Privee é um chat para conversas privadas: sem conta, sem email, sem número de telefone, e o servidor apenas reencaminha mensagens cifradas."
 
 msgid "Privee logo"
 msgstr "Logótipo do Privee"
@@ -280,6 +280,9 @@ msgstr "Sucesso!"
 msgid "Switch theme"
 msgstr "Mudar tema"
 
+msgid "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+msgstr "O ficheiro CSV não está cifrado e fica nas suas transferências, mesmo depois de terminar a sessão ou limpar este dispositivo. Transferi-lo?"
+
 msgid "The application was updated. Please reload the page."
 msgstr "A aplicação foi atualizada. Recarregue a página."
 
@@ -331,8 +334,11 @@ msgstr "Escreva : na caixa de mensagem para ver os comandos. São executados no 
 msgid "Type a password after :lock, for example :lock my-secret."
 msgstr "Escreva uma palavra-passe depois de :lock, por exemplo :lock meu-segredo."
 
-msgid "Unused sessions are deleted automatically, so nothing ties you to past conversations."
-msgstr "As sessões não utilizadas são apagadas automaticamente, para que nada o ligue a conversas passadas."
+msgid "Unknown command. Start with :: to send a message that begins with a colon."
+msgstr "Comando desconhecido. Comece com :: para enviar uma mensagem que comece com dois pontos."
+
+msgid "Unused sessions are deleted from the server automatically after months without a sign-in."
+msgstr "As sessões não utilizadas são apagadas automaticamente do servidor após meses sem início de sessão."
 
 msgid "Url copied"
 msgstr "Ligação copiada"

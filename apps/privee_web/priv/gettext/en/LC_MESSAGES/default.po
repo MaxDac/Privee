@@ -193,8 +193,8 @@ msgstr "Privacy App"
 msgid "Privee - Text received"
 msgstr "Privee - Text received"
 
-msgid "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
-msgstr "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
+msgid "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
+msgstr "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
 
 msgid "Privee logo"
 msgstr "Privee logo"
@@ -280,6 +280,9 @@ msgstr "Success!"
 msgid "Switch theme"
 msgstr "Switch theme"
 
+msgid "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+msgstr "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+
 msgid "The application was updated. Please reload the page."
 msgstr "The application was updated. Please reload the page."
 
@@ -331,8 +334,11 @@ msgstr "Type : in the message box to see the commands. They run in your browser 
 msgid "Type a password after :lock, for example :lock my-secret."
 msgstr "Type a password after :lock, for example :lock my-secret."
 
-msgid "Unused sessions are deleted automatically, so nothing ties you to past conversations."
-msgstr "Unused sessions are deleted automatically, so nothing ties you to past conversations."
+msgid "Unknown command. Start with :: to send a message that begins with a colon."
+msgstr "Unknown command. Start with :: to send a message that begins with a colon."
+
+msgid "Unused sessions are deleted from the server automatically after months without a sign-in."
+msgstr "Unused sessions are deleted from the server automatically after months without a sign-in."
 
 msgid "Url copied"
 msgstr "Url copied"

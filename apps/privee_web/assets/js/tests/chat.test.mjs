@@ -238,6 +238,21 @@ describe("ChatController", () => {
     input.value = ":)"
     await bob.controller.sendFromComposer()
     expect(server.messages).toHaveLength(before + 1)
+
+    input.value = ":lok hunter2"
+    await bob.controller.sendFromComposer()
+    expect(server.messages).toHaveLength(before + 1)
+    expect(input.value).toBe(":lok hunter2")
+    expect(bob.doc.getElementById("chat-banner-notice")?.textContent).toContain(
+      Texts.unknownCommand,
+    )
+
+    input.value = "::lock is a command"
+    await bob.controller.sendFromComposer()
+    expect(server.messages).toHaveLength(before + 2)
+    stream(server, alice.doc, ALICE)
+    await alice.controller.processEntries()
+    expect(texts(alice.doc)).toContain(":lock is a command")
   })
 
   it("locks the screen behind a password and unlocks it from the local history", async () => {
@@ -278,6 +293,25 @@ describe("ChatController", () => {
     expect(bob.doc.getElementById("chat-banner-notice")?.textContent).toContain(Texts.wrongPassword)
     expect(bob.doc.body.textContent).not.toContain("top secret")
 
+    // While locked, nothing else runs: no re-lock, export, sending or menu action.
+    const download = vi.fn()
+    bob.controller.download = download
+    const sent = server.messages.length
+    for (const text of [":lock other", ":export", "hello"]) {
+      input.value = text
+      await bob.controller.sendFromComposer()
+    }
+    bob.doc.getElementById("chat-export")?.click()
+    expect(download).not.toHaveBeenCalled()
+    expect(server.messages).toHaveLength(sent)
+
+    // An identity change disables sending, but `:unlock` stays available.
+    bob.controller.blockedByIdentity = true
+    bob.controller.updateComposer()
+    expect(input.disabled).toBe(false)
+    bob.controller.blockedByIdentity = false
+    bob.controller.updateComposer()
+
     input.value = ":unlock hunter2"
     await bob.controller.sendFromComposer()
     expect(texts(bob.doc)).toEqual(["top secret", "still secret"])
@@ -296,6 +330,11 @@ describe("ChatController", () => {
     const input = /** @type {HTMLInputElement} */ (alice.doc.getElementById("chat-text"))
     input.value = "=HYPERLINK(1), hi"
     await alice.controller.sendFromComposer()
+
+    alice.controller.confirm = () => false
+    await alice.controller.exportCsv()
+    expect(download).not.toHaveBeenCalled()
+    alice.controller.confirm = () => true
 
     alice.doc.getElementById("chat-export")?.click()
     await vi.waitFor(() => expect(download).toHaveBeenCalled())

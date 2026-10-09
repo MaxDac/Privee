@@ -5,6 +5,8 @@ import {
   csvCell,
   hashPassword,
   historyToCsv,
+  isUnknownCommand,
+  messageText,
   parseCommand,
   suggestCommands,
 } from "../utils/commands.mjs"
@@ -87,9 +89,20 @@ describe("commands", () => {
     expect(csvCell("plain")).toBe("plain")
     const q = String.fromCharCode(34)
     expect(csvCell(`a,${q}b${q}`)).toBe(`${q}a,${q}${q}b${q}${q}${q}`)
-    for (const prefix of ["=", "+", "-", "@", "\t"])
+    for (const prefix of ["=", "+", "-", "@", "\t", "|", " =", "  +"])
       expect(csvCell(`${prefix}1`)).toBe(`'${prefix}1`)
+    expect(csvCell("a = b")).toBe("a = b")
     expect(csvCell("line\r\nbreak")).toBe(`${q}line\r\nbreak${q}`)
+  })
+
+  it("recognizes mistyped commands and the :: escape", () => {
+    expect(isUnknownCommand(":lok hunter2")).toBe(true)
+    expect(isUnknownCommand(":lock hunter2")).toBe(false)
+    expect(isUnknownCommand(":)")).toBe(false)
+    expect(isUnknownCommand("::lock")).toBe(false)
+    expect(isUnknownCommand("hi :lok")).toBe(false)
+    expect(messageText("::lock")).toBe(":lock")
+    expect(messageText(":)")).toBe(":)")
   })
 
   it("exports history rows sorted by time", () => {

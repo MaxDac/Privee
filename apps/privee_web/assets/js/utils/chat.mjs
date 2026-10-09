@@ -17,7 +17,14 @@ import {
 import { clientTexts } from "./locale.mjs"
 import { openHintEditor } from "./hint-editor.mjs"
 import { renderMarkdown } from "./markdown.mjs"
-import { hashPassword, historyToCsv, parseCommand, suggestCommands } from "./commands.mjs"
+import {
+  hashPassword,
+  historyToCsv,
+  isUnknownCommand,
+  messageText,
+  parseCommand,
+  suggestCommands,
+} from "./commands.mjs"
 import { VimMode } from "./vim.mjs"
 
 const lockedText = "••••••"
@@ -161,11 +168,16 @@ export class ChatController {
     else if (state === "ready") this.clearBanner(["superseded", "needs_reset"])
   }
 
+  canSend() {
+    return this.state === "ready" && !this.blockedByIdentity
+  }
+
   updateComposer() {
-    const enabled = this.state === "ready" && !this.blockedByIdentity
+    const enabled = this.canSend()
     const input = /** @type {HTMLInputElement | null} */ (this.query(Selectors.input))
     const send = /** @type {HTMLButtonElement | null} */ (this.query(Selectors.send))
-    if (input) input.disabled = !enabled
+    // While locked, the input stays usable for the local `:unlock` command.
+    if (input) input.disabled = !enabled && !this.lock
     if (send) send.disabled = !enabled
   }
 
@@ -447,10 +459,18 @@ export class ChatController {
       await this.runCommand(command.name, command.arg)
       return
     }
+    if (this.lock || isUnknownCommand(text)) {
+      this.showBanner(
+        this.lock ? "locked" : "notice",
+        this.lock ? this.texts.messagesLocked : this.texts.unknownCommand,
+      )
+      return
+    }
+    if (!this.canSend()) return
 
     input.value = ""
     try {
-      await this.client.send(this.peerId, text)
+      await this.client.send(this.peerId, messageText(text))
       this.clearBanner(["notice"])
     } catch (e) {
       const queued = wasQueued(e)
@@ -628,6 +648,7 @@ export class ChatController {
       const el = this.query(selector)
       if (!el) return
       const listener = () => {
+        if (this.lock) return this.showBanner("locked", this.texts.messagesLocked)
         handler().catch((e) => console.error(e))
       }
       el.addEventListener("click", listener)
@@ -648,6 +669,12 @@ export class ChatController {
    * @param {string} arg
    */
   async runCommand(name, arg) {
+    // While locked, only `:unlock` runs: the other commands would reveal
+    // (export, hint, safety) or destroy (clear) the hidden conversation.
+    if (this.lock && name !== "unlock") {
+      this.showBanner("locked", this.texts.messagesLocked)
+      return
+    }
     try {
       switch (name) {
         case "lock":
@@ -683,6 +710,8 @@ export class ChatController {
     }
     this.lock = await hashPassword(password)
     this.el.dataset.locked = "true"
+    this.updateComposer()
+    this.renderPeerHint(null)
     this.showBanner("locked", this.texts.messagesLocked)
     for (const entry of /** @type {NodeListOf<HTMLElement>} */ (
       this.doc.querySelectorAll(`${Selectors.entry}[data-converted=true]`)
@@ -704,6 +733,7 @@ export class ChatController {
 
     this.lock = null
     delete this.el.dataset.locked
+    this.updateComposer()
     this.clearBanner(["locked", "notice"])
     for (const entry of /** @type {NodeListOf<HTMLElement>} */ (
       this.doc.querySelectorAll(`${Selectors.entry}[data-locked=true]`)
@@ -715,10 +745,12 @@ export class ChatController {
       this.fill(entry, text)
     }
     await this.renderLocalHistory()
+    await this.loadPeerMeta()
   }
 
   /** Downloads the history stored on this device as CSV (#57). */
   async exportCsv() {
+    if (!this.confirm(this.texts.confirmExport)) return
     const rows = await this.client.history(this.peerId)
     const date = new Date().toISOString().slice(0, 10)
     const peer = (this.peerName ?? String(this.peerId)).replace(/[^\w.-]+/g, "_")

@@ -62,7 +62,7 @@ The release is `privee_umbrella` ([`mix.exs`](../mix.exs)).
 | `Privee.PreKeyStore` | `sessions.prekey_bundle` | Public Signal bundle: identity key, signed prekey, Kyber-1024 last-resort prekey, ≤ 100 one-time prekeys with append-only increasing ids. Every write validates key sizes inside a row-locked transaction. |
 | `Privee.Chats` | ETS (`:chat_messages`, `:chat_conversations`, `:chat_nonces`) | Node-local ciphertext store grouped by conversation and **epoch**; dedup by client nonce; expiry after 24 h idle, 7 days or 1000 messages. Lost on restart, not shared across nodes. |
 | `Privee.Push` | `push_endpoints` | UnifiedPush endpoint registration (bound to a session token) and content-free wake-up delivery with SSRF checks. |
-| `Privee.Sessions.Janitor` | - | GenServer, every 6 hours: deletes expired session tokens and sessions without a sign-in for `PRIVEE_SESSION_RETENTION_DAYS` (cascading tokens, push endpoints and the prekey bundle). |
+| `Privee.Sessions.Janitor` | - | GenServer, every 6 hours: deletes expired session tokens and sessions whose `last_used_at` (last token issued) is older than `PRIVEE_SESSION_RETENTION_DAYS` (cascading tokens, push endpoints and the prekey bundle). |
 | `Privee.RateLimiter` | ETS `:rate_limits` | Fixed-window counters (auth, prekey pops, pushes). |
 | `Privee.SessionNameProvider` | - | Behaviour + `Impl` (real names) and a mock used in tests (`config :privee, :session_name_provider`). |
 

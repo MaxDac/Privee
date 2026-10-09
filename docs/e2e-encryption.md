@@ -113,13 +113,20 @@ deleted.
   every time, not to use the contact's name. "Clear history on this device"
   keeps hints; logging out and "Forget this device" remove them.
 - **Chat commands are local.** The server never sees a `:` command, so it
-  cannot act on it. `:lock <password>` replaces the rendered plaintext with the
-  stored ciphertext and masks new messages; the password hash (salted SHA-256)
-  is kept in memory only, and reloading the page unlocks. It hides the screen
-  from onlookers, it does not encrypt the local history. Messages that arrive
-  while locked are still decrypted (Signal keys are single-use) and saved to
-  the local history. `:export` (and "Export CSV") downloads the local history
-  as CSV, with cells starting with `= + - @` prefixed by `'` to defuse formulas.
+  cannot act on it. A mistyped command (`:lok secret`) is not sent either, so a
+  lock password cannot leak to the contact; `::` sends a literal leading
+  colon. `:lock <password>` replaces the rendered plaintext with the stored
+  ciphertext, masks new messages and hides the local hint; the password hash
+  (salted SHA-256) is kept in memory only, and reloading the page unlocks.
+  While locked only `:unlock` works: no sending, re-locking, export, hint,
+  safety number or clearing. It is a screen cover against onlookers, not the
+  app lock rejected in the [E2EE audit](security/e2ee-audit.md): it does not
+  encrypt the local history. Messages that arrive while locked are still
+  decrypted (Signal keys are single-use) and saved to the local history.
+  `:export` (and "Export CSV") downloads the local history as an unencrypted
+  CSV after a confirmation that warns the file outlives sign-out and "Forget
+  this device"; cells starting (after spaces) with `= + - @ |` are prefixed by
+  `'` to defuse formulas.
 - **Server retention.** Ciphertext lives in node-local ETS and is lost when the
   node restarts. A conversation expires as a whole after 24 hours of inactivity,
   7 days of age, or 1000 messages; the next message starts a new epoch. Older

@@ -13,6 +13,7 @@ defmodule Privee.Sessions.Session do
           hashed_recovery_phrase: String.t(),
           is_quick: boolean(),
           has_logged: boolean(),
+          last_used_at: NaiveDateTime.t() | nil,
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
@@ -24,6 +25,7 @@ defmodule Privee.Sessions.Session do
     field :is_quick, :boolean, default: false
     field :has_logged, :boolean, default: false
     field :prekey_bundle, :map
+    field :last_used_at, :naive_datetime
 
     timestamps()
   end

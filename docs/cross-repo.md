@@ -44,6 +44,13 @@ the app relies on:
 - The token is the raw 32-byte session token as **unpadded base64url**, valid
   60 days, used both as `Authorization: Bearer` and as the socket
   `auth_token`. Logout revokes it and disconnects its sockets.
+- The server deletes a session (with its tokens, push endpoint and prekey
+  bundle) once no token has been issued for it for
+  `PRIVEE_SESSION_RETENTION_DAYS` (default 90, never under 60); a never-used
+  quick session goes after a day. Its name can then be registered again, so
+  a later log in returns `401 invalid_credentials`. The app should treat that
+  as "this session no longer exists" and register its UnifiedPush endpoint
+  again after a new sign-in.
 - Signal addresses and safety numbers use the numeric session ids (`session.id`,
   `peer_id`), not session names.
 - Message `type` is libsignal's `CiphertextMessageType`: `2` (Whisper) or `3`

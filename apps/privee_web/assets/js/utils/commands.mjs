@@ -3,7 +3,8 @@
  *
  * Commands run in the browser only and are never sent to the server: with
  * end-to-end encryption the server cannot read messages, so it cannot interpret
- * them either. Text that does not match a known command is sent as a message.
+ * them either. Text that does not match a known command is sent as a message,
+ * except a mistyped command (`:lok`); `::` sends a literal leading colon.
  */
 
 /** @typedef {"lock" | "unlock" | "export" | "clear" | "safety" | "hint" | "vim"} CommandName */
@@ -38,6 +39,21 @@ export const parseCommand = (text) => {
 }
 
 /**
+ * Whether the text looks like a command that does not exist (`:lok secret`).
+ * It is not sent, so a mistyped command never reaches the peer.
+ * @param {string} text
+ */
+export const isUnknownCommand = (text) =>
+  /^:[a-z]+(?:\s|$)/.test(text.trim()) && parseCommand(text) === null
+
+/**
+ * The message to send for a composer text: a leading `::` sends a literal
+ * leading colon (`::lock` sends `:lock`).
+ * @param {string} text
+ */
+export const messageText = (text) => (text.startsWith("::") ? text.slice(1) : text)
+
+/**
  * Commands to suggest while the user is typing the command name.
  * @param {string} text
  * @returns {Command[]}
@@ -66,7 +82,7 @@ export const hashPassword = async (password, salt = crypto.getRandomValues(new U
  * @returns {string}
  */
 export const csvCell = (value) => {
-  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
+  const safe = /^\s*[=+\-@|]/.test(value) || /^[\t\r]/.test(value) ? `'${value}` : value
   return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, (quote) => quote + quote)}"` : safe
 }
 

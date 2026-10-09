@@ -193,8 +193,8 @@ msgstr "App per la privacy"
 msgid "Privee - Text received"
 msgstr "Privee - Messaggio ricevuto"
 
-msgid "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
-msgstr "Privee è una chat per conversazioni private che non lasciano traccia: niente account, niente email, niente numero di telefono."
+msgid "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
+msgstr "Privee è una chat per conversazioni private: niente account, niente email, niente numero di telefono, e il server inoltra solo messaggi cifrati."
 
 msgid "Privee logo"
 msgstr "Logo di Privee"
@@ -280,6 +280,9 @@ msgstr "Operazione riuscita!"
 msgid "Switch theme"
 msgstr "Cambia tema"
 
+msgid "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+msgstr "Il file CSV non è cifrato e resta nei tuoi download, anche dopo l'uscita o la pulizia di questo dispositivo. Vuoi scaricarlo?"
+
 msgid "The application was updated. Please reload the page."
 msgstr "L'applicazione è stata aggiornata. Ricarica la pagina."
 
@@ -331,8 +334,11 @@ msgstr "Scrivi : nella casella del messaggio per vedere i comandi. Vengono esegu
 msgid "Type a password after :lock, for example :lock my-secret."
 msgstr "Scrivi una password dopo :lock, per esempio :lock mio-segreto."
 
-msgid "Unused sessions are deleted automatically, so nothing ties you to past conversations."
-msgstr "Le sessioni inutilizzate vengono eliminate automaticamente, così nulla ti lega alle conversazioni passate."
+msgid "Unknown command. Start with :: to send a message that begins with a colon."
+msgstr "Comando sconosciuto. Inizia con :: per inviare un messaggio che comincia con i due punti."
+
+msgid "Unused sessions are deleted from the server automatically after months without a sign-in."
+msgstr "Le sessioni inutilizzate vengono eliminate automaticamente dal server dopo mesi senza accessi."
 
 msgid "Url copied"
 msgstr "Link copiato"

@@ -127,10 +127,19 @@ describe("askNotificationPermissionOnGesture", () => {
     return { doc: dom.window.document, requestPermission }
   }
 
-  it("waits for a user gesture before asking", async () => {
+  it("waits for a click or tap of a signed-in session before asking", async () => {
     const { doc, requestPermission } = stub("default")
     const result = askNotificationPermissionOnGesture(doc)
     await Promise.resolve()
+    expect(requestPermission).not.toHaveBeenCalled()
+
+    doc.body.dispatchEvent(new doc.defaultView.MouseEvent("click", { bubbles: true }))
+    expect(requestPermission).not.toHaveBeenCalled()
+
+    const menu = doc.createElement("button")
+    menu.id = "copy-session-code-btn"
+    doc.body.append(menu)
+    doc.body.dispatchEvent(new doc.defaultView.KeyboardEvent("keydown", { bubbles: true }))
     expect(requestPermission).not.toHaveBeenCalled()
 
     doc.body.dispatchEvent(new doc.defaultView.MouseEvent("click", { bubbles: true }))

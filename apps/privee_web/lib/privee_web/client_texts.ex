@@ -76,6 +76,12 @@ defmodule PriveeWeb.ClientTexts do
         commandVim: gettext("Turn VIM mode on or off"),
         lockNeedsPassword: gettext("Type a password after :lock, for example :lock my-secret."),
         wrongPassword: gettext("Wrong password. The messages stay hidden."),
+        unknownCommand:
+          gettext("Unknown command. Start with :: to send a message that begins with a colon."),
+        confirmExport:
+          gettext(
+            "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+          ),
         messagesLocked:
           gettext("Messages are hidden. Type :unlock followed by your password to show them.")
       }

@@ -21,7 +21,7 @@ defmodule PriveeWeb.GuideLive do
           <:subtitle>
             {lgettext(
               @locale,
-              "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
+              "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
             )}
           </:subtitle>
         </.header>
@@ -39,7 +39,7 @@ defmodule PriveeWeb.GuideLive do
           <p>
             {lgettext(
               @locale,
-              "Unused sessions are deleted automatically, so nothing ties you to past conversations."
+              "Unused sessions are deleted from the server automatically after months without a sign-in."
             )}
           </p>
         </section>

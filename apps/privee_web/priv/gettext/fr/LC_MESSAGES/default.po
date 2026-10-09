@@ -193,8 +193,8 @@ msgstr "Application de confidentialité"
 msgid "Privee - Text received"
 msgstr "Privee - Message reçu"
 
-msgid "Privee is a chat for private conversations that leave no trace: no account, no email, no phone number."
-msgstr "Privee est un chat pour des conversations privées qui ne laissent aucune trace : pas de compte, pas d'e-mail, pas de numéro de téléphone."
+msgid "Privee is a chat for private conversations: no account, no email, no phone number, and the server only relays encrypted messages."
+msgstr "Privee est un chat pour des conversations privées : pas de compte, pas d'e-mail, pas de numéro de téléphone, et le serveur ne relaie que des messages chiffrés."
 
 msgid "Privee logo"
 msgstr "Logo de Privee"
@@ -280,6 +280,9 @@ msgstr "Succès !"
 msgid "Switch theme"
 msgstr "Changer de thème"
 
+msgid "The CSV file is not encrypted and stays in your downloads, even after you sign out or clear this device. Download it?"
+msgstr "Le fichier CSV n'est pas chiffré et reste dans vos téléchargements, même après la déconnexion ou le nettoyage de cet appareil. Le télécharger ?"
+
 msgid "The application was updated. Please reload the page."
 msgstr "L'application a été mise à jour. Rechargez la page."
 
@@ -331,8 +334,11 @@ msgstr "Tapez : dans la zone de message pour voir les commandes. Elles s'exécut
 msgid "Type a password after :lock, for example :lock my-secret."
 msgstr "Tapez un mot de passe après :lock, par exemple :lock mon-secret."
 
-msgid "Unused sessions are deleted automatically, so nothing ties you to past conversations."
-msgstr "Les sessions inutilisées sont supprimées automatiquement, rien ne vous relie donc aux conversations passées."
+msgid "Unknown command. Start with :: to send a message that begins with a colon."
+msgstr "Commande inconnue. Commencez par :: pour envoyer un message qui commence par deux-points."
+
+msgid "Unused sessions are deleted from the server automatically after months without a sign-in."
+msgstr "Les sessions inutilisées sont supprimées automatiquement du serveur après des mois sans connexion."
 
 msgid "Url copied"
 msgstr "Lien copié"

@@ -79,7 +79,11 @@ defmodule PriveeWeb.Router do
     pipe_through [:browser]
 
     live_session :public,
-      on_mount: [PriveeWeb.LocaleLive, {PriveeWeb.SessionAuth, :mount_current_session}] do
+      on_mount: [
+        PriveeWeb.LocaleLive,
+        {PriveeWeb.SessionAuth, :mount_current_session},
+        PriveeWeb.NotificationsLive
+      ] do
       live "/guide", GuideLive
     end
 
